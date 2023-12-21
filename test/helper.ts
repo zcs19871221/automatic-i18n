@@ -1,7 +1,6 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { LocaleReplacer } from '../src';
-import { ScriptTarget } from 'typescript';
 
 const testBaseDir = path.join(process.cwd(), 'test');
 const expectName = 'expect';
@@ -35,16 +34,14 @@ export const run = (dirName: string) => {
   fs.removeSync(distDir);
   fs.ensureDirSync(distDir);
 
-  LocaleReplacer.replace({
+  return LocaleReplacer.replace({
     projectDir: distDir,
-    i18nDir: '',
+    i18nDirName: '',
     fileReplaceDist: distDir,
-    filter: () => true,
+    fileFilter: () => true,
     filesOrDirsToReplace: [template],
-    locales: ['en-us', 'zh-cn'],
-    localeToSearch: 'zh-cn',
+    localesToGenerate: ['en-us', 'zh-cn'],
+    localeToReplace: 'zh-cn',
     importPath: './',
-    defaultLocale: 'zh-cn',
-    tsTarget: ScriptTarget.ESNext,
   });
 };

@@ -3,13 +3,13 @@ import * as path from 'path';
 
 const originWarn = console.warn;
 
-it('should show warnings text correctly', () => {
+it('should show warnings text correctly', async () => {
   let warnText = '';
   console.warn = (text) => {
     warnText += text;
   };
 
-  commonRun(__dirname);
+  await commonRun(__dirname);
   expect(warnText).toMatch(`【'发'】`);
   expect(warnText).toMatch(`【'好'】`);
   expect(warnText).toMatch(`【'你'】`);

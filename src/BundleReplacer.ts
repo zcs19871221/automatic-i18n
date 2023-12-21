@@ -1,5 +1,6 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import * as prettier from 'prettier';
 
 import { FileReplacer } from './FileReplacer';
 import { Opt } from './types';
@@ -12,20 +13,13 @@ const notTouchWarning = `/*
 `;
 
 export class BundleReplacer {
-  public readonly opt: Exclude<Opt, 'i18nDir'> & { i18nDir: string };
+  constructor(private readonly opt: Opt) {
+    this.langDir = path.join(this.opt.projectDir, this.opt.i18nDirName);
+  }
 
-  constructor(opt: Opt) {
-    const { projectDir, debug } = opt;
-    const i18nDir = opt.i18nDir ?? 'i18n';
-    this.opt = { ...opt, i18nDir };
-
-    if (!this.opt.locales.includes(this.opt.localeToSearch)) {
-      this.opt.locales.push(this.opt.localeToSearch);
-    }
-
-    this.langDir = path.join(projectDir, i18nDir);
-    const keyMappingText = this.parseLocaleTsFile(
-      path.join(this.langDir, opt.localeToSearch + '.ts')
+  public async replace() {
+    const keyMappingText = await this.parseLocaleTsFile(
+      path.join(this.langDir, this.opt.localeToReplace + '.ts')
     );
     this.localeTextMappingKey = Object.entries<string>(keyMappingText).reduce(
       (localeMappingKey: Record<string, string>, [key, text]) => {
@@ -37,30 +31,18 @@ export class BundleReplacer {
       {}
     );
 
-    console.debug = (...args: any[]) => {
-      if (debug) {
-        console.log(' '.repeat(this.debugIndent), ...args);
-      }
-    };
-  }
-
-  public replace() {
-    try {
-      if (this.opt.fileReplaceDist) {
-        fs.ensureDirSync(this.opt.fileReplaceDist);
-      }
-
-      this.replaceAllFiles();
-
-      this.handleStaticTemplate();
-
-      this.warnings.forEach((warn) => {
-        console.warn(warn);
-        console.log('\n');
-      });
-    } catch (error) {
-      console.error(error);
+    if (this.opt.fileReplaceDist) {
+      await fs.ensureDir(this.opt.fileReplaceDist);
     }
+
+    await this.replaceAllFiles();
+
+    await this.handleStaticTemplate();
+
+    this.warnings.forEach((warn) => {
+      console.warn(warn);
+      console.log('\n');
+    });
   }
 
   public getOrSetLocaleTextKeyIfAbsence(localeText: string) {
@@ -77,86 +59,97 @@ export class BundleReplacer {
     return FileReplacer.localeMapToken + textKey;
   }
 
-  public warnings: string[] = [];
+  public warnings: Set<string> = new Set();
 
-  private handleStaticTemplate() {
+  private async handleStaticTemplate() {
     let textKeys: null | string[] = null;
 
-    const defaultLocaleNaming = this.camel(this.opt.defaultLocale);
-    this.opt.locales.forEach((name) => {
-      const localeFile = path.join(this.langDir, `${name}.ts`);
-      let keyMappingText: Record<string, string> =
-        this.parseLocaleTsFile(localeFile);
+    const defaultLocaleNaming = this.camel(this.opt.localeToReplace);
+    await Promise.all(
+      this.opt.localesToGenerate.map(async (name) => {
+        const localeFile = path.join(this.langDir, `${name}.ts`);
+        let keyMappingText: Record<string, string> =
+          await this.parseLocaleTsFile(localeFile);
 
-      Object.keys(this.localeTextMappingKey).forEach((text) => {
-        let key = this.localeTextMappingKey[text];
+        let changed = false;
+        Object.keys(this.localeTextMappingKey).forEach((text) => {
+          let key = this.localeTextMappingKey[text];
 
-        if (!keyMappingText[key]) {
-          keyMappingText[key] = text;
+          if (!keyMappingText[key]) {
+            keyMappingText[key] = text;
+            changed = true;
+          }
+        });
+
+        if (!changed) {
+          return;
         }
-      });
+        keyMappingText = Object.keys(keyMappingText)
+          .sort()
+          .reduce((obj: Record<string, string>, key) => {
+            obj[key] = keyMappingText[key];
+            return obj;
+          }, {});
+        if (!textKeys) {
+          textKeys = Object.keys(keyMappingText);
+        } else if (
+          textKeys.join(',') !== Object.keys(keyMappingText).join(',')
+        ) {
+          throw new Error(
+            this.opt.localesToGenerate.join(',') + ' exits different keys'
+          );
+        }
 
-      keyMappingText = Object.keys(keyMappingText)
-        .sort()
-        .reduce((obj: Record<string, string>, key) => {
-          obj[key] = keyMappingText[key];
-          return obj;
-        }, {});
-      if (!textKeys) {
-        textKeys = Object.keys(keyMappingText);
-      } else if (textKeys.join(',') !== Object.keys(keyMappingText).join(',')) {
-        throw new Error(this.opt.locales.join(',') + ' exits different keys');
-      }
-
-      const defaultLocale = name === this.opt.defaultLocale;
-      let localePrevContent = notTouchWarning;
-      let localeEndContent = '';
-      if (defaultLocale) {
-        localePrevContent = `const defaultLocales = {\n`;
-        localeEndContent =
-          '};\n' +
-          `
+        const defaultLocale = name === this.opt.localeToReplace;
+        let localePrevContent = notTouchWarning;
+        let localeEndContent = '';
+        if (defaultLocale) {
+          localePrevContent = `const defaultLocales = {\n`;
+          localeEndContent =
+            '};\n' +
+            `
 export type Locales = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key in keyof typeof defaultLocales]: any;
 };\n\nexport const locales: Locales = defaultLocales;`;
-      } else {
-        localePrevContent = `import { Locales } from './${this.opt.defaultLocale}';\n\nexport const locales: Locales = {\n`;
-        localeEndContent = '};\n';
-      }
-      fs.writeFileSync(
-        localeFile,
-        Object.entries(keyMappingText).reduce((content, [key, text]) => {
-          if (key.includes('-')) {
-            key = '"' + key + '"';
-          }
-          content += `  ${key}: '${text}',\n`;
-          return content;
-        }, localePrevContent) + localeEndContent
-      );
-      console.log('create ' + localeFile + ' successful! 😃');
-    });
+        } else {
+          localePrevContent = `import { Locales } from './${this.opt.localeToReplace}';\n\nexport const locales: Locales = {\n`;
+          localeEndContent = '};\n';
+        }
+        return this.formatAndWrite(
+          localeFile,
+          Object.entries(keyMappingText).reduce((content, [key, text]) => {
+            if (key.includes('-')) {
+              key = '"' + key + '"';
+            }
+            content += `  ${key}: '${text}',\n`;
+            return content;
+          }, localePrevContent) + localeEndContent
+        );
+      })
+    );
 
     const templateDist = path.join(
       this.opt.projectDir,
-      this.opt.i18nDir,
+      this.opt.i18nDirName,
       'index.ts'
     );
 
-    if (fs.existsSync(templateDist)) {
+    if (await fs.exists(templateDist)) {
       return;
     }
 
-    const otherLocales = this.opt.locales.filter(
-      (locale) => locale !== this.opt.defaultLocale
+    const otherLocales = this.opt.localesToGenerate.filter(
+      (locale) => locale !== this.opt.localeToReplace
     );
 
-    let templateContent = fs
-      .readFileSync(
+    let templateContent = (
+      await fs.readFile(
         path.join(process.cwd(), 'src/static-template/index.ts'),
         'utf-8'
       )
-      .replace(/zh-cn/g, this.opt.defaultLocale)
+    )
+      .replace(/zh-cn/g, this.opt.localeToReplace)
       .replace(/zhCn/g, defaultLocaleNaming);
     if (otherLocales.length > 0) {
       templateContent = templateContent
@@ -179,16 +172,31 @@ export type Locales = {
           );
         });
     }
-    fs.writeFileSync(templateDist, templateContent);
+    await this.formatAndWrite(templateDist, templateContent);
   }
 
-  private parseLocaleTsFile(fileLocate: string) {
-    if (!fs.existsSync(fileLocate)) {
+  private async formatAndWrite(dist: string, file: string) {
+    if (this.opt.prettierConfig) {
+      try {
+        file = prettier.format(file, {
+          singleQuote: true,
+          trailingComma: 'es5',
+        });
+      } catch {}
+    }
+
+    return await fs.writeFile(dist, file);
+  }
+
+  private async parseLocaleTsFile(
+    fileLocate: string
+  ): Promise<Record<string, string>> {
+    if (!(await fs.exists(fileLocate))) {
       return {};
     }
     const source = ts.createSourceFile(
       fileLocate,
-      fs.readFileSync(fileLocate, 'utf-8'),
+      await fs.readFile(fileLocate, 'utf-8'),
       this.opt.tsTarget,
       true
     );
@@ -217,7 +225,7 @@ export type Locales = {
     }
     return naming;
   }
-  private localeTextMappingKey: Record<string, string>;
+  private localeTextMappingKey: Record<string, string> = {};
 
   private key: number = 1;
 
@@ -236,29 +244,53 @@ export type Locales = {
       return false;
     }
 
-    if (this.opt.filter) {
-      return this.opt.filter(name);
+    if (this.opt.fileFilter) {
+      return this.opt.fileFilter(name);
     }
 
     return true;
   };
 
-  private debugIndent = 0;
-
-  private replaceAllFiles(
+  private async replaceAllFiles(
     filesOrDirs: string[] = this.opt.filesOrDirsToReplace
-  ): void {
+  ): Promise<void> {
     filesOrDirs = filesOrDirs.filter(this.fileFilter);
     filesOrDirs.sort();
-    filesOrDirs.forEach((fileOrDir) => {
-      if (fs.lstatSync(fileOrDir).isDirectory()) {
-        return this.replaceAllFiles(
-          fs.readdirSync(fileOrDir).map((d) => path.join(fileOrDir, d))
-        );
-      }
+    await Promise.all(
+      filesOrDirs.map(async (fileOrDir) => {
+        if ((await fs.lstat(fileOrDir)).isDirectory()) {
+          return this.replaceAllFiles(
+            (await fs.readdir(fileOrDir)).map((d) => path.join(fileOrDir, d))
+          );
+        }
 
-      const fileReplaceInfo = new FileReplacer(fileOrDir, this, this.opt);
-      fileReplaceInfo.replace();
-    });
+        const fileReplaceInfo = new FileReplacer(
+          fileOrDir,
+          this,
+          this.opt,
+          await fs.readFile(fileOrDir, 'utf-8')
+        );
+        const file = fileReplaceInfo.replace();
+        if (!file) {
+          return;
+        }
+
+        if (this.opt.fileReplaceOverwirte) {
+          await this.formatAndWrite(fileOrDir, file);
+          console.log(fileOrDir + ' rewrite sucessful! 😃');
+        } else {
+          await this.formatAndWrite(
+            path.join(this.opt.fileReplaceDist, path.basename(fileOrDir)),
+            file
+          );
+          console.log(
+            fileOrDir +
+              ' write to ' +
+              this.opt.fileReplaceDist +
+              ' sucessful! 😃'
+          );
+        }
+      })
+    );
   }
 }

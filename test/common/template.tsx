@@ -18,7 +18,7 @@ export const App = ({
   const nested1 = `${`  sffds你好${name}哈哈${
     gender ? '好的' : '不好'
   }为什么`}北京大学`;
-  const nested2 = `${gender === '男' /* @ignore */ ? '真是男的' : `你好${name}哈哈`}北京大学`;
+  const nested2 = `${/* @ignore */ gender === '男'  ? '真是男的' : `你好${name}哈哈`}北京大学`;
   const school = `北京${name}大学`;
   const school1 = `${name}北京大学`;
 

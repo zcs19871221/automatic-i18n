@@ -1,6 +1,4 @@
 import * as ts from 'typescript';
-import * as fs from 'fs-extra';
-import * as path from 'path';
 import { SyntaxKind, TemplateExpression } from 'typescript';
 import { BundleReplacer } from './BundleReplacer';
 import { Opt } from './types';
@@ -17,15 +15,16 @@ export class FileReplacer {
   constructor(
     private readonly fileLocate: string,
     private readonly bundleReplacer: BundleReplacer,
-    private readonly opt: Opt
+    private readonly opt: Opt,
+    private file: string
   ) {
-    this.file = fs.readFileSync(fileLocate, 'utf-8');
+    this.file = file;
   }
 
   public replace() {
     try {
       this.extractLocales();
-      this.replaceLocalesIfExists();
+      return this.replaceLocalesIfExists();
     } catch (error: any) {
       if (error.message) {
         error.message = '@ ' + this.fileLocate + ' ' + error.message;
@@ -105,8 +104,6 @@ export class FileReplacer {
     this.positionToReplace = [];
   }
 
-  private file: string;
-
   private extractLocales() {
     const sourceFile = ts.createSourceFile(
       this.fileLocate,
@@ -117,9 +114,9 @@ export class FileReplacer {
     this.traverseAstAndExtractLocales(sourceFile);
   }
 
-  private replaceLocalesIfExists() {
+  private replaceLocalesIfExists(): string | null {
     if (this.positionToReplace.length === 0) {
-      return;
+      return null;
     }
 
     const hasImportedI18nModules = this.file.includes(
@@ -150,22 +147,7 @@ export class FileReplacer {
         this.createImportStatement() +
         this.file.slice(insertIndex);
     }
-
-    if (this.opt.fileReplaceOverwirte) {
-      fs.writeFileSync(this.fileLocate, this.file);
-      console.log(this.fileLocate + ' rewrite sucessful! 😃');
-    } else {
-      fs.writeFileSync(
-        path.join(this.opt.fileReplaceDist, path.basename(this.fileLocate)),
-        this.file
-      );
-      console.log(
-        this.fileLocate +
-          ' write to ' +
-          this.opt.fileReplaceDist +
-          ' sucessful! 😃'
-      );
-    }
+    return this.file;
   }
 
   private removeTextVariableSymobl(text: string) {
@@ -174,25 +156,6 @@ export class FileReplacer {
 
   private textKeyAddJsxVariableBacket(textKey: string) {
     return '{' + textKey + '}';
-  }
-
-  private ignoreSpeicalCase(text: string) {
-    const specail = [
-      '实际值',
-      '预测值',
-      '店',
-      '设备',
-      '预测误差上限',
-      '安装日期',
-      '采购金额',
-      '产品描述',
-      '生产厂商',
-      '采购日期',
-      '咖啡机1',
-      '咖啡机2',
-      '咖啡机3',
-    ];
-    return specail.some((s) => text.includes(s));
   }
 
   private traverseAstAndExtractLocales(node: ts.Node) {
@@ -208,26 +171,22 @@ export class FileReplacer {
           if (node.parent?.kind === ts.SyntaxKind.ImportDeclaration) {
             return;
           }
+          if (this.ignore(node)) {
+            return '';
+          }
           // 跳过equal判断 type === '店' 和 includes判断
           if (
             this.stringLiteralIsInEqualBLock(node) ||
             this.stringLiteralIsChildOfIncludeBlock(node)
           ) {
-            if (
-              !this.ignoreWarning(node) &&
-              !this.ignoreWarning(node.parent) &&
-              !this.ignoreSpeicalCase(node.getText())
-            ) {
-              this.addWarningInfo({
-                text:
-                  'do not use locale literal to do [===] or [includes], maybe an error! use /* ' +
-                  FileReplacer.ignoreWarningKey +
-                  ' */ after text to ignore warning or refactor code!',
-                start: node.getStart(),
-                end: node.getEnd(),
-              });
-            }
-
+            this.addWarningInfo({
+              text:
+                'do not use locale literal to do [===] or [includes], maybe an error! use /* ' +
+                FileReplacer.ignoreWarningKey +
+                ' */ before text to ignore warning or refactor code!',
+              start: node.getStart(),
+              end: node.getEnd(),
+            });
             return;
           }
           this.pushPositionIfTargetLocale({
@@ -306,10 +265,9 @@ export class FileReplacer {
       }
       case SyntaxKind.Identifier: {
         if (
-          this.opt.localeToSearch !== 'en-us' &&
+          this.opt.localeToReplace !== 'en-us' &&
           this.includesTargetLocale(node.getText()) &&
-          !this.ignoreWarning(node) &&
-          !this.ignoreSpeicalCase(node.getText())
+          !this.ignore(node)
         ) {
           this.addWarningInfo({
             text: 'property name of object should be english',
@@ -323,11 +281,11 @@ export class FileReplacer {
     ts.forEachChild(node, (n) => this.traverseAstAndExtractLocales(n));
   }
 
-  private ignoreWarning(node: ts.Node) {
-    return node.parent?.getFullText().includes(FileReplacer.ignoreWarningKey);
+  private ignore(node: ts.Node) {
+    return node.getFullText().includes(FileReplacer.ignoreWarningKey);
   }
   private addWarningInfo({ start, end, text }: Warning) {
-    this.bundleReplacer.warnings.push(
+    this.bundleReplacer.warnings.add(
       text +
         '\nfile at: ' +
         this.fileLocate +

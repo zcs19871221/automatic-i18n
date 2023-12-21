@@ -19,7 +19,7 @@ export const App = ({
   const nested1 = `${`  sffds${i18.locales.key0004}${name}${i18.locales.key0005}${
     gender ? i18.locales.key0007 : i18.locales.key0008
   }${i18.locales.key0006}`}${i18.locales.key0003}`;
-  const nested2 = `${gender === '男' /* @ignore */ ? i18.locales.key0009 : `${i18.locales.key0004}${name}${i18.locales.key0005}`}${i18.locales.key0003}`;
+  const nested2 = `${/* @ignore */ gender === '男'  ? i18.locales.key0009 : `${i18.locales.key0004}${name}${i18.locales.key0005}`}${i18.locales.key0003}`;
   const school = `${i18.locales.key0010}${name}${i18.locales.key0011}`;
   const school1 = `${name}${i18.locales.key0003}`;
 

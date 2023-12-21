@@ -1,4 +1,5 @@
 import { ScriptTarget } from 'typescript';
+import { Options as PrettierOptions } from 'prettier';
 
 export type localeTypes =
   | 'af'
@@ -166,36 +167,33 @@ export type localeTypes =
   | 'yi'
   | 'zu';
 
-export type Opt = (
-  | {
-      readonly fileReplaceOverwirte: true;
-      readonly fileReplaceDist?: never;
-    }
-  | {
-      readonly fileReplaceDist: string;
-      readonly fileReplaceOverwirte?: never;
-    }
-) & {
-  readonly projectDir: string;
-  readonly i18nDir?: string;
-  readonly importPath: string;
-  readonly filesOrDirsToReplace: string[];
-  locales: localeTypes[];
-  defaultLocale: localeTypes;
-  localeToSearch: localeTypes;
-  filter?: (fileName: string) => boolean;
-  tsTarget: ScriptTarget;
-} & (
+  export interface OptionOpt {
+     i18nDirName?: string;
+     localesToGenerate?: localeTypes[];
+     localeToReplace?: localeTypes;
+    tsTarget?: ScriptTarget;
+  }
+
+  export type BaseOpt = (
     | {
-        debug: boolean;
-        debugPrev?: number;
-        debugAfter?: number;
-        debugBreak?: number;
+        readonly fileReplaceOverwirte: true;
+        readonly fileReplaceDist?: never;
       }
     | {
-        debug?: undefined;
-        debugPrev?: never;
-        debugAfter?: never;
-        debugBreak?: never;
+        readonly fileReplaceDist: string;
+        readonly fileReplaceOverwirte?: never;
       }
-  );
+  ) & {
+    readonly projectDir: string;
+    readonly importPath: string;
+    readonly filesOrDirsToReplace: string[];
+    readonly fileFilter?: (fileName: string) => boolean;
+    prettierConfig?: PrettierOptions;
+  } 
+
+export type Opt = BaseOpt & {
+  readonly [key in keyof OptionOpt]-?: OptionOpt[key]
+}
+
+
+export type InputOption = BaseOpt & OptionOpt;
