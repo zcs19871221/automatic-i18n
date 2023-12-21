@@ -17,8 +17,8 @@ export class BundleReplacer {
     this.langDir = path.join(this.opt.projectDir, this.opt.i18nDirName);
   }
 
-  public async replace() {
-    const keyMappingText = await this.parseLocaleTsFile(
+  public replace() {
+    const keyMappingText = this.parseLocaleTsFile(
       path.join(this.langDir, this.opt.localeToReplace + '.ts')
     );
     this.localeTextMappingKey = Object.entries<string>(keyMappingText).reduce(
@@ -32,12 +32,12 @@ export class BundleReplacer {
     );
 
     if (this.opt.fileReplaceDist) {
-      await fs.ensureDir(this.opt.fileReplaceDist);
+      fs.ensureDirSync(this.opt.fileReplaceDist);
     }
 
-    await this.replaceAllFiles();
+    this.replaceAllFiles();
 
-    await this.generateLocaleFiles();
+    this.generateLocaleFiles();
 
     this.warnings.forEach((warn) => {
       console.warn(warn);
@@ -61,74 +61,71 @@ export class BundleReplacer {
 
   public warnings: Set<string> = new Set();
 
-  private async generateLocaleFiles() {
+  private generateLocaleFiles() {
     let textKeys: null | string[] = null;
 
-    await fs.ensureDir(this.langDir);
+    fs.ensureDirSync(this.langDir);
     const defaultLocaleNaming = this.camel(this.opt.localeToReplace);
-    await Promise.all(
-      this.opt.localesToGenerate.map(async (name) => {
-        const localeFile = path.join(this.langDir, `${name}.ts`);
-        let keyMappingText: Record<string, string> =
-          await this.parseLocaleTsFile(localeFile);
 
-        let changed = false;
-        Object.keys(this.localeTextMappingKey).forEach((text) => {
-          let key = this.localeTextMappingKey[text];
+    this.opt.localesToGenerate.map((name) => {
+      const localeFile = path.join(this.langDir, `${name}.ts`);
+      let keyMappingText: Record<string, string> =
+        this.parseLocaleTsFile(localeFile);
 
-          if (!keyMappingText[key]) {
-            keyMappingText[key] = text;
-            changed = true;
-          }
-        });
+      let changed = false;
+      Object.keys(this.localeTextMappingKey).forEach((text) => {
+        let key = this.localeTextMappingKey[text];
 
-        if (!changed) {
-          return;
+        if (!keyMappingText[key]) {
+          keyMappingText[key] = text;
+          changed = true;
         }
-        keyMappingText = Object.keys(keyMappingText)
-          .sort()
-          .reduce((obj: Record<string, string>, key) => {
-            obj[key] = keyMappingText[key];
-            return obj;
-          }, {});
-        if (!textKeys) {
-          textKeys = Object.keys(keyMappingText);
-        } else if (
-          textKeys.join(',') !== Object.keys(keyMappingText).join(',')
-        ) {
-          throw new Error(
-            this.opt.localesToGenerate.join(',') + ' exits different keys'
-          );
-        }
+      });
 
-        const defaultLocale = name === this.opt.localeToReplace;
-        let localePrevContent = notTouchWarning;
-        let localeEndContent = '';
-        if (defaultLocale) {
-          localePrevContent = `const defaultLocales = {\n`;
-          localeEndContent =
-            '};\n' +
-            `
+      if (!changed) {
+        return;
+      }
+      keyMappingText = Object.keys(keyMappingText)
+        .sort()
+        .reduce((obj: Record<string, string>, key) => {
+          obj[key] = keyMappingText[key];
+          return obj;
+        }, {});
+      if (!textKeys) {
+        textKeys = Object.keys(keyMappingText);
+      } else if (textKeys.join(',') !== Object.keys(keyMappingText).join(',')) {
+        throw new Error(
+          this.opt.localesToGenerate.join(',') + ' exits different keys'
+        );
+      }
+
+      const defaultLocale = name === this.opt.localeToReplace;
+      let localePrevContent = notTouchWarning;
+      let localeEndContent = '';
+      if (defaultLocale) {
+        localePrevContent = `const defaultLocales = {\n`;
+        localeEndContent =
+          '};\n' +
+          `
 export type Locales = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key in keyof typeof defaultLocales]: any;
 };\n\nexport const locales: Locales = defaultLocales;`;
-        } else {
-          localePrevContent = `import { Locales } from './${this.opt.localeToReplace}';\n\nexport const locales: Locales = {\n`;
-          localeEndContent = '};\n';
-        }
-        return this.formatAndWrite(
-          localeFile,
-          Object.entries(keyMappingText).reduce((content, [key, text]) => {
-            if (key.includes('-')) {
-              key = '"' + key + '"';
-            }
-            content += `  ${key}: '${text}',\n`;
-            return content;
-          }, localePrevContent) + localeEndContent
-        );
-      })
-    );
+      } else {
+        localePrevContent = `import { Locales } from './${this.opt.localeToReplace}';\n\nexport const locales: Locales = {\n`;
+        localeEndContent = '};\n';
+      }
+      return this.formatAndWrite(
+        localeFile,
+        Object.entries(keyMappingText).reduce((content, [key, text]) => {
+          if (key.includes('-')) {
+            key = '"' + key + '"';
+          }
+          content += `  ${key}: '${text}',\n`;
+          return content;
+        }, localePrevContent) + localeEndContent
+      );
+    });
 
     const templateDist = path.join(
       this.opt.projectDir,
@@ -136,7 +133,7 @@ export type Locales = {
       'index.ts'
     );
 
-    if (await fs.exists(templateDist)) {
+    if (fs.existsSync(templateDist)) {
       return;
     }
 
@@ -144,12 +141,11 @@ export type Locales = {
       (locale) => locale !== this.opt.localeToReplace
     );
 
-    let templateContent = (
-      await fs.readFile(
+    let templateContent = fs
+      .readFileSync(
         path.join(process.cwd(), 'src/static-template/index.ts'),
         'utf-8'
       )
-    )
       .replace(/zh-cn/g, this.opt.localeToReplace)
       .replace(/zhCn/g, defaultLocaleNaming);
     if (otherLocales.length > 0) {
@@ -173,10 +169,10 @@ export type Locales = {
           );
         });
     }
-    await this.formatAndWrite(templateDist, templateContent);
+    this.formatAndWrite(templateDist, templateContent);
   }
 
-  private async formatAndWrite(dist: string, file: string) {
+  private formatAndWrite(dist: string, file: string) {
     if (this.opt.prettierConfig) {
       try {
         file = prettier.format(file, {
@@ -186,18 +182,16 @@ export type Locales = {
       } catch {}
     }
 
-    return await fs.writeFile(dist, file);
+    return fs.writeFileSync(dist, file);
   }
 
-  private async parseLocaleTsFile(
-    fileLocate: string
-  ): Promise<Record<string, string>> {
-    if (!(await fs.exists(fileLocate))) {
+  private parseLocaleTsFile(fileLocate: string) {
+    if (!fs.existsSync(fileLocate)) {
       return {};
     }
     const source = ts.createSourceFile(
       fileLocate,
-      await fs.readFile(fileLocate, 'utf-8'),
+      fs.readFileSync(fileLocate, 'utf-8'),
       this.opt.tsTarget,
       true
     );
@@ -252,46 +246,41 @@ export type Locales = {
     return true;
   };
 
-  private async replaceAllFiles(
+  private replaceAllFiles(
     filesOrDirs: string[] = this.opt.filesOrDirsToReplace
-  ): Promise<void> {
+  ): void {
     filesOrDirs = filesOrDirs.filter(this.fileFilter);
     filesOrDirs.sort();
-    await Promise.all(
-      filesOrDirs.map(async (fileOrDir) => {
-        if ((await fs.lstat(fileOrDir)).isDirectory()) {
-          return this.replaceAllFiles(
-            (await fs.readdir(fileOrDir)).map((d) => path.join(fileOrDir, d))
-          );
-        }
-
-        const fileReplaceInfo = new FileReplacer(
-          fileOrDir,
-          this,
-          this.opt,
-          await fs.readFile(fileOrDir, 'utf-8')
+    filesOrDirs.forEach((fileOrDir) => {
+      if (fs.lstatSync(fileOrDir).isDirectory()) {
+        return this.replaceAllFiles(
+          fs.readdirSync(fileOrDir).map((d) => path.join(fileOrDir, d))
         );
-        const file = fileReplaceInfo.replace();
-        if (!file) {
-          return;
-        }
+      }
 
-        if (this.opt.fileReplaceOverwirte) {
-          await this.formatAndWrite(fileOrDir, file);
-          console.log(fileOrDir + ' rewrite sucessful! 😃');
-        } else {
-          await this.formatAndWrite(
-            path.join(this.opt.fileReplaceDist, path.basename(fileOrDir)),
-            file
-          );
-          console.log(
-            fileOrDir +
-              ' write to ' +
-              this.opt.fileReplaceDist +
-              ' sucessful! 😃'
-          );
-        }
-      })
-    );
+      const fileReplaceInfo = new FileReplacer(
+        fileOrDir,
+        this,
+        this.opt,
+        fs.readFileSync(fileOrDir, 'utf-8')
+      );
+      const file = fileReplaceInfo.replace();
+      if (!file) {
+        return;
+      }
+
+      if (this.opt.fileReplaceOverwirte) {
+        this.formatAndWrite(fileOrDir, file);
+        console.log(fileOrDir + ' rewrite sucessful! 😃');
+      } else {
+        this.formatAndWrite(
+          path.join(this.opt.fileReplaceDist, path.basename(fileOrDir)),
+          file
+        );
+        console.log(
+          fileOrDir + ' write to ' + this.opt.fileReplaceDist + ' sucessful! 😃'
+        );
+      }
+    });
   }
 }

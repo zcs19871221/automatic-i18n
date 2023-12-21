@@ -6,18 +6,18 @@ import { InputOption, Opt } from './types';
 import { ScriptTarget } from 'typescript';
 
 export class LocaleReplacer {
-  public static async replace(opt: InputOption) {
+  public static replace(opt: InputOption) {
     try {
       console.time('usedTime');
       let tsTarget = opt.tsTarget;
       if (
         !tsTarget &&
-        (await fs.exists(path.join(opt.projectDir, 'tsconfig.json')))
+        fs.existsSync(path.join(opt.projectDir, 'tsconfig.json'))
       ) {
         const tsConfig =
-          (await fs.readJson(path.join(opt.projectDir, 'tsconfig.json'), {
+          fs.readJsonSync(path.join(opt.projectDir, 'tsconfig.json'), {
             throws: false,
-          })) ?? {};
+          }) ?? {};
         tsTarget = ScriptTarget[tsConfig?.compilerOptions?.target] as any;
         if (tsTarget) {
           console.log(
@@ -30,7 +30,7 @@ export class LocaleReplacer {
       let prettierConfig = opt.prettierConfig;
       if (
         !prettierConfig &&
-        (await fs.exists(path.join(opt.projectDir, '.prettierrc.js')))
+        fs.existsSync(path.join(opt.projectDir, '.prettierrc.js'))
       ) {
         try {
           prettierConfig = require(path.join(opt.projectDir, '.prettierrc.js'));
@@ -57,7 +57,7 @@ export class LocaleReplacer {
         replaceOpt.localesToGenerate.push(replaceOpt.localeToReplace);
       }
       const replaceBundle = new BundleReplacer(replaceOpt);
-      await replaceBundle.replace();
+      replaceBundle.replace();
       console.timeEnd('usedTime');
     } catch (error) {
       console.error(error);
