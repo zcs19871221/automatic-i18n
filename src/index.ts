@@ -33,7 +33,11 @@ export class LocaleReplacer {
         fs.existsSync(path.join(opt.projectDir, '.prettierrc.js'))
       ) {
         try {
-          prettierConfig = require(path.join(opt.projectDir, '.prettierrc.js'));
+          const prettierConfigPath = path.join(
+            opt.projectDir,
+            '.prettierrc.js'
+          );
+          prettierConfig = require(prettierConfigPath);
           console.log(
             'use prettierConfig:' +
               JSON.stringify(prettierConfig, null, 2) +

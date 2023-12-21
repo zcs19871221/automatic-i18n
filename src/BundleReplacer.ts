@@ -67,7 +67,7 @@ export class BundleReplacer {
     fs.ensureDirSync(this.langDir);
     const defaultLocaleNaming = this.camel(this.opt.localeToReplace);
 
-    this.opt.localesToGenerate.map((name) => {
+    this.opt.localesToGenerate.forEach((name) => {
       const localeFile = path.join(this.langDir, `${name}.ts`);
       let keyMappingText: Record<string, string> =
         this.parseLocaleTsFile(localeFile);
@@ -175,11 +175,10 @@ export type Locales = {
   private formatAndWrite(dist: string, file: string) {
     if (this.opt.prettierConfig) {
       try {
-        file = prettier.format(file, {
-          singleQuote: true,
-          trailingComma: 'es5',
-        });
-      } catch {}
+        file = prettier.format(file, this.opt.prettierConfig);
+      } catch (error) {
+        console.warn(error);
+      }
     }
 
     return fs.writeFileSync(dist, file);
@@ -270,10 +269,10 @@ export type Locales = {
       }
 
       if (this.opt.fileReplaceOverwirte) {
-        this.formatAndWrite(fileOrDir, file);
+        fs.writeFileSync(fileOrDir, file);
         console.log(fileOrDir + ' rewrite sucessful! 😃');
       } else {
-        this.formatAndWrite(
+        fs.writeFileSync(
           path.join(this.opt.fileReplaceDist, path.basename(fileOrDir)),
           file
         );
