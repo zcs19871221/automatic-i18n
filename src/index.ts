@@ -8,6 +8,7 @@ import { ScriptTarget } from 'typescript';
 export class LocaleReplacer {
   public static async replace(opt: InputOption) {
     try {
+      console.time('usedTime');
       let tsTarget = opt.tsTarget;
       if (
         !tsTarget &&
@@ -40,6 +41,9 @@ export class LocaleReplacer {
           );
         } catch {}
       }
+      if (prettierConfig && !prettierConfig.parser) {
+        prettierConfig.parser = 'typescript';
+      }
 
       const replaceOpt: Opt = {
         ...opt,
@@ -53,7 +57,8 @@ export class LocaleReplacer {
         replaceOpt.localesToGenerate.push(replaceOpt.localeToReplace);
       }
       const replaceBundle = new BundleReplacer(replaceOpt);
-      return await replaceBundle.replace();
+      await replaceBundle.replace();
+      console.timeEnd('usedTime');
     } catch (error) {
       console.error(error);
     }
