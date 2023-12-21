@@ -37,7 +37,7 @@ export class BundleReplacer {
 
     await this.replaceAllFiles();
 
-    await this.handleStaticTemplate();
+    await this.generateLocaleFiles();
 
     this.warnings.forEach((warn) => {
       console.warn(warn);
@@ -61,9 +61,10 @@ export class BundleReplacer {
 
   public warnings: Set<string> = new Set();
 
-  private async handleStaticTemplate() {
+  private async generateLocaleFiles() {
     let textKeys: null | string[] = null;
 
+    await fs.ensureDir(this.langDir);
     const defaultLocaleNaming = this.camel(this.opt.localeToReplace);
     await Promise.all(
       this.opt.localesToGenerate.map(async (name) => {
