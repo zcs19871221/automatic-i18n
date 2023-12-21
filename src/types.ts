@@ -1,3 +1,5 @@
+import { ScriptTarget } from 'typescript';
+
 export type localeTypes =
   | 'af'
   | 'sq'
@@ -179,8 +181,10 @@ export type Opt = (
   readonly importPath: string;
   readonly filesOrDirsToReplace: string[];
   locales: localeTypes[];
+  defaultLocale: localeTypes;
   localeToSearch: localeTypes;
   filter?: (fileName: string) => boolean;
+  tsTarget: ScriptTarget;
 } & (
     | {
         debug: boolean;

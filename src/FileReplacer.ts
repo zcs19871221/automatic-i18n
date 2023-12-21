@@ -5,7 +5,15 @@ import { SyntaxKind, TemplateExpression } from 'typescript';
 import { BundleReplacer } from './BundleReplacer';
 import { Opt } from './types';
 
+interface Warning {
+  start: number;
+  end: number;
+  text: string;
+}
+
 export class FileReplacer {
+  private static ignoreWarningKey = '@ignore';
+
   constructor(
     private readonly fileLocate: string,
     private readonly bundleReplacer: BundleReplacer,
@@ -18,7 +26,7 @@ export class FileReplacer {
     try {
       this.extractLocales();
       this.replaceLocalesIfExists();
-    } catch (error) {
+    } catch (error: any) {
       if (error.message) {
         error.message = '@ ' + this.fileLocate + ' ' + error.message;
       }
@@ -28,9 +36,11 @@ export class FileReplacer {
     }
   }
 
-  private static exportName = 'Locales';
+  private static exportName = 'i18';
 
-  public static localeMapToken: string = `${FileReplacer.exportName}.`;
+  private static localesProperty = 'locales';
+
+  public static localeMapToken: string = `${FileReplacer.exportName}.${FileReplacer.localesProperty}.`;
 
   private createImportStatement() {
     return `import { ${FileReplacer.exportName} } from '${this.opt.importPath}';\n`;
@@ -58,36 +68,34 @@ export class FileReplacer {
     if (!this.includesTargetLocale(localeToSearch)) {
       return;
     }
+
+    const push = (startPos: number, endPos: number, text: string) => {
+      let textKey = this.bundleReplacer.getOrSetLocaleTextKeyIfAbsence(text);
+      textKey = formatter(textKey);
+
+      this.positionToReplace.push({
+        startPos,
+        endPos,
+        newText: textKey,
+      });
+    };
     if (needTrim) {
-      const needTrimStart = localeToSearch.match(/^[^\u4e00-\u9fa5a-zA-Z\d]+/);
-      const needTrimEnd = localeToSearch.match(/[^\u4e00-\u9fa5a-zA-Z\d]+$/);
-      if (needTrimStart !== null) {
-        localeToSearch = localeToSearch.slice(needTrimStart[0].length);
-        start = start + needTrimStart[0].length;
-      }
-      if (needTrimEnd !== null) {
-        localeToSearch = localeToSearch.slice(
-          0,
-          localeToSearch.length - needTrimEnd[0].length
-        );
-        end = end - needTrimEnd[0].length;
-      }
+      localeToSearch.replace(
+        /(?:\d+)?[\u4e00-\u9fa5]+/g,
+        (matched: string, index: number) => {
+          push(start + index, start + index + matched.length, matched);
+          return '';
+        }
+      );
+    } else {
+      push(start, end, localeToSearch);
     }
-
-    let textKey =
-      this.bundleReplacer.getOrSetLocaleTextKeyIfAbsence(localeToSearch);
-    textKey = formatter(textKey);
-
-    this.positionToReplace.push({
-      startPos: start,
-      endPos: end,
-      newText: textKey,
-    });
   }
 
   private targetLocaleReg() {
     return /[\u4e00-\u9fa5]+/g;
   }
+
   private includesTargetLocale(text: string) {
     return this.targetLocaleReg().test(text);
   }
@@ -103,7 +111,7 @@ export class FileReplacer {
     const sourceFile = ts.createSourceFile(
       this.fileLocate,
       this.file,
-      ts.ScriptTarget.ES2015,
+      this.opt.tsTarget,
       true
     );
     this.traverseAstAndExtractLocales(sourceFile);
@@ -130,7 +138,17 @@ export class FileReplacer {
     });
 
     if (!hasImportedI18nModules) {
-      this.file = this.createImportStatement() + this.file;
+      const tsNocheckMatched = this.file.match(
+        /(\n|^)\/\/\s*@ts-nocheck[^\n]*\n/
+      );
+      const insertIndex =
+        tsNocheckMatched === null
+          ? 0
+          : (tsNocheckMatched.index ?? 0) + tsNocheckMatched[0].length;
+      this.file =
+        this.file.slice(0, insertIndex) +
+        this.createImportStatement() +
+        this.file.slice(insertIndex);
     }
 
     if (this.opt.fileReplaceOverwirte) {
@@ -151,19 +169,65 @@ export class FileReplacer {
   }
 
   private removeTextVariableSymobl(text: string) {
-    return text.replace(/(^['"`])|(['"]$)/g, '');
+    return text.replace(/^['"`]/, '').replace(/['"`]$/, '');
   }
 
   private textKeyAddJsxVariableBacket(textKey: string) {
     return '{' + textKey + '}';
   }
 
+  private ignoreSpeicalCase(text: string) {
+    const specail = [
+      '实际值',
+      '预测值',
+      '店',
+      '设备',
+      '预测误差上限',
+      '安装日期',
+      '采购金额',
+      '产品描述',
+      '生产厂商',
+      '采购日期',
+      '咖啡机1',
+      '咖啡机2',
+      '咖啡机3',
+    ];
+    return specail.some((s) => text.includes(s));
+  }
+
   private traverseAstAndExtractLocales(node: ts.Node) {
+    if (!this.includesTargetLocale(node.getText())) {
+      return;
+    }
+
     switch (node.kind) {
       // 字符串字面量: "你好" '大家' 以及jsx中的属性常量: <div name="张三"/>
       case SyntaxKind.StringLiteral:
         {
-          if (node.parent.kind === ts.SyntaxKind.ImportDeclaration) {
+          // 跳过import
+          if (node.parent?.kind === ts.SyntaxKind.ImportDeclaration) {
+            return;
+          }
+          // 跳过equal判断 type === '店' 和 includes判断
+          if (
+            this.stringLiteralIsInEqualBLock(node) ||
+            this.stringLiteralIsChildOfIncludeBlock(node)
+          ) {
+            if (
+              !this.ignoreWarning(node) &&
+              !this.ignoreWarning(node.parent) &&
+              !this.ignoreSpeicalCase(node.getText())
+            ) {
+              this.addWarningInfo({
+                text:
+                  'do not use locale literal to do [===] or [includes], maybe an error! use /* ' +
+                  FileReplacer.ignoreWarningKey +
+                  ' */ after text to ignore warning or refactor code!',
+                start: node.getStart(),
+                end: node.getEnd(),
+              });
+            }
+
             return;
           }
           this.pushPositionIfTargetLocale({
@@ -211,14 +275,14 @@ export class FileReplacer {
           {
             start: template.head.getStart(),
             end: template.head.getEnd(),
-            targetLocaleMaybe: template.head.rawText,
+            targetLocaleMaybe: template.head.rawText ?? '',
           },
         ];
 
         template.templateSpans.forEach((templateSpan) => {
           literalTextNodes.push({
             start: templateSpan.getStart(),
-            targetLocaleMaybe: templateSpan.literal.rawText,
+            targetLocaleMaybe: templateSpan.literal.rawText ?? '',
             end: templateSpan.getEnd(),
           });
         });
@@ -240,7 +304,63 @@ export class FileReplacer {
         });
         break;
       }
+      case SyntaxKind.Identifier: {
+        if (
+          this.opt.localeToSearch !== 'en-us' &&
+          this.includesTargetLocale(node.getText()) &&
+          !this.ignoreWarning(node) &&
+          !this.ignoreSpeicalCase(node.getText())
+        ) {
+          this.addWarningInfo({
+            text: 'property name of object should be english',
+            start: node.getStart(),
+            end: node.getEnd(),
+          });
+        }
+        break;
+      }
     }
     ts.forEachChild(node, (n) => this.traverseAstAndExtractLocales(n));
+  }
+
+  private ignoreWarning(node: ts.Node) {
+    return node.parent?.getFullText().includes(FileReplacer.ignoreWarningKey);
+  }
+  private addWarningInfo({ start, end, text }: Warning) {
+    this.bundleReplacer.warnings.push(
+      text +
+        '\nfile at: ' +
+        this.fileLocate +
+        '\ntext: ' +
+        this.file.slice(Math.max(0, start - 3), start) +
+        '【' +
+        this.file.slice(start, end) +
+        '】' +
+        this.file.slice(end + 1, end + 4) +
+        '\n'
+    );
+  }
+
+  private stringLiteralIsChildOfIncludeBlock(node: ts.Node) {
+    if (
+      node.parent?.kind === SyntaxKind.ArrayLiteralExpression &&
+      node.parent?.parent?.kind === SyntaxKind.PropertyAccessExpression
+    ) {
+      const name = (node.parent?.parent as ts.PropertyAccessExpression)?.name;
+      return name.getText() === 'includes';
+    }
+    return false;
+  }
+
+  private stringLiteralIsInEqualBLock(node: ts.Node) {
+    if (node.parent?.kind === ts.SyntaxKind.BinaryExpression) {
+      const expression = node.parent as ts.BinaryExpression;
+
+      return (
+        expression.operatorToken.kind === SyntaxKind.EqualsEqualsToken ||
+        expression.operatorToken.kind === SyntaxKind.EqualsEqualsEqualsToken
+      );
+    }
+    return false;
   }
 }

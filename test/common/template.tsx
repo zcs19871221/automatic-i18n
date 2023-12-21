@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-curly-brace-presence */
 /* eslint-disable no-console */
-//@ts-ignore
+// @ts-nocheck
 import React from 'react';
 //@ts-ignore
 // import file from './报告.doc'
@@ -18,7 +18,7 @@ export const App = ({
   const nested1 = `${`  sffds你好${name}哈哈${
     gender ? '好的' : '不好'
   }为什么`}北京大学`;
-  const nested2 = `${gender === '男' ? '真是男的' : `你好${name}哈哈`}北京大学`;
+  const nested2 = `${gender === '男' /* @ignore */ ? '真是男的' : `你好${name}哈哈`}北京大学`;
   const school = `北京${name}大学`;
   const school1 = `${name}北京大学`;
 
@@ -34,6 +34,7 @@ export const App = ({
   const flag2 = true;
   const x = `和\``;
   const noVariable = ` sfdsfds你好dsffds你好`;
+
   console.log(gender, school, school1, school2, obj, nested1, nested2);
   return (
     <div
