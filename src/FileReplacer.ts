@@ -37,9 +37,11 @@ export class FileReplacer {
 
   private static exportName = 'i18';
 
-  private static localesProperty = 'locales';
+  private static property = 'intl';
 
-  public static localeMapToken: string = `${FileReplacer.exportName}.${FileReplacer.localesProperty}.`;
+  public static localeMapToken(key: string) {
+    return `${FileReplacer.exportName}.${FileReplacer.property}.formatMessage({id: '${key}'})`;
+  }
 
   private createImportStatement() {
     return `import { ${FileReplacer.exportName} } from '${this.opt.importPath}';\n`;
@@ -120,7 +122,7 @@ export class FileReplacer {
     }
 
     const hasImportedI18nModules = this.file.includes(
-      FileReplacer.localeMapToken
+      FileReplacer.exportName + '.' + FileReplacer.property
     );
     this.positionToReplace.sort((a, b) => b.startPos - a.startPos);
     let prevStart: number | null = null;

@@ -56,7 +56,7 @@ export class BundleReplacer {
       this.localeTextMappingKey[localeText] = textKey;
     }
 
-    return FileReplacer.localeMapToken + textKey;
+    return FileReplacer.localeMapToken(textKey);
   }
 
   public warnings: Set<string> = new Set();
