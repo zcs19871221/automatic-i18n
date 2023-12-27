@@ -1,15 +1,14 @@
-import { run as commonRun, expectDirEqualDistDirAt } from '../helper';
-import * as path from 'path';
+import { runAndExpect } from '../helper';
 
 const originWarn = console.warn;
 
-it('should show warnings text correctly', async () => {
+it('should show warnings text correctly', () => {
   let warnText = '';
   console.warn = (text) => {
     warnText += text;
   };
 
-  await commonRun(__dirname);
+  runAndExpect('warning');
   expect(warnText).toMatch(`【'发'】`);
   expect(warnText).toMatch(`【'好'】`);
   expect(warnText).toMatch(`【'你'】`);
@@ -21,6 +20,4 @@ it('should show warnings text correctly', async () => {
   expect(warnText).toMatch(`【最近30天】`);
 
   console.warn = originWarn;
-
-  expectDirEqualDistDirAt(path.basename(__dirname));
 });

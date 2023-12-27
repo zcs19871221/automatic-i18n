@@ -7,13 +7,21 @@ if (variable === '发') {
 if ('好' === variable) {
 }
 
-if ('忽略' /* @ignore */ === variable) {
+if (/* @ignore */ '忽略' === variable) {
 }
 
 ['你', variable, '大'].includes(variable);
-['他' /* @ignore */].includes(variable);
+[/* @ignore */ '他'].includes(variable);
 
-const days = [i18.locales.key0001, i18.locales.key0002, i18.locales.key0003, i18.locales.key0004];
+const days = [
+  i18.intl.formatMessage({ id: 'key0001' }),
+  i18.intl.formatMessage({ id: 'key0002' }),
+  i18.intl.formatMessage({ id: 'key0003' }),
+  i18.intl.formatMessage({ id: 'key0004' }),
+];
+
+const willBeSkip = /* @ignore */ '忽略';
+const notSkip = i18.intl.formatMessage({ id: 'key0005' });
 
 const obj = {
   今天 /* @ignore */: [moment(), moment()],

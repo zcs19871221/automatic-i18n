@@ -194,9 +194,18 @@ export class FileReplacer {
     let textPattern = '';
     let start = current.start + startTag.length;
     const variables: Record<string, string> = {};
-    current?.replaceHoders.forEach((c, index) => {
+    const paramValues = current.replaceHoders
+      .map((holder) => holder.paramValue)
+      .reduce((valueMapKey: Record<string, string>, value) => {
+        if (!valueMapKey[value]) {
+          valueMapKey[value] = 'v' + (Object.keys(valueMapKey).length + 1);
+        }
+        return valueMapKey;
+      }, {});
+
+    current.replaceHoders.forEach((c, index) => {
       textPattern += this.file.slice(start, c.start);
-      const paramName = 'v' + (index + 1);
+      const paramName = paramValues[c.paramValue];
       variables[paramName] = c.paramValue;
       textPattern += '{' + paramName + '}';
       start = c.end;
@@ -253,7 +262,6 @@ export class FileReplacer {
   private hasImportedI18nModules: boolean = false;
 
   private traverseAstAndExtractLocales(node: ts.Node) {
-    console.log(node.kind, SyntaxKind[node.kind], node.getText());
     switch (node.kind) {
       // 判断是否引入i18
       case SyntaxKind.ImportDeclaration: {
@@ -321,8 +329,20 @@ export class FileReplacer {
         if (!this.includesTargetLocale(node.getText())) {
           return;
         }
-        let newText = this.generateNewText({
-          localeTextOrPattern: node.getText(),
+        let start = node.getStart();
+        let end = node.getEnd();
+        let newText = node
+          .getText()
+          .replace(/^[\s\n]+/, (_m) => {
+            start += _m.length;
+            return '';
+          })
+          .replace(/[\s\n]+$/, (_m) => {
+            end -= _m.length;
+            return '';
+          });
+        newText = this.generateNewText({
+          localeTextOrPattern: newText,
         });
         newText = this.textKeyAddJsxVariableBacket(newText);
         this.positionToReplace.push({

@@ -6,13 +6,16 @@ if (variable === '发') {
 if ('好' === variable) {
 }
 
-if ('忽略' /* @ignore */ === variable) {
+if (/* @ignore */ '忽略' === variable) {
 }
 
 ['你', variable, '大'].includes(variable);
-['他' /* @ignore */].includes(variable);
+[/* @ignore */ '他'].includes(variable);
 
 const days = ['7月1日', '7月5日', '7月6日', '7月8日'];
+
+const willBeSkip = /* @ignore */ '忽略';
+const notSkip = '忽略';
 
 const obj = {
   今天 /* @ignore */: [moment(), moment()],

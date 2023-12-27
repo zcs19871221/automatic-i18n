@@ -1,7 +1,5 @@
-import { run as commonRun, expectDirEqualDistDirAt } from '../helper';
-import * as path from 'path';
+import { runAndExpect } from '../helper';
 
-it('should extract successful', async () => {
-  await commonRun(__dirname);
-  expectDirEqualDistDirAt(path.basename(__dirname));
+it('should extract successful', () => {
+  runAndExpect('common');
 });

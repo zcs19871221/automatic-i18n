@@ -5,8 +5,9 @@
 import { Locales } from './zh-cn';
 
 export const locales: Locales = {
-  key0001: '里面{v1}',
-  key0002: '你好',
-  key0003: '不好',
-  key0004: 'fsffdsfd{v1}你好呀{v2}哈哈{v3}ffff{v4}{v5}xz{v2}',
+  key0001: '一开始12342142',
+  key0002: '中间',
+  key0003: '{v1}末班{v1}车',
+  key0004: '哈哈',
+  key0005: '你好呀',
 };
