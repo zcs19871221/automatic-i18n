@@ -17,12 +17,10 @@ interface Position {
 interface TemplateString {
   start: number;
   end: number;
-  type: 'template' | 'variable';
   replaceHoders: {
     start: number;
     end: number;
     paramValue: string;
-    type: 'template' | 'variable';
   }[];
 }
 export class FileReplacer {
@@ -167,15 +165,15 @@ export class FileReplacer {
 
   private handleTemplateSpan(node: ts.TemplateSpan) {
     const first = node.getChildren()[0];
-
+    const startSymbol = '${';
+    const endSymbol = '}';
     this.templateStrings.push({
-      start: node.getStart() - '${'.length,
-      end: first.getEnd() + '}'.length,
+      start: this.file.lastIndexOf(startSymbol, node.getStart()),
+      end: this.file.indexOf(endSymbol, first.getEnd()) + endSymbol.length,
       replaceHoders: [],
-      type: 'variable',
     });
     ts.forEachChild(node, (n) => this.traverseAstAndExtractLocales(n));
-    this.popStack();
+    this.handleVariablePop();
   }
 
   private handleTemplate(node: ts.TemplateExpression) {
@@ -183,20 +181,16 @@ export class FileReplacer {
       start: node.getStart(),
       end: node.getEnd(),
       replaceHoders: [],
-      type: 'template',
     });
     ts.forEachChild(node, (n) => this.traverseAstAndExtractLocales(n));
-    this.popStack();
+    this.handleTemplatePop();
   }
 
-  private popStack() {
+  private handleTemplatePop() {
     const current = this.templateStrings.pop()!;
-    let startTag = '`';
-    let endTag = '`';
-    if (current.type === 'variable') {
-      startTag = '${';
-      endTag = '}';
-    }
+    const startTag = '`';
+    const endTag = '`';
+
     let textPattern = '';
     let start = current.start + startTag.length;
     const variables: Record<string, string> = {};
@@ -204,23 +198,14 @@ export class FileReplacer {
       textPattern += this.file.slice(start, c.start);
       const paramName = 'v' + (index + 1);
       variables[paramName] = c.paramValue;
-      if (c.type === 'template') {
-        textPattern += c.paramValue;
-      } else {
-        textPattern += '{' + paramName + '}';
-      }
+      textPattern += '{' + paramName + '}';
       start = c.end;
     });
     textPattern += this.file.slice(start, current.end - endTag.length);
 
-    let paramValue = '';
-    if (current.type === 'template') {
-      const textKey =
-        this.bundleReplacer.getOrSetLocaleTextKeyIfAbsence(textPattern);
-      paramValue = FileReplacer.localeMapToken(textKey, variables);
-    } else {
-      paramValue = textPattern;
-    }
+    const textKey =
+      this.bundleReplacer.getOrSetLocaleTextKeyIfAbsence(textPattern);
+    const paramValue = FileReplacer.localeMapToken(textKey, variables);
 
     const prev = this.peek();
 
@@ -229,7 +214,6 @@ export class FileReplacer {
         start: current.start,
         end: current.end,
         paramValue,
-        type: current.type,
       });
     } else {
       this.positionToReplace.push({
@@ -238,6 +222,32 @@ export class FileReplacer {
         newText: paramValue,
       });
     }
+  }
+
+  private handleVariablePop() {
+    const current = this.templateStrings.pop()!;
+    const startTag = '${';
+    const endTag = '}';
+
+    let paramValue = '';
+    let start = current.start + startTag.length;
+    current?.replaceHoders.forEach((c, index) => {
+      paramValue += this.file.slice(start, c.start);
+      paramValue += c.paramValue;
+      start = c.end;
+    });
+    paramValue += this.file.slice(start, current.end - endTag.length);
+
+    const prev = this.peek();
+    if (!prev) {
+      throw new Error('TemplateSpan should have a templateExpression');
+    }
+
+    prev.replaceHoders.push({
+      start: current.start,
+      end: current.end,
+      paramValue,
+    });
   }
 
   private hasImportedI18nModules: boolean = false;
@@ -290,11 +300,20 @@ export class FileReplacer {
           if (node.parent.kind === SyntaxKind.JsxAttribute) {
             newText = this.textKeyAddJsxVariableBacket(newText);
           }
-          this.positionToReplace.push({
-            start: node.getStart(),
-            end: node.getEnd(),
-            newText,
-          });
+          const stackItem = this.peek();
+          if (stackItem !== null) {
+            stackItem.replaceHoders.push({
+              start: node.getStart(),
+              end: node.getEnd(),
+              paramValue: newText,
+            });
+          } else {
+            this.positionToReplace.push({
+              start: node.getStart(),
+              end: node.getEnd(),
+              newText,
+            });
+          }
         }
         break;
       // html文本标签中字面量<div>大家好</div>

@@ -15,6 +15,6 @@
     "experimentalDecorators": true,
     "module": "CommonJS"
   },
-  "include": ["./src/*.ts", "./src/run/*.ts"],
-  "exclude": ["./test/**/*.ts", "./src/static-template/**/*.ts"]
+  "include": ["./src/**/*.ts"],
+  "exclude": ["./test/**/*.ts"]
 }

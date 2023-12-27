@@ -4,7 +4,7 @@
  */
 export const locales = {
   key0001: '里面{v1}',
-  key0002: 'fsffdsfd{v1}你好呀{v2}哈哈{v3}ffff',
+  key0002: 'fsffdsfd{v1}你好呀{v2}哈哈{v3}ffff{v4}{v5}',
 } as const;
 
 export type LocalKey = keyof typeof locales;
