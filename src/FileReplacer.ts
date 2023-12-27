@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import { SyntaxKind, TemplateExpression } from 'typescript';
+import { ImportDeclaration, SyntaxKind } from 'typescript';
 import { BundleReplacer } from './BundleReplacer';
 import { Opt } from './types';
 
@@ -8,7 +8,23 @@ interface Warning {
   end: number;
   text: string;
 }
+interface Position {
+  start: number;
+  end: number;
+  newText: string;
+}
 
+interface TemplateString {
+  start: number;
+  end: number;
+  type: 'template' | 'variable';
+  replaceHoders: {
+    start: number;
+    end: number;
+    paramValue: string;
+    type: 'template' | 'variable';
+  }[];
+}
 export class FileReplacer {
   private static ignoreWarningKey = '@ignore';
 
@@ -39,58 +55,39 @@ export class FileReplacer {
 
   private static property = 'intl';
 
-  public static localeMapToken(key: string) {
-    return `${FileReplacer.exportName}.${FileReplacer.property}.formatMessage({id: '${key}'})`;
+  public static localeMapToken(key: string, map?: Record<string, string>) {
+    let params = '';
+    if (map) {
+      params += ',';
+      params +=
+        Object.entries<string>(map).reduce((text: string, [key, value]) => {
+          if (key === value) {
+            return text + key + ',';
+          } else {
+            return text + `${key}: ${value}` + ',';
+          }
+        }, '{') + '}';
+    }
+    return `${FileReplacer.exportName}.${FileReplacer.property}.formatMessage({id: '${key}'}${params})`;
   }
 
   private createImportStatement() {
     return `import { ${FileReplacer.exportName} } from '${this.opt.importPath}';\n`;
   }
 
-  private positionToReplace: {
-    startPos: number;
-    endPos: number;
-    newText: string;
-  }[] = [];
+  private positionToReplace: Position[] = [];
 
-  private pushPositionIfTargetLocale({
-    start,
-    end,
-    localeToSearch,
-    needTrim,
-    formatter = (textKey: string) => textKey,
+  private generateNewText({
+    localeTextOrPattern,
+    params,
   }: {
-    start: number;
-    end: number;
-    needTrim: boolean;
-    localeToSearch: string;
-    formatter?: (textKey: string) => string;
+    localeTextOrPattern: string;
+    params?: Record<string, string>;
   }) {
-    if (!this.includesTargetLocale(localeToSearch)) {
-      return;
-    }
+    const localeKey =
+      this.bundleReplacer.getOrSetLocaleTextKeyIfAbsence(localeTextOrPattern);
 
-    const push = (startPos: number, endPos: number, text: string) => {
-      let textKey = this.bundleReplacer.getOrSetLocaleTextKeyIfAbsence(text);
-      textKey = formatter(textKey);
-
-      this.positionToReplace.push({
-        startPos,
-        endPos,
-        newText: textKey,
-      });
-    };
-    if (needTrim) {
-      localeToSearch.replace(
-        /(?:\d+)?[\u4e00-\u9fa5]+/g,
-        (matched: string, index: number) => {
-          push(start + index, start + index + matched.length, matched);
-          return '';
-        }
-      );
-    } else {
-      push(start, end, localeToSearch);
-    }
+    return FileReplacer.localeMapToken(localeKey, params);
   }
 
   private targetLocaleReg() {
@@ -121,22 +118,21 @@ export class FileReplacer {
       return null;
     }
 
-    const hasImportedI18nModules = this.file.includes(
-      FileReplacer.exportName + '.' + FileReplacer.property
-    );
-    this.positionToReplace.sort((a, b) => b.startPos - a.startPos);
+    this.positionToReplace.sort((a, b) => b.start - a.start);
     let prevStart: number | null = null;
-    this.positionToReplace.forEach(({ startPos, endPos, newText }) => {
-      if (prevStart === null) {
-        prevStart = startPos;
-      } else if (endPos >= prevStart) {
-        throw new Error(`error parse at ${prevStart}`);
+    this.positionToReplace.forEach(
+      ({ start: startPos, end: endPos, newText }) => {
+        if (prevStart === null) {
+          prevStart = startPos;
+        } else if (endPos >= prevStart) {
+          throw new Error(`error parse at ${prevStart}`);
+        }
+        this.file =
+          this.file.slice(0, startPos) + newText + this.file.slice(endPos);
       }
-      this.file =
-        this.file.slice(0, startPos) + newText + this.file.slice(endPos);
-    });
+    );
 
-    if (!hasImportedI18nModules) {
+    if (!this.hasImportedI18nModules) {
       const tsNocheckMatched = this.file.match(
         /(\n|^)\/\/\s*@ts-nocheck[^\n]*\n/
       );
@@ -160,15 +156,112 @@ export class FileReplacer {
     return '{' + textKey + '}';
   }
 
-  private traverseAstAndExtractLocales(node: ts.Node) {
-    if (!this.includesTargetLocale(node.getText())) {
-      return;
+  private templateStrings: TemplateString[] = [];
+
+  private peek() {
+    if (this.templateStrings.length > 0) {
+      return this.templateStrings[this.templateStrings.length - 1];
+    }
+    return null;
+  }
+
+  private handleTemplateSpan(node: ts.TemplateSpan) {
+    const first = node.getChildren()[0];
+
+    this.templateStrings.push({
+      start: node.getStart() - '${'.length,
+      end: first.getEnd() + '}'.length,
+      replaceHoders: [],
+      type: 'variable',
+    });
+    ts.forEachChild(node, (n) => this.traverseAstAndExtractLocales(n));
+    this.popStack();
+  }
+
+  private handleTemplate(node: ts.TemplateExpression) {
+    this.templateStrings.push({
+      start: node.getStart(),
+      end: node.getEnd(),
+      replaceHoders: [],
+      type: 'template',
+    });
+    ts.forEachChild(node, (n) => this.traverseAstAndExtractLocales(n));
+    this.popStack();
+  }
+
+  private popStack() {
+    const current = this.templateStrings.pop()!;
+    let startTag = '`';
+    let endTag = '`';
+    if (current.type === 'variable') {
+      startTag = '${';
+      endTag = '}';
+    }
+    let textPattern = '';
+    let start = current.start + startTag.length;
+    const variables: Record<string, string> = {};
+    current?.replaceHoders.forEach((c, index) => {
+      textPattern += this.file.slice(start, c.start);
+      const paramName = 'v' + (index + 1);
+      variables[paramName] = c.paramValue;
+      if (c.type === 'template') {
+        textPattern += c.paramValue;
+      } else {
+        textPattern += '{' + paramName + '}';
+      }
+      start = c.end;
+    });
+    textPattern += this.file.slice(start, current.end - endTag.length);
+
+    let paramValue = '';
+    if (current.type === 'template') {
+      const textKey =
+        this.bundleReplacer.getOrSetLocaleTextKeyIfAbsence(textPattern);
+      paramValue = FileReplacer.localeMapToken(textKey, variables);
+    } else {
+      paramValue = textPattern;
     }
 
+    const prev = this.peek();
+
+    if (prev != null) {
+      prev.replaceHoders.push({
+        start: current.start,
+        end: current.end,
+        paramValue,
+        type: current.type,
+      });
+    } else {
+      this.positionToReplace.push({
+        start: current.start,
+        end: current.end,
+        newText: paramValue,
+      });
+    }
+  }
+
+  private hasImportedI18nModules: boolean = false;
+
+  private traverseAstAndExtractLocales(node: ts.Node) {
+    console.log(node.kind, SyntaxKind[node.kind], node.getText());
     switch (node.kind) {
+      // 判断是否引入i18
+      case SyntaxKind.ImportDeclaration: {
+        const importNode = node as ImportDeclaration;
+        if (
+          importNode.moduleSpecifier.getText().includes(this.opt.importPath) &&
+          importNode.importClause?.getText().includes(FileReplacer.exportName)
+        ) {
+          this.hasImportedI18nModules = true;
+        }
+        break;
+      }
       // 字符串字面量: "你好" '大家' 以及jsx中的属性常量: <div name="张三"/>
       case SyntaxKind.StringLiteral:
         {
+          if (!this.includesTargetLocale(node.getText())) {
+            return;
+          }
           // 跳过import
           if (node.parent?.kind === ts.SyntaxKind.ImportDeclaration) {
             return;
@@ -191,80 +284,62 @@ export class FileReplacer {
             });
             return;
           }
-          this.pushPositionIfTargetLocale({
+          let newText = this.generateNewText({
+            localeTextOrPattern: this.removeTextVariableSymobl(node.getText()),
+          });
+          if (node.parent.kind === SyntaxKind.JsxAttribute) {
+            newText = this.textKeyAddJsxVariableBacket(newText);
+          }
+          this.positionToReplace.push({
             start: node.getStart(),
             end: node.getEnd(),
-            localeToSearch: this.removeTextVariableSymobl(node.getText()),
-            formatter: (textKey: string) => {
-              if (node.parent.kind === SyntaxKind.JsxAttribute) {
-                return this.textKeyAddJsxVariableBacket(textKey);
-              }
-              return textKey;
-            },
-            needTrim: false,
+            newText,
           });
         }
         break;
       // html文本标签中字面量<div>大家好</div>
       case SyntaxKind.JsxText:
-        this.pushPositionIfTargetLocale({
+        if (!this.includesTargetLocale(node.getText())) {
+          return;
+        }
+        let newText = this.generateNewText({
+          localeTextOrPattern: node.getText(),
+        });
+        newText = this.textKeyAddJsxVariableBacket(newText);
+        this.positionToReplace.push({
           start: node.getStart(),
           end: node.getEnd(),
-          localeToSearch: node.getText(),
-          formatter: this.textKeyAddJsxVariableBacket,
-          needTrim: true,
+          newText,
         });
         break;
       // 没有变量的模板字符串: `张三`
       case SyntaxKind.FirstTemplateToken: {
-        this.pushPositionIfTargetLocale({
+        if (!this.includesTargetLocale(node.getText())) {
+          return;
+        }
+        this.positionToReplace.push({
           start: node.getStart(),
           end: node.getEnd(),
-          localeToSearch: this.removeTextVariableSymobl(node.getText()),
-          needTrim: false,
+          newText: this.generateNewText({
+            localeTextOrPattern: this.removeTextVariableSymobl(node.getText()),
+          }),
         });
         break;
       }
       // 模板字符串: `${name}张三${gender}李四`
       case ts.SyntaxKind.TemplateExpression: {
-        const template = node as TemplateExpression;
-        const literalTextNodes: {
-          start: number;
-          end: number;
-          targetLocaleMaybe: string;
-        }[] = [
-          {
-            start: template.head.getStart(),
-            end: template.head.getEnd(),
-            targetLocaleMaybe: template.head.rawText ?? '',
-          },
-        ];
-
-        template.templateSpans.forEach((templateSpan) => {
-          literalTextNodes.push({
-            start: templateSpan.getStart(),
-            targetLocaleMaybe: templateSpan.literal.rawText ?? '',
-            end: templateSpan.getEnd(),
-          });
-        });
-
-        literalTextNodes.forEach((l) => {
-          const startOffset = this.file
-            .slice(l.start, l.end)
-            .indexOf(l.targetLocaleMaybe);
-
-          this.pushPositionIfTargetLocale({
-            start: l.start + startOffset,
-            end: l.start + startOffset + l.targetLocaleMaybe.length,
-            localeToSearch: l.targetLocaleMaybe,
-            needTrim: true,
-            formatter(textKey: string) {
-              return '${' + textKey + '}';
-            },
-          });
-        });
-        break;
+        if (!this.includesTargetLocale(node.getText())) {
+          return;
+        }
+        this.handleTemplate(node as ts.TemplateExpression);
+        return;
       }
+      // 模板字符串: `${name}张三${gender}李四`
+      case ts.SyntaxKind.TemplateSpan: {
+        this.handleTemplateSpan(node as ts.TemplateSpan);
+        return;
+      }
+      // 中文对象名警告和template中的变量${name}提取
       case SyntaxKind.Identifier: {
         if (
           this.opt.localeToReplace !== 'en-us' &&

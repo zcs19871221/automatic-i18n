@@ -3,14 +3,10 @@ import * as path from 'path';
 import * as prettier from 'prettier';
 
 import { FileReplacer } from './FileReplacer';
+import { renderEntryFile } from './static-template/entryFile';
+import { renderLocaleFile } from './static-template/localeFile';
 import { Opt } from './types';
 import ts, { PropertyAssignment } from 'typescript';
-
-const notTouchWarning = `/*
- * This file will be add extra properies by automatic program.
- * Don't change export name and don't add extra object here.
- */
-`;
 
 export class BundleReplacer {
   constructor(private readonly opt: Opt) {
@@ -56,16 +52,26 @@ export class BundleReplacer {
       this.localeTextMappingKey[localeText] = textKey;
     }
 
-    return FileReplacer.localeMapToken(textKey);
+    return textKey;
   }
 
   public warnings: Set<string> = new Set();
 
+  public static stringifyObject(obj: Record<string, string>) {
+    return (
+      Object.entries(obj).reduce((content, [key, text]) => {
+        if (key.includes('-')) {
+          key = `'"' + key + '"'`;
+        }
+        content += `  ${key}: '${text}',\n`;
+        return content;
+      }, '{') + '};\n'
+    );
+  }
   private generateLocaleFiles() {
     let textKeys: null | string[] = null;
 
     fs.ensureDirSync(this.langDir);
-    const defaultLocaleNaming = this.camel(this.opt.localeToReplace);
 
     this.opt.localesToGenerate.forEach((name) => {
       const localeFile = path.join(this.langDir, `${name}.ts`);
@@ -99,31 +105,9 @@ export class BundleReplacer {
         );
       }
 
-      const defaultLocale = name === this.opt.localeToReplace;
-      let localePrevContent = notTouchWarning;
-      let localeEndContent = '';
-      if (defaultLocale) {
-        localePrevContent = `const defaultLocales = {\n`;
-        localeEndContent =
-          '};\n' +
-          `
-export type Locales = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key in keyof typeof defaultLocales]: any;
-};\n\nexport const locales: Locales = defaultLocales;`;
-      } else {
-        localePrevContent = `import { Locales } from './${this.opt.localeToReplace}';\n\nexport const locales: Locales = {\n`;
-        localeEndContent = '};\n';
-      }
       return this.formatAndWrite(
         localeFile,
-        Object.entries(keyMappingText).reduce((content, [key, text]) => {
-          if (key.includes('-')) {
-            key = '"' + key + '"';
-          }
-          content += `  ${key}: '${text}',\n`;
-          return content;
-        }, localePrevContent) + localeEndContent
+        renderLocaleFile(name, keyMappingText, this.opt.localeToReplace)
       );
     });
 
@@ -137,39 +121,10 @@ export type Locales = {
       return;
     }
 
-    const otherLocales = this.opt.localesToGenerate.filter(
-      (locale) => locale !== this.opt.localeToReplace
+    this.formatAndWrite(
+      templateDist,
+      renderEntryFile(this.opt.localesToGenerate, this.opt.localeToReplace)
     );
-
-    let templateContent = fs
-      .readFileSync(
-        path.join(process.cwd(), 'src/static-template/index.ts'),
-        'utf-8'
-      )
-      .replace(/zh-cn/g, this.opt.localeToReplace)
-      .replace(/zhCn/g, defaultLocaleNaming);
-    if (otherLocales.length > 0) {
-      templateContent = templateContent
-        .replace('/* othersLocalesImport */', () => {
-          return (
-            otherLocales
-              .map(
-                (l) => `import { locales as ${this.camel(l)} } from './${l}';`
-              )
-              .join('\n') + '\n'
-          );
-        })
-        .replace('/* othersLocalesName */', () => {
-          return ',' + otherLocales.map((l) => `'${l}'`).join(', ');
-        })
-        .replace('/* othersLocalesNameMapping */', () => {
-          return (
-            otherLocales.map((l) => `'${l}': ${this.camel(l)}`).join(',\n') +
-            ',\n'
-          );
-        });
-    }
-    this.formatAndWrite(templateDist, templateContent);
   }
 
   private formatAndWrite(dist: string, file: string) {
@@ -208,17 +163,6 @@ export type Locales = {
     ts.forEachChild(node, (n) => this.parse(n, obj));
   }
 
-  private camel(naming: string) {
-    const splitIndex = naming.indexOf('-');
-    if (splitIndex > -1) {
-      return (
-        naming.slice(0, splitIndex) +
-        naming[splitIndex + 1].toUpperCase() +
-        naming.slice(splitIndex + 2)
-      );
-    }
-    return naming;
-  }
   private localeTextMappingKey: Record<string, string> = {};
 
   private key: number = 1;
@@ -269,10 +213,10 @@ export type Locales = {
       }
 
       if (this.opt.fileReplaceOverwirte) {
-        fs.writeFileSync(fileOrDir, file);
+        this.formatAndWrite(fileOrDir, file);
         console.log(fileOrDir + ' rewrite sucessful! 😃');
       } else {
-        fs.writeFileSync(
+        this.formatAndWrite(
           path.join(this.opt.fileReplaceDist, path.basename(fileOrDir)),
           file
         );

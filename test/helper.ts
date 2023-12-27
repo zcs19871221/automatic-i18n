@@ -26,15 +26,14 @@ export const expectDirEqualDistDirAt = (dir: string) => {
   doEqual(expectDir);
 };
 
-export const run = (dirName: string) => {
-  dirName = path.basename(dirName);
+export const runAndExpect = (dirName: string) => {
   const testDir = path.join(testBaseDir, dirName);
   const distDir = path.join(testDir, distName);
   const template = path.join(testDir, 'template.tsx');
   fs.removeSync(distDir);
   fs.ensureDirSync(distDir);
 
-  return LocaleReplacer.replace({
+  LocaleReplacer.replace({
     projectDir: distDir,
     i18nDirName: '',
     fileReplaceDist: distDir,
@@ -43,5 +42,9 @@ export const run = (dirName: string) => {
     localesToGenerate: ['en-us', 'zh-cn'],
     localeToReplace: 'zh-cn',
     importPath: './',
+    prettierConfig: {
+      singleQuote: true,
+    },
   });
+  expectDirEqualDistDirAt(dirName);
 };
