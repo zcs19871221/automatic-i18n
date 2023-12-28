@@ -1,5 +1,6 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import * as prettier from 'prettier';
 import { BundleReplacer } from '../src/BundleReplacer';
 import ts from 'typescript';
 import { renderLocaleFile } from '../src/static-template/localeFile';
@@ -106,8 +107,20 @@ const main = () => {
       enFinal[key] = enMapping[key];
       zhFinal[key] = zhMapping[key];
     });
-  fs.writeFileSync(en, renderLocaleFile('en-us', enFinal, 'zh-cn'));
-  fs.writeFileSync(zh, renderLocaleFile('zh-cn', zhFinal, 'zh-cn'));
+  fs.writeFileSync(
+    en,
+    prettier.format(renderLocaleFile('en-us', enFinal, 'zh-cn'), {
+      singleQuote: true, // 使用单引号代替双引号
+      trailingComma: 'es5',
+    })
+  );
+  fs.writeFileSync(
+    zh,
+    prettier.format(renderLocaleFile('zh-cn', zhFinal, 'zh-cn'), {
+      singleQuote: true, // 使用单引号代替双引号
+      trailingComma: 'es5',
+    })
+  );
   replaceKey(
     [
       path.join(process.cwd(), 'components'),
