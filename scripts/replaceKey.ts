@@ -1,10 +1,19 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import { BundleReplacer } from '../src/BundleReplacer';
+import ts from 'typescript';
+import { renderLocaleFile } from '../src/static-template/localeFile';
 
 const replaceKey = (dirs: string[], mapping: Record<string, string>) => {
   dirs.forEach((dir) => {
     fs.readdirSync(dir).forEach((dirName) => {
       const fileOrDir = path.join(dir, dirName);
+      if (
+        dirName.startsWith('.') ||
+        (dirName.includes('.') && !dirName.match(/[t|j]sx?/))
+      ) {
+        return;
+      }
       if (fs.lstatSync(fileOrDir).isDirectory()) {
         replaceKey([fileOrDir], mapping);
         return;
@@ -13,7 +22,7 @@ const replaceKey = (dirs: string[], mapping: Record<string, string>) => {
         fileOrDir,
         fs
           .readFileSync(fileOrDir, 'utf-8')
-          .replace(/id: '(key\d+)'/g, (_matched, key) => {
+          .replace(/id:\s*'(key\d+)'/g, (_matched, key) => {
             if (mapping[key]) {
               return `id: '${mapping[key]}'`;
             }
@@ -27,9 +36,9 @@ const replaceKey = (dirs: string[], mapping: Record<string, string>) => {
 
 export const englishMessgeToVariableName = (text: string) => {
   text = text.trim();
-  return text
+  text = text
     .replace(
-      /(?:(?:\s+)|(?:\n))([a-z\d])/gi,
+      /(?:[^a-z\d]+)([a-z\d])/gi,
       (_matched: string, firstLetter: string) => {
         return firstLetter.toUpperCase();
       }
@@ -37,45 +46,83 @@ export const englishMessgeToVariableName = (text: string) => {
     .replace(/\{[(^}+)]\}/g, (_matched: string, variableName: string) => {
       return 'V' + variableName;
     })
-    .replace(/[^a-z]/gi, '');
+    .replace(/[^a-z\d]/gi, '');
+  if (text.match(/^\d/)) {
+    text = '_' + text;
+  }
+  if (text.length > 30) {
+    text = text.slice(0, 30) + '_';
+  }
+  return text;
 };
 
 const main = () => {
-  const en = 'C:/work/eh-ui/i18n/en-us.ts';
-  const zh = 'C:/work/eh-ui/i18n/zh-cn.ts';
-  let cnFile = fs.readFileSync(zh, 'utf-8');
-  let enFile = fs.readFileSync(en, 'utf-8');
-  const mapping: Record<string, string> = {};
-  fs.writeFileSync(
+  const en = path.join(process.cwd(), '/i18n/en-us.ts');
+  const zh = path.join(process.cwd(), '/i18n/zh-cn.ts');
+  const enMapping: Record<string, string> = BundleReplacer.parseLocaleTsFile(
     en,
-    enFile.replace(
-      /(key\d+): '([^']+)'/g,
-      (_matched, key: string, english: string) => {
-        if (!english || !english.trim() || english.match(/[\u4e00-\u9fa5]/)) {
-          return _matched;
-        }
-        if (!english.match(/[a-z]/i)) {
-          return _matched;
-        }
-        const variableName = englishMessgeToVariableName(english);
-        cnFile = cnFile.replace(key, variableName);
-        mapping[key] = variableName;
-        return `${variableName}: '${english}'`;
-      }
-    )
+    ts.ScriptTarget.ESNext
   );
-  fs.writeFileSync(zh, cnFile);
+  const zhMapping: Record<string, string> = BundleReplacer.parseLocaleTsFile(
+    zh,
+    ts.ScriptTarget.ESNext
+  );
+  const mapping: Record<string, string> = {};
+
+  const variableNames = new Set(
+    Object.keys(enMapping).filter((key) => !key.match(/key\d+/))
+  );
+
+  Object.keys(enMapping).forEach((key) => {
+    if (key.match(/key\d+/)) {
+      const value = enMapping[key];
+      if (value.match(/[\u4e00-\u9fa5]/) || !value.match(/[a-z]/i)) {
+        return;
+      }
+
+      const variableName = englishMessgeToVariableName(value);
+      let i = 1;
+      let name = variableName;
+      while (variableNames.has(name)) {
+        name = variableName + '_' + i++;
+      }
+      variableNames.add(name);
+      mapping[key] = name;
+
+      enMapping[name] = enMapping[key];
+      delete enMapping[key];
+
+      zhMapping[name] = zhMapping[key];
+      delete zhMapping[key];
+    }
+  });
+
+  const enFinal: any = {};
+  const zhFinal: any = {};
+
+  Object.keys(enMapping)
+    .sort()
+    .forEach((key) => {
+      enFinal[key] = enMapping[key];
+      zhFinal[key] = zhMapping[key];
+    });
+  fs.writeFileSync(en, renderLocaleFile('en-us', enFinal, 'zh-cn'));
+  fs.writeFileSync(zh, renderLocaleFile('zh-cn', zhFinal, 'zh-cn'));
   replaceKey(
     [
-      'C:\\work\\eh-ui\\components',
-      'C:\\work\\eh-ui\\pages',
-      'C:\\work\\eh-ui\\components',
-      'C:\\work\\eh-ui\\middleware',
-      'C:\\work\\eh-ui\\utils',
-      'C:\\work\\eh-ui\\modules',
+      path.join(process.cwd(), 'components'),
+      path.join(process.cwd(), 'pages'),
+      path.join(process.cwd(), 'components'),
+      path.join(process.cwd(), 'middleware'),
+      path.join(process.cwd(), 'utils'),
+      path.join(process.cwd(), 'modules'),
     ],
     mapping
   );
 };
 
-main();
+try {
+  main();
+} catch (error) {
+  console.error(error);
+}
