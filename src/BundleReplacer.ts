@@ -6,7 +6,7 @@ import { FileReplacer } from './FileReplacer';
 import { renderEntryFile } from './static-template/entryFile';
 import { renderLocaleFile } from './static-template/localeFile';
 import { Opt } from './types';
-import ts, { PropertyAssignment } from 'typescript';
+import ts, { PropertyAssignment, ScriptTarget } from 'typescript';
 
 export class BundleReplacer {
   constructor(private readonly opt: Opt) {
@@ -14,8 +14,9 @@ export class BundleReplacer {
   }
 
   public replace() {
-    const keyMappingText = this.parseLocaleTsFile(
-      path.join(this.langDir, this.opt.localeToReplace + '.ts')
+    const keyMappingText = BundleReplacer.parseLocaleTsFile(
+      path.join(this.langDir, this.opt.localeToReplace + '.ts'),
+      this.opt.tsTarget
     );
     this.localeTextMappingKey = Object.entries<string>(keyMappingText).reduce(
       (localeMappingKey: Record<string, string>, [key, text]) => {
@@ -76,7 +77,7 @@ export class BundleReplacer {
     this.opt.localesToGenerate.forEach((name) => {
       const localeFile = path.join(this.langDir, `${name}.ts`);
       let keyMappingText: Record<string, string> =
-        this.parseLocaleTsFile(localeFile);
+        BundleReplacer.parseLocaleTsFile(localeFile, this.opt.tsTarget);
 
       let changed = false;
       Object.keys(this.localeTextMappingKey).forEach((text) => {
@@ -139,28 +140,28 @@ export class BundleReplacer {
     return fs.writeFileSync(dist, file);
   }
 
-  private parseLocaleTsFile(fileLocate: string) {
+  public static parseLocaleTsFile(fileLocate: string, target: ScriptTarget) {
     if (!fs.existsSync(fileLocate)) {
       return {};
     }
     const source = ts.createSourceFile(
       fileLocate,
       fs.readFileSync(fileLocate, 'utf-8'),
-      this.opt.tsTarget,
+      target,
       true
     );
     const obj = {};
-    this.parse(source, obj);
+    BundleReplacer.parse(source, obj);
     return obj;
   }
 
-  parse(node: ts.Node, obj: Record<string, string>) {
+  private static parse(node: ts.Node, obj: Record<string, string>) {
     if (node.kind === ts.SyntaxKind.PropertyAssignment) {
       const name = (node as PropertyAssignment).name.getText();
       const value = (node as PropertyAssignment).initializer.getText();
       obj[name] = value.replace(/(^['"])|(['"]$)/g, '');
     }
-    ts.forEachChild(node, (n) => this.parse(n, obj));
+    ts.forEachChild(node, (n) => BundleReplacer.parse(n, obj));
   }
 
   private localeTextMappingKey: Record<string, string> = {};
