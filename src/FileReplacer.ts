@@ -14,14 +14,17 @@ interface Position {
   newText: string;
 }
 
+interface Holder {
+  start: number;
+  end: number;
+  paramValue: string;
+}
+
 interface TemplateString {
   start: number;
   end: number;
-  replaceHoders: {
-    start: number;
-    end: number;
-    paramValue: string;
-  }[];
+  replaceHoders: Holder[];
+  jsxExpressionWithJsx?: boolean;
 }
 export class FileReplacer {
   private static ignoreWarningKey = '@ignore';
@@ -55,7 +58,7 @@ export class FileReplacer {
 
   public static localeMapToken(key: string, map?: Record<string, string>) {
     let params = '';
-    if (map) {
+    if (map && Object.keys(map).length > 0) {
       params += ',';
       params +=
         Object.entries<string>(map).reduce((text: string, [key, value]) => {
@@ -75,6 +78,12 @@ export class FileReplacer {
 
   private positionToReplace: Position[] = [];
 
+  private push(p: Position) {
+    if (!this.includesTargetLocale(this.file.slice(p.start, p.end))) {
+      return;
+    }
+    this.positionToReplace.push(p);
+  }
   private generateNewText({
     localeTextOrPattern,
     params,
@@ -173,7 +182,19 @@ export class FileReplacer {
       replaceHoders: [],
     });
     ts.forEachChild(node, (n) => this.traverseAstAndExtractLocales(n));
-    this.handleVariablePop();
+    this.handleVariablePop(startSymbol, endSymbol);
+  }
+
+  private handleJsxExpressioninContent(node: ts.JsxExpression) {
+    const startSymbol = '{';
+    const endSymbol = '}';
+    this.templateStrings.push({
+      start: node.getStart(),
+      end: node.getEnd(),
+      replaceHoders: [],
+    });
+    ts.forEachChild(node, (n) => this.traverseAstAndExtractLocales(n));
+    this.handleVariablePop(startSymbol, endSymbol);
   }
 
   private handleTemplate(node: ts.TemplateExpression) {
@@ -186,13 +207,11 @@ export class FileReplacer {
     this.handleTemplatePop();
   }
 
-  private handleTemplatePop() {
+  private handleBlockFinish(skipPrev: number, skipAfter: number) {
     const current = this.templateStrings.pop()!;
-    const startTag = '`';
-    const endTag = '`';
 
     let textPattern = '';
-    let start = current.start + startTag.length;
+    let start = current.start + skipPrev;
     const variables: Record<string, string> = {};
     const paramValues = current.replaceHoders
       .map((holder) => holder.paramValue)
@@ -210,33 +229,122 @@ export class FileReplacer {
       textPattern += '{' + paramName + '}';
       start = c.end;
     });
-    textPattern += this.file.slice(start, current.end - endTag.length);
+    textPattern += this.file.slice(start, current.end - skipAfter);
 
+    if (!this.includesTargetLocale(textPattern)) {
+      return null;
+    }
     const textKey =
       this.bundleReplacer.getOrSetLocaleTextKeyIfAbsence(textPattern);
     const paramValue = FileReplacer.localeMapToken(textKey, variables);
 
-    const prev = this.peek();
+    return { start: current.start, end: current.end, paramValue };
+  }
 
-    if (prev != null) {
-      prev.replaceHoders.push({
-        start: current.start,
-        end: current.end,
-        paramValue,
+  private handleJsxContentsFinish() {
+    const ans = this.handleBlockFinish(0, 0);
+    if (!ans) {
+      return;
+    }
+    this.push({
+      start: ans.start,
+      end: ans.end,
+      newText: '{' + ans.paramValue + '}',
+    });
+  }
+
+  private handleTemplatePop() {
+    const startTag = '`';
+    const endTag = '`';
+
+    const ans = this.handleBlockFinish(startTag.length, endTag.length);
+    if (!ans) {
+      return;
+    }
+    const prev = this.peek();
+    if (prev === null || prev.jsxExpressionWithJsx) {
+      this.push({
+        start: ans.start,
+        end: ans.end,
+        newText: ans.paramValue,
       });
     } else {
-      this.positionToReplace.push({
-        start: current.start,
-        end: current.end,
-        newText: paramValue,
-      });
+      prev.replaceHoders.push(ans);
     }
   }
 
-  private handleVariablePop() {
+  private inlcudeJsxElement(node: any) {
+    let hasJsxElement = false;
+    ts.forEachChild(node, (n) => {
+      if (n.kind === SyntaxKind.JsxElement) {
+        hasJsxElement = true;
+      }
+      if (hasJsxElement) {
+        return;
+      }
+      hasJsxElement = this.inlcudeJsxElement(n);
+    });
+    return hasJsxElement;
+  }
+
+  private handleJsxElement(node: any) {
+    if (!this.includesTargetLocale(node.getText())) {
+      return;
+    }
+    const openingElement: any = node.openingElement || node.openingFragment;
+    const closingElement: any = node.closingElement || node.closingFragment;
+    this.traverseAstAndExtractLocales(openingElement);
+
+    const closeRange = (n: ts.Node) => {
+      this.peek()!.end = n.getStart();
+      this.handleJsxContentsFinish();
+    };
+
+    this.templateStrings.push({
+      start: openingElement.getEnd(),
+      end: 0,
+      replaceHoders: [],
+    });
+    node.children
+      .filter((e: any) => e !== openingElement && e !== closingElement)
+
+      // JsxText | JsxExpression | JsxElement | JsxSelfClosingElement | JsxFragment;
+      .forEach((n: any) => {
+        console.log(n.kind, SyntaxKind[n.kind], n.getText());
+        switch (n.kind) {
+          case SyntaxKind.JsxElement:
+          case SyntaxKind.JsxFragment:
+            this.peek()!.end = n.getStart();
+            closeRange(n);
+            this.handleJsxElement(n);
+            this.templateStrings.push({
+              start: (n.closingElement || n.closingFragment).getEnd(),
+              end: 0,
+              replaceHoders: [],
+            });
+            break;
+          case SyntaxKind.JsxExpression:
+            if (this.inlcudeJsxElement(n)) {
+              closeRange(n);
+              this.traverseAstAndExtractLocales(n);
+              this.templateStrings.push({
+                start: n.getStart(),
+                end: 0,
+                replaceHoders: [],
+                jsxExpressionWithJsx: true,
+              });
+            }
+            this.handleJsxExpressioninContent(n);
+            break;
+          default:
+            break;
+        }
+      });
+    closeRange(closingElement);
+  }
+
+  private handleVariablePop(startTag: string, endTag: string) {
     const current = this.templateStrings.pop()!;
-    const startTag = '${';
-    const endTag = '}';
 
     let paramValue = '';
     let start = current.start + startTag.length;
@@ -262,6 +370,7 @@ export class FileReplacer {
   private hasImportedI18nModules: boolean = false;
 
   private traverseAstAndExtractLocales(node: ts.Node) {
+    console.log(node.kind, SyntaxKind[node.kind], node.getText());
     switch (node.kind) {
       // 判断是否引入i18
       case SyntaxKind.ImportDeclaration: {
@@ -309,14 +418,14 @@ export class FileReplacer {
             newText = this.textKeyAddJsxVariableBacket(newText);
           }
           const stackItem = this.peek();
-          if (stackItem !== null) {
+          if (stackItem !== null && !stackItem.jsxExpressionWithJsx) {
             stackItem.replaceHoders.push({
               start: node.getStart(),
               end: node.getEnd(),
               paramValue: newText,
             });
           } else {
-            this.positionToReplace.push({
+            this.push({
               start: node.getStart(),
               end: node.getEnd(),
               newText,
@@ -325,38 +434,16 @@ export class FileReplacer {
         }
         break;
       // html文本标签中字面量<div>大家好</div>
-      case SyntaxKind.JsxText:
-        if (!this.includesTargetLocale(node.getText())) {
-          return;
-        }
-        let start = node.getStart();
-        let end = node.getEnd();
-        let newText = node
-          .getText()
-          .replace(/^[\s\n]+/, (_m) => {
-            start += _m.length;
-            return '';
-          })
-          .replace(/[\s\n]+$/, (_m) => {
-            end -= _m.length;
-            return '';
-          });
-        newText = this.generateNewText({
-          localeTextOrPattern: newText,
-        });
-        newText = this.textKeyAddJsxVariableBacket(newText);
-        this.positionToReplace.push({
-          start: node.getStart(),
-          end: node.getEnd(),
-          newText,
-        });
-        break;
+      case SyntaxKind.JsxElement:
+      case SyntaxKind.JsxFragment:
+        this.handleJsxElement(node);
+        return;
       // 没有变量的模板字符串: `张三`
       case SyntaxKind.FirstTemplateToken: {
         if (!this.includesTargetLocale(node.getText())) {
           return;
         }
-        this.positionToReplace.push({
+        this.push({
           start: node.getStart(),
           end: node.getEnd(),
           newText: this.generateNewText({
@@ -367,9 +454,6 @@ export class FileReplacer {
       }
       // 模板字符串: `${name}张三${gender}李四`
       case ts.SyntaxKind.TemplateExpression: {
-        if (!this.includesTargetLocale(node.getText())) {
-          return;
-        }
         this.handleTemplate(node as ts.TemplateExpression);
         return;
       }
