@@ -202,7 +202,11 @@ export class FileReplacer {
     this.handleTemplatePop();
   }
 
-  private handleBlockFinish(skipPrev: number, skipAfter: number) {
+  private handleBlockFinish(
+    skipPrev: number,
+    skipAfter: number,
+    jsx?: boolean
+  ) {
     const current = this.templateStrings.pop()!;
 
     let textPattern = '';
@@ -229,15 +233,29 @@ export class FileReplacer {
     if (!this.includesTargetLocale(textPattern)) {
       return null;
     }
+    let replaceStart = current.start;
+    let replaceEnd = current.end;
+    if (jsx) {
+      textPattern = textPattern.replace(/\n/g, (_match, start, end) => {
+        if (start) {
+          replaceStart += _match.length;
+        } else {
+          replaceEnd -= _match.length;
+        }
+        return '';
+      });
+    }
+    textPattern = textPattern.replace(/\n/g, '\\n');
+
     const textKey =
       this.bundleReplacer.getOrSetLocaleTextKeyIfAbsence(textPattern);
     const paramValue = FileReplacer.localeMapToken(textKey, variables);
 
-    return { start: current.start, end: current.end, paramValue };
+    return { start: replaceStart, end: replaceEnd, paramValue };
   }
 
   private handleJsxContentsFinish() {
-    const ans = this.handleBlockFinish(0, 0);
+    const ans = this.handleBlockFinish(0, 0, true);
     if (!ans) {
       return;
     }
@@ -257,7 +275,11 @@ export class FileReplacer {
       return;
     }
     const prev = this.peek();
-    if (prev === null || prev.jsxExpressionWithJsx) {
+    if (
+      prev === null ||
+      this.templateStrings[this.templateStrings.length - 2]
+        ?.jsxExpressionWithJsx
+    ) {
       this.push({
         start: ans.start,
         end: ans.end,
@@ -305,7 +327,6 @@ export class FileReplacer {
 
       // JsxText | JsxExpression | JsxElement | JsxSelfClosingElement | JsxFragment;
       .forEach((n: any) => {
-        console.log(n.kind, SyntaxKind[n.kind], n.getText());
         switch (n.kind) {
           case SyntaxKind.JsxElement:
           case SyntaxKind.JsxFragment:
@@ -364,7 +385,6 @@ export class FileReplacer {
   private hasImportedI18nModules: boolean = false;
 
   private traverseAstAndExtractLocales(node: ts.Node) {
-    console.log(node.kind, SyntaxKind[node.kind], node.getText());
     switch (node.kind) {
       // 判断是否引入i18
       case SyntaxKind.ImportDeclaration: {
