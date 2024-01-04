@@ -63,7 +63,7 @@ export class FileReplacer {
           if (key === value) {
             return text + key + ',';
           } else {
-            return text + `${key}: ${value}` + ',';
+            return text + `${key}: ${value === '' ? "''" : value}` + ',';
           }
         }, '{') + '}';
     }
@@ -388,6 +388,7 @@ export class FileReplacer {
   private hasImportedI18nModules: boolean = false;
 
   private traverseAstAndExtractLocales(node: ts.Node) {
+    console.log(node.kind, SyntaxKind[node.kind], node.getText());
     switch (node.kind) {
       // 判断是否引入i18
       case SyntaxKind.ImportDeclaration: {
