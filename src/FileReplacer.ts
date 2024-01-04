@@ -236,14 +236,17 @@ export class FileReplacer {
     let replaceStart = current.start;
     let replaceEnd = current.end;
     if (jsx) {
-      textPattern = textPattern.replace(/\n/g, (_match, start, end) => {
-        if (start) {
-          replaceStart += _match.length;
-        } else {
-          replaceEnd -= _match.length;
+      textPattern = textPattern.replace(
+        /(^[\s\n]+)|([\s\n]+$)/g,
+        (_match, start, end) => {
+          if (start) {
+            replaceStart += _match.length;
+          } else {
+            replaceEnd -= _match.length;
+          }
+          return '';
         }
-        return '';
-      });
+      );
     }
     textPattern = textPattern.replace(/\n/g, '\\n');
 
