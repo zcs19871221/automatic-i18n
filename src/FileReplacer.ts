@@ -34,9 +34,7 @@ export class FileReplacer {
     private readonly bundleReplacer: BundleReplacer,
     private readonly opt: Opt,
     private file: string
-  ) {
-    this.file = file;
-  }
+  ) {}
 
   public replace() {
     try {
@@ -84,6 +82,7 @@ export class FileReplacer {
     }
     this.positionToReplace.push(p);
   }
+
   private generateNewText({
     localeTextOrPattern,
     params,
@@ -97,12 +96,8 @@ export class FileReplacer {
     return FileReplacer.localeMapToken(localeKey, params);
   }
 
-  private targetLocaleReg() {
-    return /[\u4e00-\u9fa5]+/g;
-  }
-
   private includesTargetLocale(text: string) {
-    return this.targetLocaleReg().test(text);
+    return /[\u4e00-\u9fa5]+/g.test(text);
   }
 
   private clear() {
@@ -326,7 +321,6 @@ export class FileReplacer {
           case SyntaxKind.JsxExpression:
             if (this.inlcudeJsxElement(n)) {
               closeRange(n);
-              this.traverseAstAndExtractLocales(n);
               this.templateStrings.push({
                 start: n.getStart(),
                 end: 0,
