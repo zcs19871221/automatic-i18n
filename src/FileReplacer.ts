@@ -18,7 +18,7 @@ class Context {
     public newStr: string = ''
   ) {}
 
-  public concatVariable(startSkip: number = 0, endSkip: number = 0): string {
+  protected concatVariable(startSkip: number = 0, endSkip: number = 0): string {
     let s = this.start + startSkip;
     let str = '';
     this.childs
@@ -32,7 +32,7 @@ class Context {
     return str;
   }
 
-  public concatBlock(
+  protected concatBlock(
     startSkip: number = 0,
     endSkip: number = 0
   ): { str: string; keyMapValue: Record<string, string> } {
@@ -42,6 +42,11 @@ class Context {
     const keyMapValue: Record<string, string> = {};
     this.childs.forEach((c) => {
       str += this.replacer.file.slice(s, c.start);
+      if (!valueMapKey[c.newStr]) {
+        const key = 'v' + (Object.keys(valueMapKey).length + 1);
+        valueMapKey[c.newStr] = key;
+        keyMapValue[key] = c.newStr;
+      }
       str += '{' + valueMapKey[c.newStr] + '}';
       s = c.end;
     });
