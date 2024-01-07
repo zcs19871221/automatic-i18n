@@ -12,5 +12,6 @@ const nest1 = (
     <span>{flag ? '再见' : `哈哈${name}`}</span>
     <span>{flag}</span>
     <span>flag</span>
+    <span>{flag ? '再见' : `哈哈${name}`}</span>;
   </div>
 );

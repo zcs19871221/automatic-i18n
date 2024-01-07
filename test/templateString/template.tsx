@@ -10,4 +10,8 @@ const x = `fsffdsfd${rule}你好呀${name}哈哈${age ? `里面${what}` : end}ff
 
 const y = `fdsffdfdhello${age ? rule : what}`;
 
+const z1 = `hello${age ? '张三' : what}`;
+const z2 = `hello${age ? 'ffff' : what}`;
+const z3 = `hello${age ? `s张三dsf` : what}`;
+
 export { x };
