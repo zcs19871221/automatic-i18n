@@ -11,6 +11,13 @@ interface Warning {
 
 class Context {
   public childs: Context[] = [];
+  public parent: Context | null = null;
+
+  public push(context: Context) {
+    this.childs.push(context);
+    context.parent = this;
+  }
+
   constructor(
     public replacer: FileReplacer,
     public start: number,
@@ -63,7 +70,8 @@ class StringLiteralContext extends Context {}
 
 class JsxVirutalBlock extends Context {
   public setNewStr(): string {
-    const { keyMapValue, str } = this.concatBlock(0, 0);
+    const { str, keyMapValue } = this.concatBlock(0, 0);
+
     if (!this.replacer.includesTargetLocale(str)) {
       return '';
     }
@@ -89,6 +97,11 @@ class JsxVirutalBlock extends Context {
 class RootContext extends Context {}
 
 class Jsx extends Context {
+  generateStrThenSet() {
+    this.newStr = this.concatVariable(0, 0);
+    return this.newStr;
+  }
+
   private openingStart: number;
   private closingEnd: number;
 
@@ -104,13 +117,14 @@ class Jsx extends Context {
     this.closingEnd = opt.closingEnd;
   }
 
-  public includeLocaleText = false;
-
-  public mergeChilds(): Context[] {
+  public mergeChilds(): void {
     const newChilds: Context[] = [];
     let start = this.start;
     let block: Context[] = [];
     const addJsxVirtualBlock = (end: number, nextStart: number) => {
+      if (start >= end) {
+        return;
+      }
       const virtualBlock = new JsxVirutalBlock(this.replacer, start, end);
       virtualBlock.childs.push(...block);
       virtualBlock.setNewStr();
@@ -123,14 +137,14 @@ class Jsx extends Context {
     this.childs.forEach((c) => {
       if (c instanceof Jsx) {
         addJsxVirtualBlock(c.openingStart, c.closingEnd);
-        newChilds.push(...c.mergeChilds());
+        newChilds.push(c);
         return;
       }
 
       if (c instanceof JsxExpression && c.includeJsx) {
         addJsxVirtualBlock(c.start, c.end);
-        c.generateStr();
         if (c.newStr) {
+          c.newStr = '{' + c.newStr + '}';
           newChilds.push(c);
         }
         return;
@@ -138,19 +152,17 @@ class Jsx extends Context {
 
       block.push(c);
     });
-
     addJsxVirtualBlock(this.end, -1);
-
-    return newChilds;
+    this.childs = newChilds;
   }
 }
 
 class JsxExpression extends Context {
-  public generateStr() {
-    if (this.includeJsx && this.childs.length === 0) {
-      this.newStr = '';
-    }
+  public generateStrThenSet(node: ts.Expression) {
     this.newStr = this.concatVariable('{'.length, '}'.length);
+    if (node.parent.kind === SyntaxKind.JsxAttribute) {
+      this.newStr = '{' + this.newStr + '}';
+    }
     return this.newStr;
   }
 
@@ -341,16 +353,25 @@ export class FileReplacer {
     ts.forEachChild(node, (n) =>
       this.traverseAstAndExtractLocales(n, jsxExpression)
     );
-    if (jsxExpression.includeJsx && jsxExpression.childs.length > 0) {
-      jsxExpression.generateStr();
-      this.rootContext.childs.push(jsxExpression);
-    } else {
-      jsxExpression.generateStr();
-      context.childs.push(jsxExpression);
-    }
+
+    jsxExpression.generateStrThenSet(node);
+
+    context.childs.push(jsxExpression);
+    jsxExpression.parent = context;
   }
 
   private handleJsx(node: any, context: Context) {
+    let jsxExpressionParent: Context | null = context;
+    while (
+      jsxExpressionParent !== null &&
+      !(jsxExpressionParent instanceof JsxExpression)
+    ) {
+      jsxExpressionParent = jsxExpressionParent.parent;
+    }
+
+    if (jsxExpressionParent instanceof JsxExpression) {
+      jsxExpressionParent.includeJsx = true;
+    }
     const openingElement: any = node.openingElement || node.openingFragment;
     const closingElement: any = node.closingElement || node.closingFragment;
     this.traverseAstAndExtractLocales(openingElement, context);
@@ -368,10 +389,10 @@ export class FileReplacer {
         this.traverseAstAndExtractLocales(n, jsx);
       });
 
-    jsx.mergeChilds().forEach((child) => {
-      this.rootContext.childs.push(child);
-    });
+    jsx.mergeChilds();
+    jsx.generateStrThenSet();
     context.childs.push(jsx);
+    jsx.parent = context;
   }
 
   private hasImportedI18nModules: boolean = false;
@@ -442,12 +463,6 @@ export class FileReplacer {
         break;
       case SyntaxKind.JsxExpression: {
         this.handleJsxExpression(node as ts.JsxExpression, context);
-        break;
-      }
-      case SyntaxKind.JsxText: {
-        if (this.includesTargetLocale(node.getText())) {
-          (context as Jsx).includeLocaleText = true;
-        }
         break;
       }
       // 没有变量的模板字符串: `张三`
