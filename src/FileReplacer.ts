@@ -69,11 +69,12 @@ class Context {
 class StringLiteralContext extends Context {}
 
 class JsxVirutalBlock extends Context {
-  public setNewStr(): string {
+  public setNewStr() {
     const { str, keyMapValue } = this.concatBlock(0, 0);
 
     if (!this.replacer.includesTargetLocale(str)) {
-      return '';
+      this.newStr = this.concat(0, 0, (str) => '{' + str + '}');
+      return;
     }
 
     const newStr = str.replace(
@@ -87,10 +88,10 @@ class JsxVirutalBlock extends Context {
         return '';
       }
     );
+
     const textKey =
       this.replacer.bundleReplacer.getOrSetLocaleTextKeyIfAbsence(newStr);
     this.newStr = '{' + FileReplacer.localeMapToken(textKey, keyMapValue) + '}';
-    return this.newStr;
   }
 }
 
@@ -173,12 +174,12 @@ class Template extends Context {
   public setNewStr() {
     const { keyMapValue, str } = this.concatBlock('`'.length, '`'.length);
     if (!this.replacer.includesTargetLocale(str)) {
-      return '';
+      this.newStr = this.concat(0, 0, (str: string) => '${' + str + '}');
+      return;
     }
     const textKey =
       this.replacer.bundleReplacer.getOrSetLocaleTextKeyIfAbsence(str);
     this.newStr = FileReplacer.localeMapToken(textKey, keyMapValue);
-    return this.newStr;
   }
 
   public push(templateExpression: TemplateExpression) {
@@ -190,7 +191,6 @@ class Template extends Context {
 class TemplateExpression extends Context {
   public setNewStr() {
     this.newStr = this.concatVariable('${'.length, '}'.length);
-    return this.newStr;
   }
 }
 
@@ -321,10 +321,7 @@ export class FileReplacer {
     ts.forEachChild(node, (n) =>
       this.traverseAstAndExtractLocales(n, template)
     );
-    const newStr = template.setNewStr();
-    if (!newStr) {
-      return;
-    }
+    template.setNewStr();
     context.childs.push(template);
   }
 
@@ -340,7 +337,7 @@ export class FileReplacer {
     ts.forEachChild(node, (n) =>
       this.traverseAstAndExtractLocales(n, templateExpression)
     );
-    templateExpression.newStr = templateExpression.setNewStr();
+    templateExpression.setNewStr();
     context.childs.push(templateExpression);
   }
 
