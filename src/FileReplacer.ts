@@ -18,40 +18,44 @@ class Context {
     public newStr: string = ''
   ) {}
 
-  protected concatVariable(startSkip: number = 0, endSkip: number = 0): string {
-    let s = this.start + startSkip;
-    let str = '';
-    this.childs
-      .filter((c) => c.newStr)
-      .forEach((c) => {
-        str += this.replacer.file.slice(s, c.start);
-        str += c.newStr;
-        s = c.end;
-      });
-    str += this.replacer.file.slice(s, this.end - endSkip);
-    return str;
+  protected concatVariable(startSkip: number, endSkip: number): string {
+    return this.concat(startSkip, endSkip);
   }
 
   protected concatBlock(
-    startSkip: number = 0,
-    endSkip: number = 0
+    startSkip: number,
+    endSkip: number
   ): { str: string; keyMapValue: Record<string, string> } {
-    let s = this.start + startSkip;
-    let str = '';
     const valueMapKey: Record<string, string> = {};
     const keyMapValue: Record<string, string> = {};
-    this.childs.forEach((c) => {
-      str += this.replacer.file.slice(s, c.start);
-      if (!valueMapKey[c.newStr]) {
+
+    const str = this.concat(startSkip, endSkip, (str) => {
+      if (!valueMapKey[str]) {
         const key = 'v' + (Object.keys(valueMapKey).length + 1);
-        valueMapKey[c.newStr] = key;
-        keyMapValue[key] = c.newStr;
+        valueMapKey[str] = key;
+        keyMapValue[key] = str;
       }
-      str += '{' + valueMapKey[c.newStr] + '}';
-      s = c.end;
+
+      return '{' + valueMapKey[str] + '}';
     });
-    str += this.replacer.file.slice(s, this.end - endSkip);
+
     return { str, keyMapValue };
+  }
+
+  protected concat(
+    startSkip: number,
+    endSkip: number,
+    strHandler: (str: string) => string = (str) => str
+  ) {
+    let str = '';
+    let start = this.start + startSkip;
+    this.childs.forEach((c) => {
+      str += this.replacer.file.slice(start, c.start);
+      str += strHandler(c.newStr);
+      start = c.end;
+    });
+    str += this.replacer.file.slice(start, this.end - endSkip);
+    return str;
   }
 }
 
@@ -59,13 +63,25 @@ class StringLiteralContext extends Context {}
 
 class JsxVirutalBlock extends Context {
   public setNewStr(): string {
-    const { keyMapValue, str } = this.concatBlock();
+    const { keyMapValue, str } = this.concatBlock(0, 0);
     if (!this.replacer.includesTargetLocale(str)) {
       return '';
     }
+
+    const newStr = str.replace(
+      /(^[\s\n]+)|([\s\n]+$)/g,
+      (_match, start, end) => {
+        if (start) {
+          this.start += _match.length;
+        } else {
+          this.end -= _match.length;
+        }
+        return '';
+      }
+    );
     const textKey =
-      this.replacer.bundleReplacer.getOrSetLocaleTextKeyIfAbsence(str);
-    this.newStr = FileReplacer.localeMapToken(textKey, keyMapValue);
+      this.replacer.bundleReplacer.getOrSetLocaleTextKeyIfAbsence(newStr);
+    this.newStr = '{' + FileReplacer.localeMapToken(textKey, keyMapValue) + '}';
     return this.newStr;
   }
 }
@@ -355,6 +371,7 @@ export class FileReplacer {
     jsx.mergeChilds().forEach((child) => {
       this.rootContext.childs.push(child);
     });
+    context.childs.push(jsx);
   }
 
   private hasImportedI18nModules: boolean = false;
