@@ -41,12 +41,7 @@ class JsxContextList extends Context {
     const { str, keyMapValue } = this.concatBlock(0, 0);
 
     if (!this.replacer.includesTargetLocale(str)) {
-      this.newStr = this.concat(0, 0, (str) => {
-        if (str.startsWith('{') && str.endsWith('}')) {
-          return str;
-        }
-        return '{' + str + '}';
-      });
+      this.newStr = this.concat(0, 0);
       return;
     }
 
@@ -174,9 +169,6 @@ export class JsxExpression extends Context {
 
   protected override generatingStrFromChildThenSet(node: ts.Expression) {
     this.newStr = this.concatVariable(0, 0);
-    // if (node.parent.kind === SyntaxKind.JsxAttribute) {
-    //   this.newStr = '{' + this.newStr + '}';
-    // }
   }
 
   public includeJsx = false;
@@ -213,28 +205,6 @@ export class Template extends Context {
   }
 }
 
-// export class JsxTagElement extends Context {
-//   protected generatingStrFromChildThenSet(node?: ts.Node | undefined): void {
-//     this.newStr = this.concatVariable(0, 0);
-//   }
-
-//   public static override handle(
-//     node: ts.JsxSelfClosingElement,
-//     parent: Context,
-//     replacer: FileReplacer
-//   ) {
-//     const closingElement = new JsxTagElement(
-//       replacer,
-//       node.getStart(),
-//       node.getEnd(),
-//       parent
-//     );
-//     ts.forEachChild(node, (n) =>
-//       replacer.traverseAstAndExtractLocales(n, closingElement)
-//     );
-//     closingElement.generateStrFromChildThenSet();
-//   }
-// }
 export class TemplateExpression extends Context {
   protected override generatingStrFromChildThenSet() {
     this.newStr = this.concatVariable('${'.length, '}'.length);
