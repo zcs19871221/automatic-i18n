@@ -4,6 +4,8 @@ import { FileReplacer } from './FileReplacer';
 export abstract class Context {
   public childs: Context[] = [];
   public newStr: string = '';
+  public needReplace = false;
+
   constructor(
     public replacer: FileReplacer,
     public start: number,
@@ -23,11 +25,13 @@ export abstract class Context {
     }
   }
 
-  public abstract doGenerateStrFromChildThenSet(node?: ts.Node): void;
+  public abstract generatingStrFromChildThenSet(node?: ts.Node): void;
 
   public generateStrFromChildThenSet(node?: ts.Node): void {
     this.sortChildThenCheck();
-    this.doGenerateStrFromChildThenSet(node);
+    this.generatingStrFromChildThenSet(node);
+    this.needReplace =
+      this.needReplace || this.childs.some((c) => c.needReplace);
     this.childs?.forEach((c) => {
       c.newStr = '';
     });

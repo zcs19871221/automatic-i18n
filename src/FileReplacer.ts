@@ -21,7 +21,7 @@ interface Warning {
 export class FileReplacer {
   private static ignoreWarningKey = '@ignore';
 
-  private readonly rootContext: RootContext;
+  public readonly rootContext: RootContext;
   constructor(
     private readonly fileLocate: string,
     public readonly bundleReplacer: BundleReplacer,
