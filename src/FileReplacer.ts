@@ -33,7 +33,13 @@ export class FileReplacer {
 
   public replace() {
     try {
-      this.extractLocales();
+      const sourceFile = ts.createSourceFile(
+        this.fileLocate,
+        this.file,
+        this.opt.tsTarget,
+        true
+      );
+      this.traverseAstAndExtractLocales(sourceFile, this.rootContext);
       if (!this.rootContext.childs.length) {
         return this.file;
       }
@@ -107,16 +113,6 @@ export class FileReplacer {
   private clear() {
     this.file = '';
     this.rootContext.newStr = '';
-  }
-
-  private extractLocales() {
-    const sourceFile = ts.createSourceFile(
-      this.fileLocate,
-      this.file,
-      this.opt.tsTarget,
-      true
-    );
-    this.traverseAstAndExtractLocales(sourceFile, this.rootContext);
   }
 
   public hasImportedI18nModules: boolean = false;
