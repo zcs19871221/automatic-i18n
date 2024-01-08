@@ -9,4 +9,6 @@ export const locales: Locales = {
   key0002: '你好',
   key0003: '不好',
   key0004: 'fsffdsfd{v1}你好呀{v2}哈哈{v3}ffff{v4}{v5}xz{v2}',
+  key0005: '张三',
+  key0006: 's张三dsf',
 };

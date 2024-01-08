@@ -26,11 +26,11 @@ export const locales = {
   key0021: '意义咋样 {v1} : sffdsfd',
   key0022: '请输入',
   key0023: '你好{v1}哈哈{v2}为什么',
-  key0024: 'html中纯文本`',
-  key0025: '哈哈{v1}你好',
-  key0026: '然后分割',
-  key0027: 'fff空节点zzx空节点',
-  key0028: '空节点',
+  key0024: '哈哈{v1}你好',
+  key0025: 'fff空节点zzx空节点',
+  key0026: '空节点',
+  key0027: '`${v1}html中纯文本`',
+  key0028: '然后分割\n      {v1}然后分割',
 } as const;
 
 export type LocalKey = keyof typeof locales;

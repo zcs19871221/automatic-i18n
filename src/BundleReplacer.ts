@@ -43,6 +43,7 @@ export class BundleReplacer {
   }
 
   public getOrSetLocaleTextKeyIfAbsence(localeText: string) {
+    localeText = localeText.replace(/\n/g, '\\n');
     let textKey = '';
     if (this.localeTextMappingKey[localeText]) {
       textKey = this.localeTextMappingKey[localeText];

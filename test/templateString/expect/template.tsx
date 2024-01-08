@@ -21,4 +21,8 @@ const x = i18.intl.formatMessage(
 
 const y = `fdsffdfdhello${age ? rule : what}`;
 
+const z1 = `hello${age ? i18.intl.formatMessage({ id: 'key0005' }) : what}`;
+const z2 = `hello${age ? 'ffff' : what}`;
+const z3 = `hello${age ? i18.intl.formatMessage({ id: 'key0006' }) : what}`;
+
 export { x };

@@ -79,22 +79,19 @@ export const App = ({
       )}
       data-v2={i18.intl.formatMessage({ id: 'key0022' })}
     >
-      `${}
-      {i18.intl.formatMessage({ id: 'key0024' })}
+      {i18.intl.formatMessage({ id: 'key0027' }, { v1: '' })}
       {flag2 ? (
         <div>{'fdsfdf'}</div>
       ) : (
         <div>
           {flag2
             ? i18.intl.formatMessage({ id: 'key0020' })
-            : i18.intl.formatMessage({ id: 'key0025' }, { v1: name })}
+            : i18.intl.formatMessage({ id: 'key0024' }, { v1: name })}
         </div>
       )}
-      {i18.intl.formatMessage({ id: 'key0026' })}
-      {name}
-      {i18.intl.formatMessage({ id: 'key0026' })}
-      <div>{i18.intl.formatMessage({ id: 'key0027' })}</div>
-      <div>{i18.intl.formatMessage({ id: 'key0028' })}</div>
+      {i18.intl.formatMessage({ id: 'key0028' }, { v1: name })}
+      <div>{i18.intl.formatMessage({ id: 'key0025' })}</div>
+      <div>{i18.intl.formatMessage({ id: 'key0026' })}</div>
     </div>
   );
 };
