@@ -165,6 +165,11 @@ export class FileReplacer {
       // html文本标签中字面量<div>大家好</div>
       case SyntaxKind.JsxElement:
       case SyntaxKind.JsxFragment:
+      case SyntaxKind.JsxOpeningElement:
+      case SyntaxKind.JsxOpeningFragment:
+      case SyntaxKind.JsxClosingElement:
+      case SyntaxKind.JsxClosingFragment:
+      case SyntaxKind.JsxSelfClosingElement:
         Jsx.handle(node, context, this);
         break;
       case SyntaxKind.JsxExpression: {
@@ -201,21 +206,6 @@ export class FileReplacer {
         }
         break;
       }
-      // // 自关闭标签属于rootContext，默认是属于jsx的，错误
-      // case SyntaxKind.self: {
-      //   if (
-      //     this.opt.localeToReplace !== 'en-us' &&
-      //     this.includesTargetLocale(node.getText()) &&
-      //     !this.ignore(node)
-      //   ) {
-      //     this.addWarningInfo({
-      //       text: 'property name of object should be english',
-      //       start: node.getStart(),
-      //       end: node.getEnd(),
-      //     });
-      //   }
-      //   break;
-      // }
       default:
         ts.forEachChild(node, (n) =>
           this.traverseAstAndExtractLocales(n, context)

@@ -36,7 +36,7 @@ export class StringLiteralContext extends Context {
   }
 }
 
-class JsxVirutalBlock extends Context {
+class JsxContextList extends Context {
   protected override generatingStrFromChildThenSet() {
     const { str, keyMapValue } = this.concatBlock(0, 0);
 
@@ -80,8 +80,9 @@ export class RootContext extends Context {
 }
 
 export class Jsx extends Context {
+  public jsxWrap = false;
   public static override handle(
-    node: any,
+    node: ts.Node,
     context: Context,
     fileReplacer: FileReplacer
   ) {
@@ -96,83 +97,60 @@ export class Jsx extends Context {
     if (jsxExpressionParent instanceof JsxExpression) {
       jsxExpressionParent.includeJsx = true;
     }
-    const openingElement: any = node.openingElement || node.openingFragment;
-    const closingElement: any = node.closingElement || node.closingFragment;
-    fileReplacer.traverseAstAndExtractLocales(openingElement, context);
-    const jsx = new Jsx({
-      fileReplacer,
-      openingStart: openingElement.getStart(),
-      openingEnd: openingElement.getEnd(),
-      closingEnd: closingElement.getEnd(),
-      closingStart: closingElement.getStart(),
-      parent: context,
-    });
 
-    node.children
-      .filter((e: any) => e !== openingElement && e !== closingElement)
-      .forEach((n: any) => {
-        fileReplacer.traverseAstAndExtractLocales(n, jsx);
-      });
+    const jsx = new Jsx(fileReplacer, node.getStart(), node.getEnd(), context);
+
+    if (
+      node.kind === SyntaxKind.JsxElement ||
+      node.kind === SyntaxKind.JsxFragment
+    ) {
+      jsx.jsxWrap = true;
+    }
+
+    ts.forEachChild(node, (n) =>
+      fileReplacer.traverseAstAndExtractLocales(n, jsx)
+    );
 
     jsx.generateStrFromChildThenSet();
   }
 
   protected override generatingStrFromChildThenSet(): void {
-    const newChilds: Context[] = [];
-    let start = this.start;
-    let block: Context[] = [];
-    const addJsxVirtualBlock = (end: number, nextStart: number) => {
-      if (start >= end) {
-        return;
-      }
-      const virtualBlock = new JsxVirutalBlock(this.replacer, start, end, this);
-      virtualBlock.childs.push(...block);
-      virtualBlock.generateStrFromChildThenSet();
-      if (virtualBlock.newStr) {
-        newChilds.push(virtualBlock);
-      }
-      start = nextStart;
-      block = [];
-    };
-    this.childs.forEach((c) => {
-      if (c instanceof Jsx) {
-        addJsxVirtualBlock(c.openingStart, c.closingEnd);
-        newChilds.push(c);
-        return;
-      }
-
-      if (c instanceof JsxExpression && c.includeJsx) {
-        addJsxVirtualBlock(c.start, c.end);
-        if (c.newStr) {
-          c.newStr = '{' + c.newStr + '}';
-          newChilds.push(c);
+    if (this.jsxWrap) {
+      const newChilds: Context[] = [];
+      let block: Context[] = [];
+      const createJsxList = (end: number, nextStart: number) => {
+        if (start >= end) {
+          return;
         }
-        return;
+        const jsxContextList = new JsxContextList(this.replacer, start, end);
+        jsxContextList.childs.push(...block);
+        jsxContextList.generateStrFromChildThenSet();
+        if (jsxContextList.newStr) {
+          newChilds.push(jsxContextList);
+        }
+        start = nextStart;
+        block = [];
+      };
+      let start = this.childs[0].end;
+      newChilds.push(this.childs[0]);
+      for (let i = 1; i < this.childs.length - 1; i++) {
+        const c = this.childs[i];
+        if (c instanceof Jsx || (c instanceof JsxExpression && c.includeJsx)) {
+          createJsxList(c.start, c.end);
+          newChilds.push(c);
+          continue;
+        }
+
+        block.push(c);
       }
 
-      block.push(c);
-    });
-    addJsxVirtualBlock(this.end, -1);
-    this.childs = newChilds;
+      createJsxList(this.childs[this.childs.length - 1].start, -1);
+      newChilds.push(this.childs[this.childs.length - 1]);
+      this.childs = newChilds;
+    }
 
     this.newStr = this.concatVariable(0, 0);
   }
-
-  constructor(opt: {
-    openingStart: number;
-    openingEnd: number;
-    closingStart: number;
-    closingEnd: number;
-    fileReplacer: FileReplacer;
-    parent: Context;
-  }) {
-    super(opt.fileReplacer, opt.openingEnd, opt.closingStart, opt.parent);
-    this.openingStart = opt.openingStart;
-    this.closingEnd = opt.closingEnd;
-  }
-
-  private openingStart: number;
-  private closingEnd: number;
 }
 
 export class JsxExpression extends Context {
@@ -181,9 +159,6 @@ export class JsxExpression extends Context {
     parent: Context,
     fileReplacer: FileReplacer
   ) {
-    if (node.parent.kind === SyntaxKind.JsxAttribute) {
-      parent = fileReplacer.rootContext;
-    }
     const jsxExpression = new JsxExpression(
       fileReplacer,
       node.getStart(),
@@ -198,10 +173,10 @@ export class JsxExpression extends Context {
   }
 
   protected override generatingStrFromChildThenSet(node: ts.Expression) {
-    this.newStr = this.concatVariable('{'.length, '}'.length);
-    if (node.parent.kind === SyntaxKind.JsxAttribute) {
-      this.newStr = '{' + this.newStr + '}';
-    }
+    this.newStr = this.concatVariable(0, 0);
+    // if (node.parent.kind === SyntaxKind.JsxAttribute) {
+    //   this.newStr = '{' + this.newStr + '}';
+    // }
   }
 
   public includeJsx = false;
@@ -238,6 +213,28 @@ export class Template extends Context {
   }
 }
 
+// export class JsxTagElement extends Context {
+//   protected generatingStrFromChildThenSet(node?: ts.Node | undefined): void {
+//     this.newStr = this.concatVariable(0, 0);
+//   }
+
+//   public static override handle(
+//     node: ts.JsxSelfClosingElement,
+//     parent: Context,
+//     replacer: FileReplacer
+//   ) {
+//     const closingElement = new JsxTagElement(
+//       replacer,
+//       node.getStart(),
+//       node.getEnd(),
+//       parent
+//     );
+//     ts.forEachChild(node, (n) =>
+//       replacer.traverseAstAndExtractLocales(n, closingElement)
+//     );
+//     closingElement.generateStrFromChildThenSet();
+//   }
+// }
 export class TemplateExpression extends Context {
   protected override generatingStrFromChildThenSet() {
     this.newStr = this.concatVariable('${'.length, '}'.length);

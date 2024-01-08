@@ -1,5 +1,6 @@
 import ts from 'typescript';
 import { FileReplacer } from './FileReplacer';
+import { JsxExpression } from './contextImpl';
 
 export abstract class Context {
   public childs: Context[] = [];
@@ -19,7 +20,7 @@ export abstract class Context {
     this.childs.sort((a, b) => a.start - b.start);
     let prev = this.childs?.[0];
     for (let i = 1; i < this.childs.length; i++) {
-      if (this.childs[i].start <= prev.end) {
+      if (this.childs[i].start < prev.end) {
         throw new Error('error parser');
       }
     }
@@ -55,9 +56,17 @@ export abstract class Context {
     const valueMapKey: Record<string, string> = {};
     const keyMapValue: Record<string, string> = {};
 
-    const str = this.concat(startSkip, endSkip, (str) => {
+    const str = this.concat(startSkip, endSkip, (str, c) => {
+      if (
+        c instanceof JsxExpression &&
+        str.startsWith('{') &&
+        str.endsWith('}')
+      ) {
+        str = str.slice(1, str.length - 1);
+      }
       if (!valueMapKey[str]) {
         const key = 'v' + (Object.keys(valueMapKey).length + 1);
+
         valueMapKey[str] = key;
         keyMapValue[key] = str;
       }
@@ -71,13 +80,13 @@ export abstract class Context {
   protected concat(
     startSkip: number,
     endSkip: number,
-    strHandler: (str: string) => string = (str) => str
+    strHandler: (str: string, c: Context) => string = (str) => str
   ) {
     let str = '';
     let start = this.start + startSkip;
     this.childs.forEach((c) => {
       str += this.replacer.file.slice(start, c.start);
-      str += strHandler(c.newStr);
+      str += strHandler(c.newStr, c);
       start = c.end;
     });
     str += this.replacer.file.slice(start, this.end - endSkip);

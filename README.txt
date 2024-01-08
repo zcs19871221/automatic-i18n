@@ -1,9 +1,6 @@
 
 context: start, end, newStr, childs: context[]
 
-generateNewText:处理childs后，生成newStr，表示【start-end】需要替换的新字符串
-如果str为空，则表示不需要替换
-
 模板字符串
     childs: 模板字符串变量
     generateNewText: 避开child替换为newText，连接出来的字符串，如果包含中文，则设置str为i18n.intl.formatMesage(字符串,variable)，否则设置str为空。放到父亲的child里，因为这个可能还会被替换
