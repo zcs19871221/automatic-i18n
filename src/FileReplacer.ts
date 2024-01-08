@@ -2,196 +2,20 @@ import * as ts from 'typescript';
 import { ImportDeclaration, SyntaxKind } from 'typescript';
 import { BundleReplacer } from './BundleReplacer';
 import { Opt } from './types';
+import { Context } from './context';
+import {
+  RootContext,
+  Template,
+  TemplateExpression,
+  JsxExpression,
+  Jsx,
+  StringLiteralContext,
+} from './contextImpl';
 
 interface Warning {
   start: number;
   end: number;
   text: string;
-}
-
-class Context {
-  public childs: Context[] = [];
-  public parent: Context | null = null;
-
-  public push(context: Context) {
-    this.childs.push(context);
-    context.parent = this;
-  }
-
-  constructor(
-    public replacer: FileReplacer,
-    public start: number,
-    public end: number,
-    public newStr: string = ''
-  ) {}
-
-  protected concatVariable(startSkip: number, endSkip: number): string {
-    return this.concat(startSkip, endSkip);
-  }
-
-  protected concatBlock(
-    startSkip: number,
-    endSkip: number
-  ): { str: string; keyMapValue: Record<string, string> } {
-    const valueMapKey: Record<string, string> = {};
-    const keyMapValue: Record<string, string> = {};
-
-    const str = this.concat(startSkip, endSkip, (str) => {
-      if (!valueMapKey[str]) {
-        const key = 'v' + (Object.keys(valueMapKey).length + 1);
-        valueMapKey[str] = key;
-        keyMapValue[key] = str;
-      }
-
-      return '{' + valueMapKey[str] + '}';
-    });
-
-    return { str, keyMapValue };
-  }
-
-  protected concat(
-    startSkip: number,
-    endSkip: number,
-    strHandler: (str: string) => string = (str) => str
-  ) {
-    let str = '';
-    let start = this.start + startSkip;
-    this.childs.forEach((c) => {
-      str += this.replacer.file.slice(start, c.start);
-      str += strHandler(c.newStr);
-      start = c.end;
-    });
-    str += this.replacer.file.slice(start, this.end - endSkip);
-    return str;
-  }
-}
-
-class StringLiteralContext extends Context {}
-
-class JsxVirutalBlock extends Context {
-  public setNewStr() {
-    const { str, keyMapValue } = this.concatBlock(0, 0);
-
-    if (!this.replacer.includesTargetLocale(str)) {
-      this.newStr = this.concat(0, 0, (str) => '{' + str + '}');
-      return;
-    }
-
-    const newStr = str.replace(
-      /(^[\s\n]+)|([\s\n]+$)/g,
-      (_match, start, end) => {
-        if (start) {
-          this.start += _match.length;
-        } else {
-          this.end -= _match.length;
-        }
-        return '';
-      }
-    );
-
-    const textKey =
-      this.replacer.bundleReplacer.getOrSetLocaleTextKeyIfAbsence(newStr);
-    this.newStr = '{' + FileReplacer.localeMapToken(textKey, keyMapValue) + '}';
-  }
-}
-
-class RootContext extends Context {}
-
-class Jsx extends Context {
-  generateStrThenSet() {
-    this.newStr = this.concatVariable(0, 0);
-    return this.newStr;
-  }
-
-  private openingStart: number;
-  private closingEnd: number;
-
-  constructor(opt: {
-    openingStart: number;
-    openingEnd: number;
-    closingStart: number;
-    closingEnd: number;
-    fileReplacer: FileReplacer;
-  }) {
-    super(opt.fileReplacer, opt.openingEnd, opt.closingStart);
-    this.openingStart = opt.openingStart;
-    this.closingEnd = opt.closingEnd;
-  }
-
-  public mergeChilds(): void {
-    const newChilds: Context[] = [];
-    let start = this.start;
-    let block: Context[] = [];
-    const addJsxVirtualBlock = (end: number, nextStart: number) => {
-      if (start >= end) {
-        return;
-      }
-      const virtualBlock = new JsxVirutalBlock(this.replacer, start, end);
-      virtualBlock.childs.push(...block);
-      virtualBlock.setNewStr();
-      if (virtualBlock.newStr) {
-        newChilds.push(virtualBlock);
-      }
-      start = nextStart;
-      block = [];
-    };
-    this.childs.forEach((c) => {
-      if (c instanceof Jsx) {
-        addJsxVirtualBlock(c.openingStart, c.closingEnd);
-        newChilds.push(c);
-        return;
-      }
-
-      if (c instanceof JsxExpression && c.includeJsx) {
-        addJsxVirtualBlock(c.start, c.end);
-        if (c.newStr) {
-          c.newStr = '{' + c.newStr + '}';
-          newChilds.push(c);
-        }
-        return;
-      }
-
-      block.push(c);
-    });
-    addJsxVirtualBlock(this.end, -1);
-    this.childs = newChilds;
-  }
-}
-
-class JsxExpression extends Context {
-  public generateStrThenSet(node: ts.Expression) {
-    this.newStr = this.concatVariable('{'.length, '}'.length);
-    if (node.parent.kind === SyntaxKind.JsxAttribute) {
-      this.newStr = '{' + this.newStr + '}';
-    }
-    return this.newStr;
-  }
-
-  public includeJsx = false;
-}
-
-class Template extends Context {
-  public setNewStr() {
-    const { keyMapValue, str } = this.concatBlock('`'.length, '`'.length);
-    if (!this.replacer.includesTargetLocale(str)) {
-      this.newStr = this.concat(0, 0, (str: string) => '${' + str + '}');
-      return;
-    }
-    const textKey =
-      this.replacer.bundleReplacer.getOrSetLocaleTextKeyIfAbsence(str);
-    this.newStr = FileReplacer.localeMapToken(textKey, keyMapValue);
-  }
-
-  public push(templateExpression: TemplateExpression) {
-    templateExpression.setNewStr();
-    this.childs.push(templateExpression);
-  }
-}
-
-class TemplateExpression extends Context {
-  public setNewStr() {
-    this.newStr = this.concatVariable('${'.length, '}'.length);
-  }
 }
 
 export class FileReplacer {
@@ -213,20 +37,8 @@ export class FileReplacer {
       if (!this.rootContext.childs.length) {
         return this.file;
       }
-      this.rootContext.childs = this.rootContext.childs.filter((c) => c.newStr);
-      this.rootContext.childs.sort((a, b) => b.start - a.start);
-      let prevStart: number | null = null;
-      this.rootContext.childs.forEach(
-        ({ start: start, end: end, newStr: str }) => {
-          if (prevStart === null) {
-            prevStart = start;
-          } else if (end >= prevStart) {
-            throw new Error(`error parse at ${prevStart}`);
-          }
-          this.file = this.file.slice(0, start) + str + this.file.slice(end);
-        }
-      );
-
+      this.rootContext.generateStrFromChildThenSet();
+      this.file = this.rootContext.newStr;
       if (!this.hasImportedI18nModules) {
         const tsNocheckMatched = this.file.match(
           /(\n|^)\/\/\s*@ts-nocheck[^\n]*\n/
@@ -275,7 +87,7 @@ export class FileReplacer {
     return `import { ${FileReplacer.exportName} } from '${this.opt.importPath}';\n`;
   }
 
-  private generateNewText({
+  public generateNewText({
     localeTextOrPattern,
     params,
   }: {
@@ -295,7 +107,6 @@ export class FileReplacer {
   private clear() {
     this.file = '';
     this.rootContext.newStr = '';
-    this.rootContext.childs = [];
   }
 
   private extractLocales() {
@@ -308,93 +119,9 @@ export class FileReplacer {
     this.traverseAstAndExtractLocales(sourceFile, this.rootContext);
   }
 
-  private removeTextVariableSymobl(text: string) {
-    return text.replace(/^['"`]/, '').replace(/['"`]$/, '');
-  }
+  public hasImportedI18nModules: boolean = false;
 
-  private textKeyAddJsxVariableBacket(textKey: string) {
-    return '{' + textKey + '}';
-  }
-
-  private handleTemplate(node: ts.TemplateExpression, context: Context) {
-    const template = new Template(this, node.getStart(), node.getEnd());
-    ts.forEachChild(node, (n) =>
-      this.traverseAstAndExtractLocales(n, template)
-    );
-    template.setNewStr();
-    context.childs.push(template);
-  }
-
-  private handleTemplateExpression(node: ts.TemplateSpan, context: Context) {
-    const first = node.getChildren()[0];
-    const startSymbol = '${';
-    const endSymbol = '}';
-    const templateExpression = new TemplateExpression(
-      this,
-      this.file.lastIndexOf(startSymbol, node.getStart()),
-      this.file.indexOf(endSymbol, first.getEnd()) + endSymbol.length
-    );
-    ts.forEachChild(node, (n) =>
-      this.traverseAstAndExtractLocales(n, templateExpression)
-    );
-    templateExpression.setNewStr();
-    context.childs.push(templateExpression);
-  }
-
-  private handleJsxExpression(node: ts.JsxExpression, context: Context) {
-    const jsxExpression = new JsxExpression(
-      this,
-      node.getStart(),
-      node.getEnd()
-    );
-    ts.forEachChild(node, (n) =>
-      this.traverseAstAndExtractLocales(n, jsxExpression)
-    );
-
-    jsxExpression.generateStrThenSet(node);
-
-    context.childs.push(jsxExpression);
-    jsxExpression.parent = context;
-  }
-
-  private handleJsx(node: any, context: Context) {
-    let jsxExpressionParent: Context | null = context;
-    while (
-      jsxExpressionParent !== null &&
-      !(jsxExpressionParent instanceof JsxExpression)
-    ) {
-      jsxExpressionParent = jsxExpressionParent.parent;
-    }
-
-    if (jsxExpressionParent instanceof JsxExpression) {
-      jsxExpressionParent.includeJsx = true;
-    }
-    const openingElement: any = node.openingElement || node.openingFragment;
-    const closingElement: any = node.closingElement || node.closingFragment;
-    this.traverseAstAndExtractLocales(openingElement, context);
-    const jsx = new Jsx({
-      fileReplacer: this,
-      openingStart: openingElement.getStart(),
-      openingEnd: openingElement.getEnd(),
-      closingEnd: closingElement.getEnd(),
-      closingStart: closingElement.getStart(),
-    });
-
-    node.children
-      .filter((e: any) => e !== openingElement && e !== closingElement)
-      .forEach((n: any) => {
-        this.traverseAstAndExtractLocales(n, jsx);
-      });
-
-    jsx.mergeChilds();
-    jsx.generateStrThenSet();
-    context.childs.push(jsx);
-    jsx.parent = context;
-  }
-
-  private hasImportedI18nModules: boolean = false;
-
-  private traverseAstAndExtractLocales(node: ts.Node, context: Context) {
+  public traverseAstAndExtractLocales(node: ts.Node, context: Context) {
     // console.log(node.kind, SyntaxKind[node.kind], node.getText());
     switch (node.kind) {
       // 判断是否引入i18
@@ -436,59 +163,31 @@ export class FileReplacer {
             });
             return;
           }
-          let newText = this.generateNewText({
-            localeTextOrPattern: this.removeTextVariableSymobl(node.getText()),
-          });
-          if (node.parent.kind === SyntaxKind.JsxAttribute) {
-            newText = this.textKeyAddJsxVariableBacket(newText);
-          }
-
-          context.childs.push(
-            new StringLiteralContext(
-              this,
-              node.getStart(),
-              node.getEnd(),
-              newText
-            )
-          );
+          StringLiteralContext.handle(node as ts.StringLiteral, context, this);
         }
         break;
       // html文本标签中字面量<div>大家好</div>
       case SyntaxKind.JsxElement:
       case SyntaxKind.JsxFragment:
-        this.handleJsx(node, context);
+        Jsx.handle(node, context, this);
         break;
       case SyntaxKind.JsxExpression: {
-        this.handleJsxExpression(node as ts.JsxExpression, context);
+        JsxExpression.handle(node as ts.JsxExpression, context, this);
         break;
       }
       // 没有变量的模板字符串: `张三`
       case SyntaxKind.FirstTemplateToken: {
-        if (!this.includesTargetLocale(node.getText())) {
-          return;
-        }
-        context.childs.push(
-          new StringLiteralContext(
-            this,
-            node.getStart(),
-            node.getEnd(),
-            this.generateNewText({
-              localeTextOrPattern: this.removeTextVariableSymobl(
-                node.getText()
-              ),
-            })
-          )
-        );
+        StringLiteralContext.handle(node as ts.StringLiteral, context, this);
         break;
       }
       // 模板字符串: `${name}张三${gender}李四`
       case ts.SyntaxKind.TemplateExpression: {
-        this.handleTemplate(node as ts.TemplateExpression, context);
+        Template.handle(node as ts.TemplateExpression, context, this);
         break;
       }
       // 模板字符串: `${name}张三${gender}李四`
       case ts.SyntaxKind.TemplateSpan: {
-        this.handleTemplateExpression(node as ts.TemplateSpan, context);
+        TemplateExpression.handle(node as ts.TemplateSpan, context, this);
         break;
       }
       // 中文对象名警告和template中的变量${name}提取
