@@ -25,7 +25,7 @@ export class StringLiteralContext extends Context {
     stringLiteral.generateStrFromChildThenSet(node);
   }
 
-  public override generatingStrFromChildThenSet(node: ts.Node): void {
+  protected override generatingStrFromChildThenSet(node: ts.Node): void {
     let newText = this.replacer.generateNewText({
       localeTextOrPattern: this.removeTextVariableSymobl(node.getText()),
     });
@@ -37,11 +37,16 @@ export class StringLiteralContext extends Context {
 }
 
 class JsxVirutalBlock extends Context {
-  public override generatingStrFromChildThenSet() {
+  protected override generatingStrFromChildThenSet() {
     const { str, keyMapValue } = this.concatBlock(0, 0);
 
     if (!this.replacer.includesTargetLocale(str)) {
-      this.newStr = this.concat(0, 0, (str) => '{' + str + '}');
+      this.newStr = this.concat(0, 0, (str) => {
+        if (str.startsWith('{') && str.endsWith('}')) {
+          return str;
+        }
+        return '{' + str + '}';
+      });
       return;
     }
 
@@ -65,7 +70,9 @@ class JsxVirutalBlock extends Context {
 }
 
 export class RootContext extends Context {
-  public generatingStrFromChildThenSet(node?: ts.Node | undefined): void {
+  protected override generatingStrFromChildThenSet(
+    node?: ts.Node | undefined
+  ): void {
     this.childs = this.childs.filter((c) => c.needReplace);
 
     this.newStr = this.concatVariable(0, 0);
@@ -110,7 +117,7 @@ export class Jsx extends Context {
     jsx.generateStrFromChildThenSet();
   }
 
-  public override generatingStrFromChildThenSet(): void {
+  protected override generatingStrFromChildThenSet(): void {
     const newChilds: Context[] = [];
     let start = this.start;
     let block: Context[] = [];
@@ -120,7 +127,7 @@ export class Jsx extends Context {
       }
       const virtualBlock = new JsxVirutalBlock(this.replacer, start, end, this);
       virtualBlock.childs.push(...block);
-      virtualBlock.generatingStrFromChildThenSet();
+      virtualBlock.generateStrFromChildThenSet();
       if (virtualBlock.newStr) {
         newChilds.push(virtualBlock);
       }
@@ -169,18 +176,14 @@ export class Jsx extends Context {
 }
 
 export class JsxExpression extends Context {
-  public override generatingStrFromChildThenSet(node: ts.Expression) {
-    this.newStr = this.concatVariable('{'.length, '}'.length);
-    if (node.parent.kind === SyntaxKind.JsxAttribute) {
-      this.newStr = '{' + this.newStr + '}';
-    }
-  }
-
   public static override handle(
     node: ts.JsxExpression,
     parent: Context,
     fileReplacer: FileReplacer
   ) {
+    if (node.parent.kind === SyntaxKind.JsxAttribute) {
+      parent = fileReplacer.rootContext;
+    }
     const jsxExpression = new JsxExpression(
       fileReplacer,
       node.getStart(),
@@ -192,6 +195,13 @@ export class JsxExpression extends Context {
     );
 
     jsxExpression.generateStrFromChildThenSet(node);
+  }
+
+  protected override generatingStrFromChildThenSet(node: ts.Expression) {
+    this.newStr = this.concatVariable('{'.length, '}'.length);
+    if (node.parent.kind === SyntaxKind.JsxAttribute) {
+      this.newStr = '{' + this.newStr + '}';
+    }
   }
 
   public includeJsx = false;
@@ -215,7 +225,7 @@ export class Template extends Context {
     template.generateStrFromChildThenSet();
   }
 
-  public override generatingStrFromChildThenSet() {
+  protected override generatingStrFromChildThenSet() {
     const { keyMapValue, str } = this.concatBlock('`'.length, '`'.length);
     if (!this.replacer.includesTargetLocale(str)) {
       this.newStr = this.concat(0, 0, (str: string) => '${' + str + '}');
@@ -229,7 +239,7 @@ export class Template extends Context {
 }
 
 export class TemplateExpression extends Context {
-  public override generatingStrFromChildThenSet() {
+  protected override generatingStrFromChildThenSet() {
     this.newStr = this.concatVariable('${'.length, '}'.length);
   }
 

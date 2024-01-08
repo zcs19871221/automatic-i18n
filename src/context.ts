@@ -25,7 +25,7 @@ export abstract class Context {
     }
   }
 
-  public abstract generatingStrFromChildThenSet(node?: ts.Node): void;
+  protected abstract generatingStrFromChildThenSet(node?: ts.Node): void;
 
   public generateStrFromChildThenSet(node?: ts.Node): void {
     this.sortChildThenCheck();

@@ -42,5 +42,14 @@ const nest1 = (
         : i18.intl.formatMessage({ id: 'key0005' }, { v1: name })}
     </span>
     ;
+    <span
+      className={css`
+        margin-left: 20px;
+      `}
+      style={{
+        width: '20px',
+      }}
+      name={i18.intl.formatMessage({ id: 'key0009' })}
+    />
   </div>
 );

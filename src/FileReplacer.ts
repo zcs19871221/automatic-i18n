@@ -40,10 +40,10 @@ export class FileReplacer {
         true
       );
       this.traverseAstAndExtractLocales(sourceFile, this.rootContext);
-      if (!this.rootContext.childs.length) {
-        return this.file;
-      }
       this.rootContext.generateStrFromChildThenSet();
+      if (!this.rootContext.needReplace) {
+        return '';
+      }
       this.file = this.rootContext.newStr;
       if (!this.hasImportedI18nModules) {
         const tsNocheckMatched = this.file.match(
@@ -201,6 +201,21 @@ export class FileReplacer {
         }
         break;
       }
+      // // 自关闭标签属于rootContext，默认是属于jsx的，错误
+      // case SyntaxKind.self: {
+      //   if (
+      //     this.opt.localeToReplace !== 'en-us' &&
+      //     this.includesTargetLocale(node.getText()) &&
+      //     !this.ignore(node)
+      //   ) {
+      //     this.addWarningInfo({
+      //       text: 'property name of object should be english',
+      //       start: node.getStart(),
+      //       end: node.getEnd(),
+      //     });
+      //   }
+      //   break;
+      // }
       default:
         ts.forEachChild(node, (n) =>
           this.traverseAstAndExtractLocales(n, context)

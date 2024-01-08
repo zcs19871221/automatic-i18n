@@ -13,4 +13,5 @@ export const locales: Locales = {
   key0006: '你好{v1}',
   key0007: '准备{v1}再见{v1}',
   key0008: '再见',
+  key0009: '张成思',
 };
