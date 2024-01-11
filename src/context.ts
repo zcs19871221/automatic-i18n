@@ -1,19 +1,40 @@
-import ts from 'typescript';
+import { Node, forEachChild } from 'typescript';
 import { FileReplacer } from './FileReplacer';
 import { JsxExpression } from './contextImpl';
 
+export interface Opt {
+  node: Node;
+  parent?: Context;
+  replacer: FileReplacer;
+}
+
+export interface SubContextConstructor {
+  new (opt: Opt): Context;
+}
 export abstract class Context {
-  public childs: Context[] = [];
+  protected childs: Context[] = [];
   public newStr: string = '';
   public needReplace = false;
+  protected node?: Node;
+  protected replacer: FileReplacer;
+  public parent?: Context;
+  public start: number;
+  public end: number;
 
-  constructor(
-    public replacer: FileReplacer,
-    public start: number,
-    public end: number,
-    public parent?: Context
-  ) {
-    parent?.childs.push(this);
+  constructor({
+    node,
+    start,
+    end,
+    replacer,
+    parent,
+  }: Omit<Opt, 'node'> & { start: number; end: number; node?: Node }) {
+    this.node = node;
+    this.replacer = replacer;
+    this.parent = parent;
+    this.start = start;
+    this.end = end;
+
+    this.parent?.childs.push(this);
   }
 
   private sortChildThenCheck() {
@@ -26,27 +47,16 @@ export abstract class Context {
     }
   }
 
-  protected abstract generatingStrFromChildThenSet(node?: ts.Node): void;
+  protected abstract generatingStrFromChildThenSet(): void;
 
-  public generateStrFromChildThenSet(node?: ts.Node): void {
+  public generateStrFromChildThenSet() {
     this.sortChildThenCheck();
-    this.generatingStrFromChildThenSet(node);
+    this.generatingStrFromChildThenSet();
     this.needReplace =
       this.needReplace || this.childs.some((c) => c.needReplace);
     this.childs?.forEach((c) => {
-      c.newStr = '';
+      c.clear();
     });
-    this.childs = [];
-  }
-
-  public static handle(
-    _node: ts.Node,
-    _parent: Context,
-    _replacer: FileReplacer
-  ) {}
-
-  protected concatVariable(startSkip: number, endSkip: number): string {
-    return this.concat(startSkip, endSkip);
   }
 
   protected concatBlock(
@@ -56,7 +66,7 @@ export abstract class Context {
     const valueMapKey: Record<string, string> = {};
     const keyMapValue: Record<string, string> = {};
 
-    const str = this.concat(startSkip, endSkip, (str, c) => {
+    const str = this.joinChilds(startSkip, endSkip, (str, c) => {
       if (
         c instanceof JsxExpression &&
         str.startsWith('{') &&
@@ -77,7 +87,7 @@ export abstract class Context {
     return { str, keyMapValue };
   }
 
-  protected concat(
+  protected joinChilds(
     startSkip: number,
     endSkip: number,
     strHandler: (str: string, c: Context) => string = (str) => str
@@ -91,5 +101,41 @@ export abstract class Context {
     });
     str += this.replacer.file.slice(start, this.end - endSkip);
     return str;
+  }
+
+  public clear() {
+    (this.node as any) = null;
+    this.parent = undefined;
+    this.newStr = '';
+    this.childs = [];
+  }
+}
+
+export abstract class NodeHandler extends Context {
+  public static of(_parameter: Opt): NodeHandler | null {
+    throw new Error('should implement of method');
+  }
+
+  public static nodeHandlers: NodeHandler[] = [];
+  private traverse() {
+    if (this.node) {
+      forEachChild(this.node, (n) =>
+        this.replacer.traverseAstAndExtractLocales(n, this)
+      );
+    }
+  }
+
+  public static handle(opt: Opt): Context | null {
+    const context = this.of(opt);
+
+    if (context === null) {
+      return null;
+    }
+
+    context.traverse();
+
+    context.generateStrFromChildThenSet();
+
+    return context;
   }
 }

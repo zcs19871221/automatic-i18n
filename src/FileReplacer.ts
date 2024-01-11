@@ -9,8 +9,8 @@ import {
   TemplateExpression,
   JsxExpression,
   Jsx,
-  StringLiteralContext,
 } from './contextImpl';
+import { StringLiteralContext } from './StringLiteralContext';
 
 interface Warning {
   start: number;
@@ -21,16 +21,14 @@ interface Warning {
 export class FileReplacer {
   private static ignoreWarningKey = '@ignore';
 
-  public readonly rootContext: RootContext;
   constructor(
     private readonly fileLocate: string,
     public readonly bundleReplacer: BundleReplacer,
     private readonly opt: Opt,
     public file: string
-  ) {
-    this.rootContext = new RootContext(this, 0, file.length);
-  }
+  ) {}
 
+  traverse() {}
   public replace() {
     try {
       const sourceFile = ts.createSourceFile(
@@ -39,12 +37,14 @@ export class FileReplacer {
         this.opt.tsTarget,
         true
       );
-      this.traverseAstAndExtractLocales(sourceFile, this.rootContext);
-      this.rootContext.generateStrFromChildThenSet();
-      if (!this.rootContext.needReplace) {
+      const rootContext = RootContext.handle({
+        node: sourceFile,
+        replacer: this,
+      });
+      if (!rootContext || !rootContext.needReplace) {
         return '';
       }
-      this.file = this.rootContext.newStr;
+      this.file = rootContext.newStr;
       if (!this.hasImportedI18nModules) {
         const tsNocheckMatched = this.file.match(
           /(\n|^)\/\/\s*@ts-nocheck[^\n]*\n/
@@ -58,6 +58,7 @@ export class FileReplacer {
           this.createImportStatement() +
           this.file.slice(insertIndex);
       }
+      rootContext.clear();
       return this.file;
     } catch (error: any) {
       if (error.message) {
@@ -112,7 +113,6 @@ export class FileReplacer {
 
   private clear() {
     this.file = '';
-    this.rootContext.newStr = '';
   }
 
   public hasImportedI18nModules: boolean = false;
@@ -159,7 +159,11 @@ export class FileReplacer {
             });
             return;
           }
-          StringLiteralContext.handle(node as ts.StringLiteral, context, this);
+          StringLiteralContext.handle({
+            node: node as ts.StringLiteral,
+            parent: context,
+            replacer: this,
+          });
         }
         break;
       // html文本标签中字面量<div>大家好</div>
@@ -170,25 +174,41 @@ export class FileReplacer {
       case SyntaxKind.JsxClosingElement:
       case SyntaxKind.JsxClosingFragment:
       case SyntaxKind.JsxSelfClosingElement:
-        Jsx.handle(node, context, this);
+        Jsx.handle({ node, parent: context, replacer: this });
         break;
       case SyntaxKind.JsxExpression: {
-        JsxExpression.handle(node as ts.JsxExpression, context, this);
+        JsxExpression.handle({
+          node: node as ts.JsxExpression,
+          parent: context,
+          replacer: this,
+        });
         break;
       }
       // 没有变量的模板字符串: `张三`
       case SyntaxKind.FirstTemplateToken: {
-        StringLiteralContext.handle(node as ts.StringLiteral, context, this);
+        StringLiteralContext.handle({
+          node: node as ts.StringLiteral,
+          parent: context,
+          replacer: this,
+        });
         break;
       }
       // 模板字符串: `${name}张三${gender}李四`
       case ts.SyntaxKind.TemplateExpression: {
-        Template.handle(node as ts.TemplateExpression, context, this);
+        Template.handle({
+          node: node as ts.TemplateExpression,
+          parent: context,
+          replacer: this,
+        });
         break;
       }
       // 模板字符串: `${name}张三${gender}李四`
       case ts.SyntaxKind.TemplateSpan: {
-        TemplateExpression.handle(node as ts.TemplateSpan, context, this);
+        TemplateExpression.handle({
+          node: node as ts.TemplateSpan,
+          parent: context,
+          replacer: this,
+        });
         break;
       }
       // 中文对象名警告和template中的变量${name}提取
