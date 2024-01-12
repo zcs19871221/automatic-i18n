@@ -14,10 +14,10 @@ class JsxTagAndExpressionList extends Context {
   }
 
   protected override generatingStrFromChildThenSet() {
-    const { str, keyMapValue } = this.concatBlock(0, 0);
+    const { str, keyMapValue } = this.joinChildsAsParamter(0, 0);
 
     if (!this.replacer.includesTargetLocale(str)) {
-      this.newStr = this.joinChilds(0, 0);
+      this.newStr = this.joinChildsToString(0, 0);
       return;
     }
 
@@ -40,22 +40,7 @@ class JsxTagAndExpressionList extends Context {
   }
 }
 
-export class RootContext extends NodeHandler {
-  protected override generatingStrFromChildThenSet(): void {
-    this.childs = this.childs.filter((c) => c.needReplace);
-
-    this.newStr = this.joinChilds(0, 0);
-  }
-
-  public static override of(opt: Opt): RootContext {
-    return new RootContext({
-      ...opt,
-      start: 0,
-      end: opt.node.getEnd(),
-    });
-  }
-}
-
+// childs：[开始标签,jsxExpression|jsx, 结束标签]
 export class Jsx extends NodeHandler {
   public static override of(opt: Opt) {
     const context = new Jsx({
@@ -130,7 +115,7 @@ export class Jsx extends NodeHandler {
       this.childs = newChilds;
     }
 
-    this.newStr = this.joinChilds(0, 0);
+    this.newStr = this.joinChildsToString(0, 0);
   }
 }
 
@@ -144,7 +129,7 @@ export class JsxExpression extends NodeHandler {
   }
 
   protected override generatingStrFromChildThenSet() {
-    this.newStr = this.joinChilds(0, 0);
+    this.newStr = this.joinChildsToString(0, 0);
   }
 
   public includeJsx = false;

@@ -1,6 +1,6 @@
 import { Node, forEachChild } from 'typescript';
 import { FileReplacer } from './FileReplacer';
-import { JsxExpression } from './JsxTagAndExpressionList';
+import { JsxExpression } from './Jsx';
 
 export interface Opt {
   node: Node;
@@ -8,9 +8,6 @@ export interface Opt {
   replacer: FileReplacer;
 }
 
-export interface SubContextConstructor {
-  new (opt: Opt): Context;
-}
 export abstract class Context {
   protected childs: Context[] = [];
   public newStr: string = '';
@@ -59,14 +56,14 @@ export abstract class Context {
     });
   }
 
-  protected concatBlock(
+  protected joinChildsAsParamter(
     startSkip: number,
     endSkip: number
   ): { str: string; keyMapValue: Record<string, string> } {
     const valueMapKey: Record<string, string> = {};
     const keyMapValue: Record<string, string> = {};
 
-    const str = this.joinChilds(startSkip, endSkip, (str, c) => {
+    const str = this.joinChildsToString(startSkip, endSkip, (str, c) => {
       if (
         c instanceof JsxExpression &&
         str.startsWith('{') &&
@@ -87,7 +84,7 @@ export abstract class Context {
     return { str, keyMapValue };
   }
 
-  protected joinChilds(
+  protected joinChildsToString(
     startSkip: number,
     endSkip: number,
     strHandler: (str: string, c: Context) => string = (str) => str

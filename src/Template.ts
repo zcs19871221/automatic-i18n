@@ -11,9 +11,17 @@ export class Template extends NodeHandler {
   }
 
   protected override generatingStrFromChildThenSet() {
-    const { keyMapValue, str } = this.concatBlock('`'.length, '`'.length);
+    const { keyMapValue, str } = this.joinChildsAsParamter(
+      '`'.length,
+      '`'.length
+    );
     if (!this.replacer.includesTargetLocale(str)) {
-      this.newStr = this.joinChilds(0, 0, (str: string) => '${' + str + '}');
+      this.newStr = this.joinChildsToString(
+        0,
+        0,
+        (str: string) =>
+          TemplateExpression.startSymbol + str + TemplateExpression.endSymbol
+      );
       return;
     }
     this.needReplace = true;
@@ -25,20 +33,26 @@ export class Template extends NodeHandler {
 
 export class TemplateExpression extends NodeHandler {
   protected override generatingStrFromChildThenSet() {
-    this.newStr = this.joinChilds('${'.length, '}'.length);
+    this.newStr = this.joinChildsToString(
+      TemplateExpression.startSymbol.length,
+      TemplateExpression.endSymbol.length
+    );
   }
 
   public static override of(opt: Opt) {
     const first = opt.node.getChildren()[0];
-    const startSymbol = '${';
-    const endSymbol = '}';
+
     const start = opt.replacer.file.lastIndexOf(
-      startSymbol,
+      this.startSymbol,
       opt.node.getStart()
     );
     const end =
-      opt.replacer.file.indexOf(endSymbol, first.getEnd()) + endSymbol.length;
+      opt.replacer.file.indexOf(this.endSymbol, first.getEnd()) +
+      this.endSymbol.length;
 
     return new TemplateExpression({ ...opt, start, end });
   }
+
+  public static readonly startSymbol: string = '${';
+  public static readonly endSymbol: string = '}';
 }
