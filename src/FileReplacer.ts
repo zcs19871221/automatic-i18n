@@ -2,7 +2,7 @@ import * as ts from 'typescript';
 import { ImportDeclaration, SyntaxKind } from 'typescript';
 import { BundleReplacer } from './BundleReplacer';
 import { Opt } from './types';
-import { Context } from './context';
+import { Context } from './Context';
 import { JsxExpression, Jsx } from './Jsx';
 import { RootContext } from './RootContext';
 import { Template, TemplateExpression } from './Template';

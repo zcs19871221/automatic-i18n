@@ -1,5 +1,5 @@
 import { FileReplacer } from './FileReplacer';
-import { NodeHandler, Opt } from './context';
+import { NodeHandler, Opt } from './Context';
 
 export class Template extends NodeHandler {
   public static override of(opt: Opt) {

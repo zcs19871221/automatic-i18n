@@ -1,5 +1,5 @@
 import { SyntaxKind } from 'typescript';
-import { NodeHandler, Opt } from './context';
+import { NodeHandler, Opt } from './Context';
 
 export class StringLiteralContext extends NodeHandler {
   private removeTextVariableSymobl(text: string) {

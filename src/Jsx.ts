@@ -1,6 +1,6 @@
 import { SyntaxKind } from 'typescript';
 import { FileReplacer } from './FileReplacer';
-import { Context, NodeHandler, Opt } from './context';
+import { Context, NodeHandler, Opt } from './Context';
 
 class JsxTagAndExpressionList extends Context {
   constructor(
