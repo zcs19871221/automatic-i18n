@@ -3,13 +3,8 @@ import { ImportDeclaration, SyntaxKind } from 'typescript';
 import { BundleReplacer } from './BundleReplacer';
 import { Opt } from './types';
 import { Context } from './context';
-import {
-  RootContext,
-  Template,
-  TemplateExpression,
-  JsxExpression,
-  Jsx,
-} from './contextImpl';
+import { RootContext, JsxExpression, Jsx } from './JsxTagAndExpressionList';
+import { Template, TemplateExpression } from './Template';
 import { StringLiteralContext } from './StringLiteralContext';
 
 interface Warning {

@@ -1,6 +1,6 @@
 import { Node, forEachChild } from 'typescript';
 import { FileReplacer } from './FileReplacer';
-import { JsxExpression } from './contextImpl';
+import { JsxExpression } from './JsxTagAndExpressionList';
 
 export interface Opt {
   node: Node;
