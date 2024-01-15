@@ -17,101 +17,37 @@ interface Warning {
 export class FileReplacer {
   private static ignoreWarningKey = '@ignore';
 
+  public rootContext: RootContext;
   constructor(
     private readonly fileLocate: string,
     public readonly bundleReplacer: BundleReplacer,
     private readonly opt: Opt,
-    public file: string
-  ) {}
+    file: string
+  ) {
+    const sourceFile = ts.createSourceFile(
+      this.fileLocate,
+      file,
+      this.opt.tsTarget,
+      true
+    );
+    this.rootContext = RootContext.of({ node: sourceFile, replacer: this });
+    this.rootContext.str = file;
+  }
 
-  traverse() {}
   public replace() {
     try {
-      const sourceFile = ts.createSourceFile(
-        this.fileLocate,
-        this.file,
-        this.opt.tsTarget,
-        true
-      );
-      const rootContext = RootContext.handle({
-        node: sourceFile,
-        replacer: this,
-      });
-      if (!rootContext || !rootContext.needReplace) {
-        return '';
-      }
-      this.file = rootContext.newStr;
-      if (!this.hasImportedI18nModules) {
-        const tsNocheckMatched = this.file.match(
-          /(\n|^)\/\/\s*@ts-nocheck[^\n]*\n/
-        );
-        const insertIndex =
-          tsNocheckMatched === null
-            ? 0
-            : (tsNocheckMatched.index ?? 0) + tsNocheckMatched[0].length;
-        this.file =
-          this.file.slice(0, insertIndex) +
-          this.createImportStatement() +
-          this.file.slice(insertIndex);
-      }
-      rootContext.clear();
-      return this.file;
+      const rootContext = this.rootContext.doHandle();
+
+      return rootContext.str;
     } catch (error: any) {
       if (error.message) {
         error.message = '@ ' + this.fileLocate + ' ' + error.message;
       }
       console.error(error);
     } finally {
-      this.clear();
+      this.rootContext.clear();
     }
   }
-
-  private static exportName = 'i18';
-
-  private static property = 'intl';
-
-  public static localeMapToken(key: string, map?: Record<string, string>) {
-    let params = '';
-    if (map && Object.keys(map).length > 0) {
-      params += ',';
-      params +=
-        Object.entries<string>(map).reduce((text: string, [key, value]) => {
-          if (key === value) {
-            return text + key + ',';
-          } else {
-            return text + `${key}: ${value === '' ? "''" : value}` + ',';
-          }
-        }, '{') + '}';
-    }
-    return `${FileReplacer.exportName}.${FileReplacer.property}.formatMessage({id: '${key}'}${params})`;
-  }
-
-  private createImportStatement() {
-    return `import { ${FileReplacer.exportName} } from '${this.opt.importPath}';\n`;
-  }
-
-  public generateNewText({
-    localeTextOrPattern,
-    params,
-  }: {
-    localeTextOrPattern: string;
-    params?: Record<string, string>;
-  }) {
-    const localeKey =
-      this.bundleReplacer.getOrSetLocaleTextKeyIfAbsence(localeTextOrPattern);
-
-    return FileReplacer.localeMapToken(localeKey, params);
-  }
-
-  public includesTargetLocale(text: string) {
-    return /[\u4e00-\u9fa5]+/g.test(text);
-  }
-
-  private clear() {
-    this.file = '';
-  }
-
-  public hasImportedI18nModules: boolean = false;
 
   public traverseAstAndExtractLocales(node: ts.Node, context: Context) {
     // console.log(node.kind, SyntaxKind[node.kind], node.getText());
@@ -269,5 +205,9 @@ export class FileReplacer {
       );
     }
     return false;
+  }
+
+  public includesTargetLocale(text: string) {
+    return /[\u4e00-\u9fa5]+/g.test(text);
   }
 }

@@ -16,7 +16,7 @@ export class Template extends NodeHandler {
       '`'.length
     );
     if (!this.replacer.includesTargetLocale(str)) {
-      this.newStr = this.joinChildsToString(
+      this.str = this.joinChildsToString(
         0,
         0,
         (str: string) =>
@@ -25,15 +25,14 @@ export class Template extends NodeHandler {
       return;
     }
     this.needReplace = true;
-    const textKey =
-      this.replacer.bundleReplacer.getOrSetLocaleTextKeyIfAbsence(str);
-    this.newStr = FileReplacer.localeMapToken(textKey, keyMapValue);
+    const textKey = this.replacer.bundleReplacer.getOrCreateIntlId(str);
+    this.str = FileReplacer.localeMapToken(textKey, keyMapValue);
   }
 }
 
 export class TemplateExpression extends NodeHandler {
   protected override generatingStrFromChildThenSet() {
-    this.newStr = this.joinChildsToString(
+    this.str = this.joinChildsToString(
       TemplateExpression.startSymbol.length,
       TemplateExpression.endSymbol.length
     );

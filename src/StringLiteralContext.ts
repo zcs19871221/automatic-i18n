@@ -27,6 +27,6 @@ export class StringLiteralContext extends NodeHandler {
     if (this.node!.parent.kind === SyntaxKind.JsxAttribute) {
       newText = '{' + newText + '}';
     }
-    this.newStr = newText;
+    this.str = newText;
   }
 }

@@ -42,19 +42,19 @@ export class BundleReplacer {
     });
   }
 
-  public getOrSetLocaleTextKeyIfAbsence(localeText: string) {
+  private getOrCreateIntlId(localeText: string) {
     localeText = localeText.replace(/\n/g, '\\n');
-    let textKey = '';
+    let intlId = '';
     if (this.localeTextMappingKey[localeText]) {
-      textKey = this.localeTextMappingKey[localeText];
+      intlId = this.localeTextMappingKey[localeText];
     } else {
       do {
-        textKey = `key${String(this.key++).padStart(4, '0')}`;
-      } while (Object.values(this.localeTextMappingKey).includes(textKey));
-      this.localeTextMappingKey[localeText] = textKey;
+        intlId = `key${String(this.key++).padStart(4, '0')}`;
+      } while (Object.values(this.localeTextMappingKey).includes(intlId));
+      this.localeTextMappingKey[localeText] = intlId;
     }
 
-    return textKey;
+    return intlId;
   }
 
   public warnings: Set<string> = new Set();
@@ -227,5 +227,41 @@ export class BundleReplacer {
         );
       }
     });
+  }
+
+  private exportName = 'i18';
+
+  private property = 'intl';
+
+  private createIntlExpression(intlId: string, param?: Record<string, string>) {
+    let paramsString = '';
+    if (param && Object.keys(param).length > 0) {
+      paramsString += ',';
+      paramsString +=
+        Object.entries<string>(param).reduce((text: string, [key, value]) => {
+          if (key === value) {
+            return text + key + ',';
+          } else {
+            return text + `${key}: ${value === '' ? "''" : value}` + ',';
+          }
+        }, '{') + '}';
+    }
+    return `${this.exportName}.${this.property}.formatMessage({id: '${intlId}'}${paramsString})`;
+  }
+
+  public createImportStatement() {
+    return `import { ${this.exportName} } from '${this.opt.importPath}';\n`;
+  }
+
+  public createIntlExpressionFromStr({
+    str,
+    params,
+  }: {
+    str: string;
+    params?: Record<string, string>;
+  }) {
+    const intl = this.getOrCreateIntlId(str);
+
+    return this.createIntlExpression(intl, params);
   }
 }

@@ -17,7 +17,7 @@ class JsxTagAndExpressionList extends Context {
     const { str, keyMapValue } = this.joinChildsAsParamter(0, 0);
 
     if (!this.replacer.includesTargetLocale(str)) {
-      this.newStr = this.joinChildsToString(0, 0);
+      this.str = this.joinChildsToString(0, 0);
       return;
     }
 
@@ -34,9 +34,8 @@ class JsxTagAndExpressionList extends Context {
       }
     );
 
-    const textKey =
-      this.replacer.bundleReplacer.getOrSetLocaleTextKeyIfAbsence(newStr);
-    this.newStr = '{' + FileReplacer.localeMapToken(textKey, keyMapValue) + '}';
+    const textKey = this.replacer.bundleReplacer.getOrCreateIntlId(newStr);
+    this.str = '{' + FileReplacer.localeMapToken(textKey, keyMapValue) + '}';
   }
 }
 
@@ -91,7 +90,7 @@ export class Jsx extends NodeHandler {
         );
 
         jsxContextList.generateStrFromChildThenSet();
-        if (jsxContextList.newStr) {
+        if (jsxContextList.str) {
           newChilds.push(jsxContextList);
         }
         start = nextStart;
@@ -115,7 +114,7 @@ export class Jsx extends NodeHandler {
       this.childs = newChilds;
     }
 
-    this.newStr = this.joinChildsToString(0, 0);
+    this.str = this.joinChildsToString(0, 0);
   }
 }
 
@@ -129,7 +128,7 @@ export class JsxExpression extends NodeHandler {
   }
 
   protected override generatingStrFromChildThenSet() {
-    this.newStr = this.joinChildsToString(0, 0);
+    this.str = this.joinChildsToString(0, 0);
   }
 
   public includeJsx = false;

@@ -10,7 +10,7 @@ export interface Opt {
 
 export abstract class Context {
   protected childs: Context[] = [];
-  public newStr: string = '';
+  public str: string = '';
   public needReplace = false;
   protected node?: Node;
   protected replacer: FileReplacer;
@@ -92,18 +92,18 @@ export abstract class Context {
     let str = '';
     let start = this.start + startSkip;
     this.childs.forEach((c) => {
-      str += this.replacer.file.slice(start, c.start);
-      str += strHandler(c.newStr, c);
+      str += this.replacer.rootContext.str.slice(start, c.start);
+      str += strHandler(c.str, c);
       start = c.end;
     });
-    str += this.replacer.file.slice(start, this.end - endSkip);
+    str += this.replacer.rootContext.str.slice(start, this.end - endSkip);
     return str;
   }
 
   public clear() {
     (this.node as any) = null;
     this.parent = undefined;
-    this.newStr = '';
+    this.str = '';
     this.childs = [];
   }
 }
@@ -122,6 +122,14 @@ export abstract class NodeHandler extends Context {
     }
   }
 
+  public doHandle() {
+    this.traverse();
+
+    this.generateStrFromChildThenSet();
+
+    return this;
+  }
+
   public static handle(opt: Opt): Context | null {
     const context = this.of(opt);
 
@@ -129,10 +137,6 @@ export abstract class NodeHandler extends Context {
       return null;
     }
 
-    context.traverse();
-
-    context.generateStrFromChildThenSet();
-
-    return context;
+    return context.doHandle();
   }
 }
