@@ -55,7 +55,7 @@ export class StringLikeNodesHandler implements NodeHandler {
       parent,
     });
     stringLiteral.needReplace = true;
-    stringLiteral.doHandle();
+    stringLiteral.generateStr();
   }
 
   private stringLiteralIsChildOfIncludeBlock(node: Node) {

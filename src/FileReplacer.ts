@@ -133,8 +133,8 @@ export class FileReplacer {
 
   public replace() {
     try {
-      this.rootContext.doHandle();
-      if (this.rootContext.str && !this.hasImportedI18nModules) {
+      let str = this.rootContext.generateStr();
+      if (str && !this.hasImportedI18nModules) {
         const tsNocheckMatched = this.file.match(
           /(\n|^)\/\/\s*@ts-nocheck[^\n]*\n/
         );
@@ -142,12 +142,12 @@ export class FileReplacer {
           tsNocheckMatched === null
             ? 0
             : (tsNocheckMatched.index ?? 0) + tsNocheckMatched[0].length;
-        this.rootContext.str =
-          this.rootContext.str.slice(0, insertIndex) +
+        str =
+          str.slice(0, insertIndex) +
           this.createImportStatement() +
-          this.rootContext.str.slice(insertIndex);
+          str.slice(insertIndex);
       }
-      return this.rootContext.str;
+      return str;
     } catch (error: any) {
       if (error.message) {
         error.message = '@ ' + this.fileLocate + ' ' + error.message;

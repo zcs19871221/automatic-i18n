@@ -33,7 +33,7 @@ export class JsxHandler implements NodeHandler {
     if ([SyntaxKind.JsxElement, SyntaxKind.JsxFragment].includes(node.kind)) {
       jsx.jsxWrap = true;
     }
-    jsx.doHandle();
+    jsx.generateStr();
   }
 }
 
@@ -54,7 +54,7 @@ export class JsxExpressionHandler implements NodeHandler {
       start: node.getStart(),
       end: node.getEnd(),
     });
-    jsxExpression.doHandle();
+    jsxExpression.generateStr();
   }
 }
 
@@ -78,7 +78,7 @@ class JsxTagAndExpressionList extends Context {
     });
 
     if (!this.replacer.includesTargetLocale(str)) {
-      this.str = this.joinChildsToString(0, 0);
+      this.str = this.joinChilds(0, 0);
       return;
     }
 
@@ -103,7 +103,6 @@ class JsxTagAndExpressionList extends Context {
   }
 }
 
-// childs：[开始标签,jsxExpression|jsx, 结束标签]
 export class Jsx extends Context {
   public jsxWrap = false;
 
@@ -161,13 +160,13 @@ export class Jsx extends Context {
       this.childs = newChilds;
     }
 
-    this.str = this.joinChildsToString(0, 0);
+    this.str = this.joinChilds(0, 0);
   }
 }
 
 export class JsxExpression extends Context {
   protected override generatingStrFromChildThenSet() {
-    this.str = this.joinChildsToString(0, 0);
+    this.str = this.joinChilds(0, 0);
   }
 
   public includeJsx = false;

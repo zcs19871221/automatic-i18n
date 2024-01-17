@@ -8,6 +8,6 @@ export class RootContext extends Context {
       return;
     }
 
-    this.str = this.joinChildsToString(0, 0);
+    this.str = this.joinChilds(0, 0);
   }
 }

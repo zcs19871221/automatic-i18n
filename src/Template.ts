@@ -15,7 +15,7 @@ export class TemplateHandler implements NodeHandler {
       end: node.getEnd(),
       parent,
     });
-    template.doHandle();
+    template.generateStr();
   }
 }
 
@@ -41,7 +41,7 @@ export class TemplateExpressionHandler implements NodeHandler {
       start,
       end,
     });
-    templateExpression.doHandle();
+    templateExpression.generateStr();
   }
 }
 export class Template extends Context {
@@ -51,7 +51,7 @@ export class Template extends Context {
       '`'.length
     );
     if (!this.replacer.includesTargetLocale(str)) {
-      this.str = this.joinChildsToString(
+      this.str = this.joinChilds(
         0,
         0,
         (str: string) =>
@@ -70,7 +70,7 @@ export class Template extends Context {
 
 export class TemplateExpression extends Context {
   protected override generatingStrFromChildThenSet() {
-    this.str = this.joinChildsToString(
+    this.str = this.joinChilds(
       TemplateExpression.startSymbol.length,
       TemplateExpression.endSymbol.length
     );

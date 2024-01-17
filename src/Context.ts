@@ -63,7 +63,7 @@ export abstract class Context {
     const valueMapKey: Record<string, string> = {};
     const keyMapValue: Record<string, string> = {};
 
-    const str = this.joinChildsToString(
+    const str = this.joinChilds(
       startSkip,
       endSkip,
       (str: string, c: Context) => {
@@ -82,11 +82,11 @@ export abstract class Context {
     return { str, keyMapValue };
   }
 
-  protected joinChildsToString(
+  protected joinChilds(
     startSkip: number,
     endSkip: number,
     strHandler: (str: string, c: Context) => string = (str) => str
-  ) {
+  ): string {
     let str = '';
     let start = this.start + startSkip;
     this.childs.forEach((c) => {
@@ -105,13 +105,13 @@ export abstract class Context {
     this.childs = [];
   }
 
-  public doHandle() {
+  public generateStr(): string {
     if (this.node) {
       forEachChild(this.node, (n) => this.replacer.traverse(n, this));
     }
 
     this.generateStrFromChildThenSet();
 
-    return this;
+    return this.str;
   }
 }
