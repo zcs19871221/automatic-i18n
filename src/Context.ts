@@ -90,11 +90,11 @@ export abstract class Context {
     let str = '';
     let start = this.start + startSkip;
     this.childs.forEach((c) => {
-      str += this.replacer.rootContext.str.slice(start, c.start);
+      str += this.replacer.file.slice(start, c.start);
       str += strHandler(c.str, c);
       start = c.end;
     });
-    str += this.replacer.rootContext.str.slice(start, this.end - endSkip);
+    str += this.replacer.file.slice(start, this.end - endSkip);
     return str;
   }
 

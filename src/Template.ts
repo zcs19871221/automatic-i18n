@@ -27,14 +27,13 @@ export class TemplateExpressionHandler implements NodeHandler {
   handle(node: Node, replacer: FileReplacer, parent: Context): void {
     const first = node.getChildren()[0];
 
-    const start = replacer.rootContext.str.lastIndexOf(
+    const start = replacer.file.lastIndexOf(
       TemplateExpression.startSymbol,
       node.getStart()
     );
     const end =
-      replacer.rootContext.str.indexOf('}', first.getEnd()) +
+      replacer.file.indexOf('}', first.getEnd()) +
       TemplateExpression.endSymbol.length;
-
     const templateExpression = new TemplateExpression({
       node,
       replacer,
@@ -61,7 +60,11 @@ export class Template extends Context {
       return;
     }
     this.needReplace = true;
-    this.str = this.replacer.createIntlExpressionFromIntlId(str, keyMapValue);
+    const intlId = this.replacer.getOrCreateIntlId(str);
+    this.str = this.replacer.createIntlExpressionFromIntlId(
+      intlId,
+      keyMapValue
+    );
   }
 }
 

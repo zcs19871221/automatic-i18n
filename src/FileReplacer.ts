@@ -66,7 +66,7 @@ export class FileReplacer {
     private readonly fileLocate: string,
     public readonly bundleReplacer: BundleReplacer,
     public readonly opt: Opt,
-    file: string
+    public file: string
   ) {
     const node = createSourceFile(this.fileLocate, file, opt.tsTarget, true);
 
@@ -76,7 +76,6 @@ export class FileReplacer {
       start: 0,
       end: file.length,
     });
-    this.rootContext.str = file;
   }
 
   private property = 'intl';
@@ -136,7 +135,7 @@ export class FileReplacer {
     try {
       this.rootContext.doHandle();
       if (this.rootContext.str && !this.hasImportedI18nModules) {
-        const tsNocheckMatched = this.rootContext.str.match(
+        const tsNocheckMatched = this.file.match(
           /(\n|^)\/\/\s*@ts-nocheck[^\n]*\n/
         );
         const insertIndex =
@@ -156,6 +155,7 @@ export class FileReplacer {
       console.error(error);
     } finally {
       this.rootContext.clear();
+      this.file = '';
     }
   }
 
@@ -193,11 +193,11 @@ export class FileReplacer {
         '\nfile at: ' +
         this.fileLocate +
         '\ntext: ' +
-        this.rootContext.str.slice(Math.max(0, start - 3), start) +
+        this.file.slice(Math.max(0, start - 3), start) +
         '【' +
-        this.rootContext.str.slice(start, end) +
+        this.file.slice(start, end) +
         '】' +
-        this.rootContext.str.slice(end + 1, end + 4) +
+        this.file.slice(end + 1, end + 4) +
         '\n'
     );
   }

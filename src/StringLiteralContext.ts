@@ -16,6 +16,9 @@ export class StringLikeNodesHandler implements NodeHandler {
     ) {
       return false;
     }
+    if (!replacer.includesTargetLocale(node.getText())) {
+      return false;
+    }
     if (node.parent?.kind === ts.SyntaxKind.ImportDeclaration) {
       return false;
     }
