@@ -1,6 +1,62 @@
-import { SyntaxKind } from 'typescript';
-import { FileReplacer } from './FileReplacer';
-import { Context, NodeHandler, Opt } from './Context';
+import { Node, SyntaxKind } from 'typescript';
+import { FileReplacer, NodeHandler } from './FileReplacer';
+import { Context } from './Context';
+
+export class JsxHandler implements NodeHandler {
+  match(node: Node): boolean {
+    return [
+      SyntaxKind.JsxElement,
+      SyntaxKind.JsxFragment,
+      SyntaxKind.JsxOpeningElement,
+      SyntaxKind.JsxOpeningFragment,
+      SyntaxKind.JsxClosingElement,
+      SyntaxKind.JsxClosingFragment,
+      SyntaxKind.JsxSelfClosingElement,
+    ].includes(node.kind);
+  }
+
+  handle(
+    node: Node,
+    replacer: FileReplacer,
+    parent?: Context | undefined
+  ): void {
+    const jsx = new Jsx({
+      node,
+      replacer,
+      parent,
+      start: node.getStart(),
+      end: node.getEnd(),
+    });
+    if (parent) {
+      Jsx.setParentJsxExpressionIncludeJsxFlag(parent);
+    }
+    if ([SyntaxKind.JsxElement, SyntaxKind.JsxFragment].includes(node.kind)) {
+      jsx.jsxWrap = true;
+    }
+    jsx.doHandle();
+  }
+}
+
+export class JsxExpressionHandler implements NodeHandler {
+  match(node: Node): boolean {
+    return SyntaxKind.JsxExpression === node.kind;
+  }
+
+  handle(
+    node: Node,
+    replacer: FileReplacer,
+    parent?: Context | undefined
+  ): void {
+    const jsxExpression = new JsxExpression({
+      node,
+      replacer,
+      parent,
+      start: node.getStart(),
+      end: node.getEnd(),
+    });
+    jsxExpression.doHandle();
+  }
+}
 
 class JsxTagAndExpressionList extends Context {
   constructor(
@@ -14,7 +70,12 @@ class JsxTagAndExpressionList extends Context {
   }
 
   protected override generatingStrFromChildThenSet() {
-    const { str, keyMapValue } = this.joinChildsAsParamter(0, 0);
+    const { str, keyMapValue } = this.joinChildsAsParamter(0, 0, (str) => {
+      if (str.startsWith('{') && str.endsWith('}')) {
+        return str.slice(1, str.length - 1);
+      }
+      return str;
+    });
 
     if (!this.replacer.includesTargetLocale(str)) {
       this.str = this.joinChildsToString(0, 0);
@@ -34,33 +95,19 @@ class JsxTagAndExpressionList extends Context {
       }
     );
 
-    const textKey = this.replacer.bundleReplacer.getOrCreateIntlId(newStr);
-    this.str = '{' + FileReplacer.localeMapToken(textKey, keyMapValue) + '}';
+    const intlId = this.replacer.getOrCreateIntlId(newStr);
+    this.str =
+      '{' +
+      this.replacer.createIntlExpressionFromIntlId(intlId, keyMapValue) +
+      '}';
   }
 }
 
 // childs：[开始标签,jsxExpression|jsx, 结束标签]
-export class Jsx extends NodeHandler {
-  public static override of(opt: Opt) {
-    const context = new Jsx({
-      ...opt,
-      start: opt.node.getStart(),
-      end: opt.node.getEnd(),
-    });
-    if (opt.parent) {
-      Jsx.setParentJsxExpressionIncludeJsxFlag(opt.parent);
-    }
-    if (
-      [SyntaxKind.JsxElement, SyntaxKind.JsxFragment].includes(opt.node.kind)
-    ) {
-      context.jsxWrap = true;
-    }
-    return context;
-  }
+export class Jsx extends Context {
+  public jsxWrap = false;
 
-  private jsxWrap = false;
-
-  private static setParentJsxExpressionIncludeJsxFlag(context: Context) {
+  public static setParentJsxExpressionIncludeJsxFlag(context: Context) {
     let jsxExpressionParent: Context | null = context;
     while (
       jsxExpressionParent !== null &&
@@ -118,15 +165,7 @@ export class Jsx extends NodeHandler {
   }
 }
 
-export class JsxExpression extends NodeHandler {
-  public static override of(opt: Opt) {
-    return new JsxExpression({
-      ...opt,
-      start: opt.node.getStart(),
-      end: opt.node.getEnd(),
-    });
-  }
-
+export class JsxExpression extends Context {
   protected override generatingStrFromChildThenSet() {
     this.str = this.joinChildsToString(0, 0);
   }

@@ -42,21 +42,6 @@ export class BundleReplacer {
     });
   }
 
-  private getOrCreateIntlId(localeText: string) {
-    localeText = localeText.replace(/\n/g, '\\n');
-    let intlId = '';
-    if (this.localeTextMappingKey[localeText]) {
-      intlId = this.localeTextMappingKey[localeText];
-    } else {
-      do {
-        intlId = `key${String(this.key++).padStart(4, '0')}`;
-      } while (Object.values(this.localeTextMappingKey).includes(intlId));
-      this.localeTextMappingKey[localeText] = intlId;
-    }
-
-    return intlId;
-  }
-
   public warnings: Set<string> = new Set();
 
   public static stringifyObject(obj: Record<string, string>) {
@@ -165,9 +150,9 @@ export class BundleReplacer {
     ts.forEachChild(node, (n) => BundleReplacer.parse(n, obj));
   }
 
-  private localeTextMappingKey: Record<string, string> = {};
+  public localeTextMappingKey: Record<string, string> = {};
 
-  private key: number = 1;
+  public key: number = 1;
 
   private readonly langDir: string;
 
@@ -229,39 +214,5 @@ export class BundleReplacer {
     });
   }
 
-  private exportName = 'i18';
-
-  private property = 'intl';
-
-  private createIntlExpression(intlId: string, param?: Record<string, string>) {
-    let paramsString = '';
-    if (param && Object.keys(param).length > 0) {
-      paramsString += ',';
-      paramsString +=
-        Object.entries<string>(param).reduce((text: string, [key, value]) => {
-          if (key === value) {
-            return text + key + ',';
-          } else {
-            return text + `${key}: ${value === '' ? "''" : value}` + ',';
-          }
-        }, '{') + '}';
-    }
-    return `${this.exportName}.${this.property}.formatMessage({id: '${intlId}'}${paramsString})`;
-  }
-
-  public createImportStatement() {
-    return `import { ${this.exportName} } from '${this.opt.importPath}';\n`;
-  }
-
-  public createIntlExpressionFromStr({
-    str,
-    params,
-  }: {
-    str: string;
-    params?: Record<string, string>;
-  }) {
-    const intl = this.getOrCreateIntlId(str);
-
-    return this.createIntlExpression(intl, params);
-  }
+  public exportName = 'i18';
 }

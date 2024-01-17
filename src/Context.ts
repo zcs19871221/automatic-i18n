@@ -1,6 +1,5 @@
 import { Node, forEachChild } from 'typescript';
 import { FileReplacer } from './FileReplacer';
-import { JsxExpression } from './Jsx';
 
 export interface Opt {
   node: Node;
@@ -58,28 +57,27 @@ export abstract class Context {
 
   protected joinChildsAsParamter(
     startSkip: number,
-    endSkip: number
+    endSkip: number,
+    hanlder: (str: string, c: Context) => string = (str) => str
   ): { str: string; keyMapValue: Record<string, string> } {
     const valueMapKey: Record<string, string> = {};
     const keyMapValue: Record<string, string> = {};
 
-    const str = this.joinChildsToString(startSkip, endSkip, (str, c) => {
-      if (
-        c instanceof JsxExpression &&
-        str.startsWith('{') &&
-        str.endsWith('}')
-      ) {
-        str = str.slice(1, str.length - 1);
-      }
-      if (!valueMapKey[str]) {
-        const key = 'v' + (Object.keys(valueMapKey).length + 1);
+    const str = this.joinChildsToString(
+      startSkip,
+      endSkip,
+      (str: string, c: Context) => {
+        str = hanlder(str, c);
+        if (!valueMapKey[str]) {
+          const key = 'v' + (Object.keys(valueMapKey).length + 1);
 
-        valueMapKey[str] = key;
-        keyMapValue[key] = str;
-      }
+          valueMapKey[str] = key;
+          keyMapValue[key] = str;
+        }
 
-      return '{' + valueMapKey[str] + '}';
-    });
+        return '{' + valueMapKey[str] + '}';
+      }
+    );
 
     return { str, keyMapValue };
   }
@@ -106,37 +104,14 @@ export abstract class Context {
     this.str = '';
     this.childs = [];
   }
-}
-
-export abstract class NodeHandler extends Context {
-  public static of(_parameter: Opt): NodeHandler | null {
-    throw new Error('should implement of method');
-  }
-
-  public static nodeHandlers: NodeHandler[] = [];
-  private traverse() {
-    if (this.node) {
-      forEachChild(this.node, (n) =>
-        this.replacer.traverseAstAndExtractLocales(n, this)
-      );
-    }
-  }
 
   public doHandle() {
-    this.traverse();
+    if (this.node) {
+      forEachChild(this.node, (n) => this.replacer.traverse(n, this));
+    }
 
     this.generateStrFromChildThenSet();
 
     return this;
-  }
-
-  public static handle(opt: Opt): Context | null {
-    const context = this.of(opt);
-
-    if (context === null) {
-      return null;
-    }
-
-    return context.doHandle();
   }
 }

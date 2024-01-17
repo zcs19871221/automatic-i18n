@@ -1,15 +1,51 @@
-import { FileReplacer } from './FileReplacer';
-import { NodeHandler, Opt } from './Context';
+import { FileReplacer, NodeHandler } from './FileReplacer';
+import { Context } from './Context';
+import { Node, SyntaxKind } from 'typescript';
 
-export class Template extends NodeHandler {
-  public static override of(opt: Opt) {
-    return new Template({
-      ...opt,
-      start: opt.node.getStart(),
-      end: opt.node.getEnd(),
-    });
+export class TemplateHandler implements NodeHandler {
+  match(node: Node): boolean {
+    return node.kind === SyntaxKind.TemplateExpression;
   }
 
+  handle(node: Node, replacer: FileReplacer, parent: Context): void {
+    const template = new Template({
+      node,
+      replacer,
+      start: node.getStart(),
+      end: node.getEnd(),
+      parent,
+    });
+    template.doHandle();
+  }
+}
+
+export class TemplateExpressionHandler implements NodeHandler {
+  match(node: Node): boolean {
+    return node.kind === SyntaxKind.TemplateSpan;
+  }
+
+  handle(node: Node, replacer: FileReplacer, parent: Context): void {
+    const first = node.getChildren()[0];
+
+    const start = replacer.rootContext.str.lastIndexOf(
+      TemplateExpression.startSymbol,
+      node.getStart()
+    );
+    const end =
+      replacer.rootContext.str.indexOf('}', first.getEnd()) +
+      TemplateExpression.endSymbol.length;
+
+    const templateExpression = new TemplateExpression({
+      node,
+      replacer,
+      parent,
+      start,
+      end,
+    });
+    templateExpression.doHandle();
+  }
+}
+export class Template extends Context {
   protected override generatingStrFromChildThenSet() {
     const { keyMapValue, str } = this.joinChildsAsParamter(
       '`'.length,
@@ -25,31 +61,16 @@ export class Template extends NodeHandler {
       return;
     }
     this.needReplace = true;
-    const textKey = this.replacer.bundleReplacer.getOrCreateIntlId(str);
-    this.str = FileReplacer.localeMapToken(textKey, keyMapValue);
+    this.str = this.replacer.createIntlExpressionFromIntlId(str, keyMapValue);
   }
 }
 
-export class TemplateExpression extends NodeHandler {
+export class TemplateExpression extends Context {
   protected override generatingStrFromChildThenSet() {
     this.str = this.joinChildsToString(
       TemplateExpression.startSymbol.length,
       TemplateExpression.endSymbol.length
     );
-  }
-
-  public static override of(opt: Opt) {
-    const first = opt.node.getChildren()[0];
-
-    const start = opt.replacer.file.lastIndexOf(
-      this.startSymbol,
-      opt.node.getStart()
-    );
-    const end =
-      opt.replacer.file.indexOf(this.endSymbol, first.getEnd()) +
-      this.endSymbol.length;
-
-    return new TemplateExpression({ ...opt, start, end });
   }
 
   public static readonly startSymbol: string = '${';

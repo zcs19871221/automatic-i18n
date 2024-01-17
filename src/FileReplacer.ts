@@ -1,12 +1,12 @@
-import * as ts from 'typescript';
+import { Node, forEachChild, createSourceFile } from 'typescript';
 import { ImportDeclaration, SyntaxKind } from 'typescript';
 import { BundleReplacer } from './BundleReplacer';
 import { Opt } from './types';
 import { Context } from './Context';
-import { JsxExpression, Jsx } from './Jsx';
 import { RootContext } from './RootContext';
-import { Template, TemplateExpression } from './Template';
-import { StringLiteralContext } from './StringLiteralContext';
+import { TemplateExpressionHandler, TemplateHandler } from './Template';
+import { StringLikeNodesHandler } from './StringLiteralContext';
+import { JsxExpressionHandler, JsxHandler as JsxLikeNodesHandler } from './Jsx';
 
 interface Warning {
   start: number;
@@ -14,31 +14,141 @@ interface Warning {
   text: string;
 }
 
+class ImportHandler implements NodeHandler {
+  match(node: Node): boolean {
+    return node.kind === SyntaxKind.ImportDeclaration;
+  }
+
+  handle(node: Node, replacer: FileReplacer): void {
+    const importNode = node as ImportDeclaration;
+    if (
+      importNode.moduleSpecifier.getText().includes(replacer.opt.importPath) &&
+      importNode.importClause
+        ?.getText()
+        .includes(replacer.bundleReplacer.exportName)
+    ) {
+      replacer.hasImportedI18nModules = true;
+    }
+  }
+}
+
+class IdentifierHandler implements NodeHandler {
+  match(node: Node): boolean {
+    return node.kind === SyntaxKind.Identifier;
+  }
+
+  handle(node: Node, replacer: FileReplacer): void {
+    if (
+      replacer.opt.localeToReplace !== 'en-us' &&
+      replacer.includesTargetLocale(node.getText()) &&
+      !replacer.ignore(node)
+    ) {
+      replacer.addWarningInfo({
+        text: 'property name of object should be english',
+        start: node.getStart(),
+        end: node.getEnd(),
+      });
+    }
+  }
+}
+export interface NodeHandler {
+  match(node: Node, replacer: FileReplacer, parentContext?: Context): boolean;
+  handle(node: Node, replacer: FileReplacer, parentContext?: Context): void;
+}
+
 export class FileReplacer {
-  private static ignoreWarningKey = '@ignore';
+  public static ignoreWarningKey = '@ignore';
 
   public rootContext: RootContext;
+  public hasImportedI18nModules: boolean = false;
+
   constructor(
     private readonly fileLocate: string,
     public readonly bundleReplacer: BundleReplacer,
-    private readonly opt: Opt,
+    public readonly opt: Opt,
     file: string
   ) {
-    const sourceFile = ts.createSourceFile(
-      this.fileLocate,
-      file,
-      this.opt.tsTarget,
-      true
-    );
-    this.rootContext = RootContext.of({ node: sourceFile, replacer: this });
+    const node = createSourceFile(this.fileLocate, file, opt.tsTarget, true);
+
+    this.rootContext = new RootContext({
+      node,
+      replacer: this,
+      start: 0,
+      end: file.length,
+    });
     this.rootContext.str = file;
+  }
+
+  private property = 'intl';
+
+  public createIntlExpressionFromIntlId(
+    intlId: string,
+    param?: Record<string, string>
+  ) {
+    let paramsString = '';
+    if (param && Object.keys(param).length > 0) {
+      paramsString += ',';
+      paramsString +=
+        Object.entries<string>(param).reduce((text: string, [key, value]) => {
+          if (key === value) {
+            return text + key + ',';
+          } else {
+            return text + `${key}: ${value === '' ? "''" : value}` + ',';
+          }
+        }, '{') + '}';
+    }
+    return `${this.bundleReplacer.exportName}.${this.property}.formatMessage({id: '${intlId}'}${paramsString})`;
+  }
+
+  public createImportStatement() {
+    return `import { ${this.bundleReplacer.exportName} } from '${this.opt.importPath}';\n`;
+  }
+
+  public getOrCreateIntlId(localeText: string) {
+    localeText = localeText.replace(/\n/g, '\\n');
+    let intlId = '';
+    const localeTextMappingKey = this.bundleReplacer.localeTextMappingKey;
+    if (localeTextMappingKey[localeText]) {
+      intlId = localeTextMappingKey[localeText];
+    } else {
+      do {
+        intlId = `key${String(this.bundleReplacer.key++).padStart(4, '0')}`;
+      } while (Object.values(localeTextMappingKey).includes(intlId));
+      localeTextMappingKey[localeText] = intlId;
+    }
+
+    return intlId;
+  }
+
+  public createIntlExpressionFromStr({
+    str,
+    params,
+  }: {
+    str: string;
+    params?: Record<string, string>;
+  }) {
+    const intl = this.getOrCreateIntlId(str);
+
+    return this.createIntlExpressionFromIntlId(intl, params);
   }
 
   public replace() {
     try {
-      const rootContext = this.rootContext.doHandle();
-
-      return rootContext.str;
+      this.rootContext.doHandle();
+      if (this.rootContext.str && !this.hasImportedI18nModules) {
+        const tsNocheckMatched = this.rootContext.str.match(
+          /(\n|^)\/\/\s*@ts-nocheck[^\n]*\n/
+        );
+        const insertIndex =
+          tsNocheckMatched === null
+            ? 0
+            : (tsNocheckMatched.index ?? 0) + tsNocheckMatched[0].length;
+        this.rootContext.str =
+          this.rootContext.str.slice(0, insertIndex) +
+          this.createImportStatement() +
+          this.rootContext.str.slice(insertIndex);
+      }
+      return this.rootContext.str;
     } catch (error: any) {
       if (error.message) {
         error.message = '@ ' + this.fileLocate + ' ' + error.message;
@@ -49,162 +159,47 @@ export class FileReplacer {
     }
   }
 
-  public traverseAstAndExtractLocales(node: ts.Node, context: Context) {
-    // console.log(node.kind, SyntaxKind[node.kind], node.getText());
-    switch (node.kind) {
-      // 判断是否引入i18
-      case SyntaxKind.ImportDeclaration: {
-        const importNode = node as ImportDeclaration;
-        if (
-          importNode.moduleSpecifier.getText().includes(this.opt.importPath) &&
-          importNode.importClause?.getText().includes(FileReplacer.exportName)
-        ) {
-          this.hasImportedI18nModules = true;
-        }
-        break;
-      }
-      // 字符串字面量: "你好" '大家' 以及jsx中的属性常量: <div name="张三"/>
-      case SyntaxKind.StringLiteral:
-        {
-          if (!this.includesTargetLocale(node.getText())) {
-            return;
-          }
-          // 跳过import
-          if (node.parent?.kind === ts.SyntaxKind.ImportDeclaration) {
-            return;
-          }
-          if (this.ignore(node)) {
-            return '';
-          }
-          // 跳过equal判断 type === '店' 和 includes判断
-          if (
-            this.stringLiteralIsInEqualBLock(node) ||
-            this.stringLiteralIsChildOfIncludeBlock(node)
-          ) {
-            this.addWarningInfo({
-              text:
-                'do not use locale literal to do [===] or [includes], maybe an error! use /* ' +
-                FileReplacer.ignoreWarningKey +
-                ' */ before text to ignore warning or refactor code!',
-              start: node.getStart(),
-              end: node.getEnd(),
-            });
-            return;
-          }
-          StringLiteralContext.handle({
-            node: node as ts.StringLiteral,
-            parent: context,
-            replacer: this,
-          });
-        }
-        break;
-      // html文本标签中字面量<div>大家好</div>
-      case SyntaxKind.JsxElement:
-      case SyntaxKind.JsxFragment:
-      case SyntaxKind.JsxOpeningElement:
-      case SyntaxKind.JsxOpeningFragment:
-      case SyntaxKind.JsxClosingElement:
-      case SyntaxKind.JsxClosingFragment:
-      case SyntaxKind.JsxSelfClosingElement:
-        Jsx.handle({ node, parent: context, replacer: this });
-        break;
-      case SyntaxKind.JsxExpression: {
-        JsxExpression.handle({
-          node: node as ts.JsxExpression,
-          parent: context,
-          replacer: this,
-        });
-        break;
-      }
-      // 没有变量的模板字符串: `张三`
-      case SyntaxKind.FirstTemplateToken: {
-        StringLiteralContext.handle({
-          node: node as ts.StringLiteral,
-          parent: context,
-          replacer: this,
-        });
-        break;
-      }
-      // 模板字符串: `${name}张三${gender}李四`
-      case ts.SyntaxKind.TemplateExpression: {
-        Template.handle({
-          node: node as ts.TemplateExpression,
-          parent: context,
-          replacer: this,
-        });
-        break;
-      }
-      // 模板字符串: `${name}张三${gender}李四`
-      case ts.SyntaxKind.TemplateSpan: {
-        TemplateExpression.handle({
-          node: node as ts.TemplateSpan,
-          parent: context,
-          replacer: this,
-        });
-        break;
-      }
-      // 中文对象名警告和template中的变量${name}提取
-      case SyntaxKind.Identifier: {
-        if (
-          this.opt.localeToReplace !== 'en-us' &&
-          this.includesTargetLocale(node.getText()) &&
-          !this.ignore(node)
-        ) {
-          this.addWarningInfo({
-            text: 'property name of object should be english',
-            start: node.getStart(),
-            end: node.getEnd(),
-          });
-        }
-        break;
-      }
-      default:
-        ts.forEachChild(node, (n) =>
-          this.traverseAstAndExtractLocales(n, context)
-        );
-        break;
+  private nodeHandlers: NodeHandler[] = [
+    new StringLikeNodesHandler(),
+    new TemplateHandler(),
+    new TemplateExpressionHandler(),
+    new ImportHandler(),
+    new IdentifierHandler(),
+    new JsxLikeNodesHandler(),
+    new JsxExpressionHandler(),
+  ];
+
+  public traverse(node: Node, parentContext?: Context) {
+    const targetHandler = this.nodeHandlers.filter((nodehHandler) =>
+      nodehHandler.match(node, this, parentContext)
+    );
+    if (targetHandler.length > 1) {
+      throw new Error('matched more then 1 ');
+    }
+    if (targetHandler.length === 1) {
+      targetHandler[0].handle(node, this, parentContext);
+    } else {
+      forEachChild(node, (n) => this.traverse(n, parentContext));
     }
   }
 
-  private ignore(node: ts.Node) {
+  public ignore(node: Node) {
     return node.getFullText().includes(FileReplacer.ignoreWarningKey);
   }
-  private addWarningInfo({ start, end, text }: Warning) {
+
+  public addWarningInfo({ start, end, text }: Warning) {
     this.bundleReplacer.warnings.add(
       text +
         '\nfile at: ' +
         this.fileLocate +
         '\ntext: ' +
-        this.file.slice(Math.max(0, start - 3), start) +
+        this.rootContext.str.slice(Math.max(0, start - 3), start) +
         '【' +
-        this.file.slice(start, end) +
+        this.rootContext.str.slice(start, end) +
         '】' +
-        this.file.slice(end + 1, end + 4) +
+        this.rootContext.str.slice(end + 1, end + 4) +
         '\n'
     );
-  }
-
-  private stringLiteralIsChildOfIncludeBlock(node: ts.Node) {
-    if (
-      node.parent?.kind === SyntaxKind.ArrayLiteralExpression &&
-      node.parent?.parent?.kind === SyntaxKind.PropertyAccessExpression
-    ) {
-      const name = (node.parent?.parent as ts.PropertyAccessExpression)?.name;
-      return name.getText() === 'includes';
-    }
-    return false;
-  }
-
-  private stringLiteralIsInEqualBLock(node: ts.Node) {
-    if (node.parent?.kind === ts.SyntaxKind.BinaryExpression) {
-      const expression = node.parent as ts.BinaryExpression;
-
-      return (
-        expression.operatorToken.kind === SyntaxKind.EqualsEqualsToken ||
-        expression.operatorToken.kind === SyntaxKind.EqualsEqualsEqualsToken
-      );
-    }
-    return false;
   }
 
   public includesTargetLocale(text: string) {
