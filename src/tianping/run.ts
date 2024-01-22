@@ -5,6 +5,7 @@ interface NewItem extends Item {
   priority: number;
   propNames: string[];
   used: boolean;
+  picked: boolean;
 }
 export function run(
   leftCount: number,
@@ -56,6 +57,7 @@ export function run(
       priority: 0,
       used: false,
       propNames: [],
+      picked: false,
     };
     let priority = 0;
 
@@ -84,8 +86,8 @@ export function run(
     ) {
       continue;
     }
-    current.used = true;
     picked.push(current);
+    current.picked = true;
     pickedProps.push(...current.propNames);
   }
 
@@ -113,6 +115,7 @@ export function run(
       const lastItem = matchedItems.find((e) => {
         return (
           !e.used &&
+          !e.picked &&
           !e.propNames.some((p) => !pickedProps.some((fpp) => fpp === p))
         );
       });
@@ -126,10 +129,10 @@ export function run(
       return;
     }
     for (let i = index; i < picked.length; i++) {
-      rightPicked.push(picked[index]);
-      picked[index].used = true;
-      count(rightPicked, index + 1);
-      picked[index].used = false;
+      rightPicked.push(picked[i]);
+      picked[i].used = true;
+      count(rightPicked, i + 1);
+      picked[i].used = false;
       rightPicked.pop();
     }
   };
@@ -140,7 +143,17 @@ export function run(
       left.push(p);
     }
   });
-  console.log('left:' + left.map((l) => l.key).join(','));
+  if (!lastLeftItemToPick) {
+    console.log('没找到');
+    return;
+  }
+  console.log(
+    'left:' +
+      left
+        .concat(lastLeftItemToPick)
+        .map((l) => l.key)
+        .join(',')
+  );
   console.log('right:' + finalPickedRight.map((r) => r.key).join(','));
   console.log(
     'props: ' +
