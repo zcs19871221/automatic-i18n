@@ -6,7 +6,7 @@ export interface Item {
   props: Property[];
 }
 
-export const originItems: Item[] = [
+export const items: Item[] = [
   { key: '铜宝箱的钥匙', props: [{ type: '使用速度' }], weight: 2 },
   { key: '圆木', props: [{ type: '最大精力' }], weight: 3 },
   { key: '枸杞', props: [{ type: '体力回复量' }], weight: 5 },
@@ -66,12 +66,12 @@ export const originItems: Item[] = [
   },
   {
     key: '生鱼片',
-    props: [{ type: '最大精力',level: 1 }],
+    props: [{ type: '最大精力', level: 1 }],
     weight: 13,
   },
   {
     key: '米诺陶斯之父',
-    props: [{ type: '格挡耐久',level: 1 },{type:'使用速度'}],
+    props: [{ type: '格挡耐久', level: 1 }, { type: '使用速度' }],
     weight: 13,
   },
   {
@@ -115,16 +115,12 @@ export const originItems: Item[] = [
   },
   {
     key: '魔像的碎片',
-    props: [
-      { type: '防御力', level: 1 },
-    ],
+    props: [{ type: '防御力', level: 1 }],
     weight: 18,
   },
-   {
+  {
     key: '空空如也的中瓶子',
-    props: [
-      { type: '适应力', level: 1 },
-    ],
+    props: [{ type: '适应力', level: 1 }],
     weight: 18,
   },
   {
@@ -145,7 +141,7 @@ export const originItems: Item[] = [
   },
   {
     key: '炸弹',
-    props: [{ type: '防御力',level:1 }, { type: '格挡耐久' }],
+    props: [{ type: '防御力', level: 1 }, { type: '格挡耐久' }],
     weight: 19,
   },
   {
@@ -155,7 +151,7 @@ export const originItems: Item[] = [
   },
   {
     key: '人心果',
-    props: [{ type: '体力回复量', level: 1 }, {type:'体力回复量'}],
+    props: [{ type: '体力回复量', level: 1 }, { type: '体力回复量' }],
     weight: 20,
   },
   {
@@ -177,7 +173,7 @@ export const originItems: Item[] = [
   { key: '玛瑙', props: [{ type: '金钱获取' }], weight: 22 },
   {
     key: '安康鱼肝',
-    props: [{ type: '缓慢回复',level: 1 }],
+    props: [{ type: '缓慢回复', level: 1 }],
     weight: 22,
   },
   {
@@ -231,7 +227,7 @@ export const originItems: Item[] = [
   },
   {
     key: '粘土岩',
-    props: [{ type: '防御力',level: 1 }, { type: '最大体力' }],
+    props: [{ type: '防御力', level: 1 }, { type: '最大体力' }],
     weight: 25,
   },
   {
@@ -253,10 +249,10 @@ export const originItems: Item[] = [
     props: [{ type: '适应力' }, { type: '适应力', level: 1 }],
     weight: 26,
   },
-  
+
   {
     key: '玩偶',
-    props: [{ type: '精力提升量',level: 2 },],
+    props: [{ type: '精力提升量', level: 2 }],
     weight: 26,
   },
   {
@@ -290,7 +286,10 @@ export const originItems: Item[] = [
   },
   {
     key: '高碳钢矿石',
-    props: [{ type: '格挡耐久',level: 1 }, { type: '防御力',level: 1 }],
+    props: [
+      { type: '格挡耐久', level: 1 },
+      { type: '防御力', level: 1 },
+    ],
     weight: 29,
   },
   {
@@ -333,7 +332,10 @@ export const originItems: Item[] = [
   },
   {
     key: '企鹅蛋',
-    props: [{ type: '失明抗性',level: 1 }, { type: '格挡耐久',level:1 }],
+    props: [
+      { type: '失明抗性', level: 1 },
+      { type: '格挡耐久', level: 1 },
+    ],
     weight: 31,
   },
   {
@@ -343,7 +345,10 @@ export const originItems: Item[] = [
   },
   {
     key: '甘鹿',
-    props: [{ type: '最大体力',level: 1 }, { type: '体力回复量',level: 1 }],
+    props: [
+      { type: '最大体力', level: 1 },
+      { type: '体力回复量', level: 1 },
+    ],
     weight: 32,
   },
   {
@@ -363,7 +368,7 @@ export const originItems: Item[] = [
   },
   {
     key: '大马士革钢顶',
-    props: [{ type: '魔导力'},{type: '攻击力',level: 1}],
+    props: [{ type: '魔导力' }, { type: '攻击力', level: 1 }],
     weight: 34,
   },
   {
@@ -378,12 +383,19 @@ export const originItems: Item[] = [
   },
   {
     key: '无暇冰',
-    props: [{ type: '适应力', level: 1 }, { type: '石化抗性',level: 1 }],
+    props: [
+      { type: '适应力', level: 1 },
+      { type: '石化抗性', level: 1 },
+    ],
     weight: 34,
   },
   {
     key: '巧克力冰激凌',
-    props: [{ type: '攻击力', level: 2 }, { type: '使用速度' }, {type: '格挡耐久'}],
+    props: [
+      { type: '攻击力', level: 2 },
+      { type: '使用速度' },
+      { type: '格挡耐久' },
+    ],
     weight: 34,
   },
   {
@@ -406,18 +418,24 @@ export const originItems: Item[] = [
   },
   {
     key: '神父的日记',
-    props: [{ type: '最大精力',level:1 }, { type: '魔导力', level: 1 }],
+    props: [
+      { type: '最大精力', level: 1 },
+      { type: '魔导力', level: 1 },
+    ],
     weight: 36,
   },
   {
     key: '蜥蜴兽人的鳞片',
-    props: [{ type: '效果时间',level:1 }, { type: '减重' }],
-    weight:36
+    props: [{ type: '效果时间', level: 1 }, { type: '减重' }],
+    weight: 36,
   },
   {
     key: '史莱姆果冻',
-    props: [{ type: '最大体力',level:1 }, { type: '麻痹抗性',level: 1 }],
-    weight:36
+    props: [
+      { type: '最大体力', level: 1 },
+      { type: '麻痹抗性', level: 1 },
+    ],
+    weight: 36,
   },
   {
     key: '银粘石',
@@ -426,7 +444,7 @@ export const originItems: Item[] = [
       { type: '剧毒抗性', level: 1 },
     ],
     weight: 38,
-  }, 
+  },
   {
     key: '镜子的碎片',
     props: [
@@ -434,22 +452,22 @@ export const originItems: Item[] = [
       { type: '精力提升量', level: 1 },
     ],
     weight: 38,
-  }, 
+  },
   {
     key: '团子',
     props: [
       { type: '最大体力', level: 1 },
       { type: '体力回复量', level: 1 },
-      {type: '精力提升量'}
+      { type: '精力提升量' },
     ],
     weight: 38,
   },
   {
     key: '汉堡',
     props: [
-      { type: '最大体力', level: 2},
+      { type: '最大体力', level: 2 },
       { type: '体力回复量' },
-      {type: '精力提升量'}
+      { type: '精力提升量' },
     ],
     weight: 38,
   },
@@ -460,12 +478,18 @@ export const originItems: Item[] = [
   },
   {
     key: '魔法银矿石',
-    props: [{ type: '防御力',level: 1 }, { type: '格挡耐久',level: 2 }],
+    props: [
+      { type: '防御力', level: 1 },
+      { type: '格挡耐久', level: 2 },
+    ],
     weight: 39,
   },
   {
     key: '火药弹',
-    props: [{ type: '防御力',level: 2 }, { type: '格挡耐久',level: 1 }],
+    props: [
+      { type: '防御力', level: 2 },
+      { type: '格挡耐久', level: 1 },
+    ],
     weight: 39,
   },
   {
@@ -479,49 +503,46 @@ export const originItems: Item[] = [
   },
   {
     key: '滴水嘴兽的翅膀',
+    props: [{ type: '剧毒抗性', level: 1 }, { type: '剧毒抗性' }],
+    weight: 40,
+  },
+  {
+    key: '六寸蛋糕',
     props: [
-      { type: '剧毒抗性', level: 1 },
-      { type: '剧毒抗性' },
+      { type: '石化抗性', level: 1 },
+      { type: '流血抗性', level: 1 },
     ],
     weight: 40,
   },
-{
-  key: '六寸蛋糕',
-  props: [
-    { type: '石化抗性', level: 1 },
-    { type: '流血抗性' ,level: 1},
-  ],
-  weight: 40,
-},
-{
-  key: '米糕',
-  props: [
-    { type: '石化抗性',  },
-    { type: '剧毒抗性' ,},
-    {type: '麻痹抗性',level:1}
-  ],
-  weight: 40,
-},
-{
-  key: '装满水的中瓶',
-  props: [
-    { type: '适应力',level: 1  },
-    { type: '缓慢回复' ,level: 1},
-  ],
-  weight: 40,
-},
+  {
+    key: '米糕',
+    props: [
+      { type: '石化抗性' },
+      { type: '剧毒抗性' },
+      { type: '麻痹抗性', level: 1 },
+    ],
+    weight: 40,
+  },
+  {
+    key: '装满水的中瓶',
+    props: [
+      { type: '适应力', level: 1 },
+      { type: '缓慢回复', level: 1 },
+    ],
+    weight: 40,
+  },
   {
     key: '原味饼干',
     props: [{ type: '攻击力' }, { type: '魔导力' }, { type: '减重' }],
     weight: 41,
   },
-  
+
   {
     key: '草莓',
     props: [
-      { type: '失明抗性',level: 1  },
-      { type: '流血抗性' ,},
-      {type: '麻痹抗性'}
+      { type: '失明抗性', level: 1 },
+      { type: '流血抗性' },
+      { type: '麻痹抗性' },
     ],
     weight: 40,
   },
@@ -539,7 +560,7 @@ export const originItems: Item[] = [
     key: '魔导壶',
     props: [
       { type: '魔导力', level: 1 },
-      { type: '失明抗性',level:1 },
+      { type: '失明抗性', level: 1 },
     ],
     weight: 43,
   },
@@ -548,7 +569,7 @@ export const originItems: Item[] = [
     props: [
       { type: '防御力', level: 2 },
       { type: '效果时间' },
-      { type: '精力提升量'},
+      { type: '精力提升量' },
     ],
     weight: 43,
   },
@@ -556,7 +577,7 @@ export const originItems: Item[] = [
     key: '秘银',
     props: [
       { type: '攻击力', level: 1 },
-      { type: '魔导力',level: 1 },
+      { type: '魔导力', level: 1 },
     ],
     weight: 44,
   },
@@ -577,17 +598,27 @@ export const originItems: Item[] = [
   },
   {
     key: '草莓可丽饼',
-    props: [{ type: '精力提升量',level: 1 }, { type: '格挡耐久',level: 1 }, {type:'防御力',level: 1}],
+    props: [
+      { type: '精力提升量', level: 1 },
+      { type: '格挡耐久', level: 1 },
+      { type: '防御力', level: 1 },
+    ],
     weight: 45,
   },
   {
     key: '雪人的毛发',
-    props: [{ type: '攻击力',level: 1 }, { type: '流血抗性',level: 1 },],
+    props: [
+      { type: '攻击力', level: 1 },
+      { type: '流血抗性', level: 1 },
+    ],
     weight: 45,
   },
   {
     key: '古代鱼的生鱼片',
-    props: [{ type: '麻痹抗性',level: 1 }, { type: '减重',level: 1 }],
+    props: [
+      { type: '麻痹抗性', level: 1 },
+      { type: '减重', level: 1 },
+    ],
     weight: 46,
   },
   {
@@ -603,8 +634,8 @@ export const originItems: Item[] = [
     key: '巧克力泡芙',
     props: [
       { type: '最大体力', level: 1 },
-      { type: '体力回复量',level: 1 },
-      { type: '精力提升量',level:1 },
+      { type: '体力回复量', level: 1 },
+      { type: '精力提升量', level: 1 },
     ],
     weight: 48,
   },
@@ -620,7 +651,7 @@ export const originItems: Item[] = [
   {
     key: '牛奶口口',
     props: [
-      { type: '使用速度', level: 2},
+      { type: '使用速度', level: 2 },
       { type: '攻击力', level: 1 },
       { type: '精力提升量' },
     ],
@@ -638,16 +669,16 @@ export const originItems: Item[] = [
   {
     key: '肉馅派',
     props: [
-      { type: '减重', level: 2},
+      { type: '减重', level: 2 },
       { type: '使用速度', level: 1 },
       { type: '格挡耐久' },
     ],
     weight: 50,
   },
   {
-    key: '里斯帕达尔顿',
+    key: '里斯帕达尔盾',
     props: [
-      { type: '防御力', level: 1},
+      { type: '防御力', level: 1 },
       { type: '经验获取', level: 1 },
     ],
     weight: 51,
@@ -667,7 +698,11 @@ export const originItems: Item[] = [
   },
   {
     key: '王城的苹果',
-    props: [{ type: '体力回复量',level: 1 }, { type: '最大体力', level: 1 }, {type: '缓慢回复',level:1}],
+    props: [
+      { type: '体力回复量', level: 1 },
+      { type: '最大体力', level: 1 },
+      { type: '缓慢回复', level: 1 },
+    ],
     weight: 54,
   },
   {
@@ -689,10 +724,7 @@ export const originItems: Item[] = [
   },
   {
     key: '祖母绿',
-    props: [
-      { type: '金钱获取', level: 1 },
-      { type: '经验获取' },
-    ],
+    props: [{ type: '金钱获取', level: 1 }, { type: '经验获取' }],
     weight: 55,
   },
   {
@@ -717,7 +749,7 @@ export const originItems: Item[] = [
     props: [
       { type: '攻击力', level: 1 },
       { type: '效果时间', level: 1 },
-      { type: '最大体力',level:1 },
+      { type: '最大体力', level: 1 },
     ],
     weight: 57,
   },
@@ -726,7 +758,7 @@ export const originItems: Item[] = [
     props: [
       { type: '最大体力', level: 2 },
       { type: '体力回复量', level: 1 },
-      { type: '精力提升量',level: 1 },
+      { type: '精力提升量', level: 1 },
     ],
     weight: 58,
   },
@@ -753,37 +785,33 @@ export const originItems: Item[] = [
     props: [
       { type: '减重', level: 1 },
       { type: '魔导力', level: 1 },
-      { type: '最大精力',level: 1 },
+      { type: '最大精力', level: 1 },
     ],
     weight: 63,
-  }, 
+  },
   {
     key: '巧克力派',
-    props: [
-      { type: '魔导力', level: 2 },
-      { type: '减重' },
-      { type: '魔导力' },
-    ],
+    props: [{ type: '魔导力', level: 2 }, { type: '减重' }, { type: '魔导力' }],
     weight: 63,
-  },  
+  },
   {
     key: '可可',
     props: [
       { type: '麻痹抗性', level: 2 },
-      { type: '剧毒抗性',level: 1 },
+      { type: '剧毒抗性', level: 1 },
       { type: '失明抗性' },
     ],
     weight: 64,
-  },  
+  },
   {
     key: '巧克力蛋糕',
     props: [
       { type: '剧毒抗性', level: 1 },
       { type: '失明抗性', level: 1 },
-      { type: '麻痹抗性',level: 1 },
+      { type: '麻痹抗性', level: 1 },
     ],
     weight: 64,
-  },  
+  },
   {
     key: '蓝宝石',
     props: [
@@ -791,7 +819,7 @@ export const originItems: Item[] = [
       { type: '经验获取', level: 1 },
     ],
     weight: 65,
-  },  
+  },
   {
     key: '佳龙之书',
     props: [
@@ -804,8 +832,8 @@ export const originItems: Item[] = [
   {
     key: '纯白的贴身衣物',
     props: [
-      { type: '最大精力',level: 2 },
-      { type: '体力回复量',level: 2 },
+      { type: '最大精力', level: 2 },
+      { type: '体力回复量', level: 2 },
       { type: '使用速度', level: 2 },
     ],
     weight: 70,
@@ -813,8 +841,8 @@ export const originItems: Item[] = [
   {
     key: '巧克力',
     props: [
-      { type: '剧毒抗性',level: 2 },
-      { type: '失明抗性',level: 1 },
+      { type: '剧毒抗性', level: 2 },
+      { type: '失明抗性', level: 1 },
       { type: '麻痹抗性', level: 1 },
     ],
     weight: 74,
@@ -822,8 +850,8 @@ export const originItems: Item[] = [
   {
     key: '豪华装饰蛋糕',
     props: [
-      { type: '防御力',level: 2 },
-      { type: '格挡耐久',level: 2 },
+      { type: '防御力', level: 2 },
+      { type: '格挡耐久', level: 2 },
       { type: '减重', level: 2 },
     ],
     weight: 86,
@@ -831,32 +859,10 @@ export const originItems: Item[] = [
   {
     key: '情人节礼物',
     props: [
-      { type: '魔导力',level: 2 },
-      { type: '攻击力',level: 2 },
+      { type: '魔导力', level: 2 },
+      { type: '攻击力', level: 2 },
       { type: '精力提升量', level: 2 },
     ],
     weight: 90,
   },
 ];
-
-const getPropsKey = (item: Item) => {
-  return item.props
-    .map((p) => p.type + (p.level ?? 0))
-    .sort()
-    .join('');
-};
-
-const items: Item[] = [originItems[0]];
-for (let i = 1; i < originItems.length; i++) {
-  const item = originItems[i];
-  if (
-    item.weight === originItems[i - 1].weight &&
-    getPropsKey(item) === getPropsKey(originItems[i - 1])
-  ) {
-    continue;
-  } else {
-    items.push(item);
-  }
-}
-
-export { items };

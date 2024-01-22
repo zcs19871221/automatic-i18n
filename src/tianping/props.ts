@@ -27,4 +27,4 @@ export interface Property {
   level?: 0 | 1 | 2 | 3;
 }
 
-export type PropsList = Property['type'][][];
+export type PropName = Property['type'];
