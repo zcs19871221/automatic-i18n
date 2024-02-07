@@ -44,17 +44,6 @@ export class BundleReplacer {
 
   public warnings: Set<string> = new Set();
 
-  public static stringifyObject(obj: Record<string, string>) {
-    return (
-      Object.entries(obj).reduce((content, [key, text]) => {
-        if (key.includes('-')) {
-          key = `'"' + key + '"'`;
-        }
-        content += `  ${key}: '${text}',\n`;
-        return content;
-      }, '{') + '};\n'
-    );
-  }
   private generateLocaleFiles() {
     let textKeys: null | string[] = null;
 
@@ -92,10 +81,15 @@ export class BundleReplacer {
         );
       }
 
-      return this.formatAndWrite(
-        localeFile,
-        renderLocaleFile(name, keyMappingText, this.opt.localeToReplace)
-      );
+      try {
+        return this.formatAndWrite(
+          localeFile,
+          renderLocaleFile(name, keyMappingText, this.opt.localeToReplace)
+        );
+      } catch (error) {
+        console.log(localeFile);
+        console.error(error);
+      }
     });
 
     const templateDist = path.join(

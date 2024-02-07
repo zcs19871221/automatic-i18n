@@ -17,7 +17,11 @@ export const locales${!isDefault ? ':Locales' : ''} = {
       if (key.includes('-')) {
         key = `'"' + key + '"'`;
       }
-      return `${key}: '${keyMapValue[key]}'`;
+      let quote = "'";
+      if (keyMapValue[key].includes("'")) {
+        quote = '"';
+      }
+      return `${key}: ${quote}${keyMapValue[key]}${quote}`;
     })
     .join(',\n')}
 }${isDefault ? ' as const' : ''};
