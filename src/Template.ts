@@ -46,12 +46,12 @@ export class TemplateExpressionHandler implements NodeHandler {
 }
 export class Template extends Context {
   protected override generatingStrFromChildThenSet() {
-    const { keyMapValue, str } = this.joinChildsAsParamter(
+    const { keyMapValue, str } = this.joinChildrenAsParameter(
       '`'.length,
       '`'.length
     );
     if (!this.replacer.includesTargetLocale(str)) {
-      this.str = this.joinChilds(
+      this.str = this.joinChildren(
         0,
         0,
         (str: string) =>
@@ -70,7 +70,7 @@ export class Template extends Context {
 
 export class TemplateExpression extends Context {
   protected override generatingStrFromChildThenSet() {
-    this.str = this.joinChilds(
+    this.str = this.joinChildren(
       TemplateExpression.startSymbol.length,
       TemplateExpression.endSymbol.length
     );

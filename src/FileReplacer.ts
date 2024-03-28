@@ -133,21 +133,22 @@ export class FileReplacer {
 
   public replace() {
     try {
-      let str = this.rootContext.generateStr();
-      if (str && !this.hasImportedI18nModules) {
-        const tsNocheckMatched = this.file.match(
+      let replacedText = this.rootContext.generateStr();
+      if (replacedText && !this.hasImportedI18nModules) {
+        const tsUncheckCommentMatched = this.file.match(
           /(\n|^)\/\/\s*@ts-nocheck[^\n]*\n/
         );
         const insertIndex =
-          tsNocheckMatched === null
+          tsUncheckCommentMatched === null
             ? 0
-            : (tsNocheckMatched.index ?? 0) + tsNocheckMatched[0].length;
-        str =
-          str.slice(0, insertIndex) +
+            : (tsUncheckCommentMatched.index ?? 0) +
+              tsUncheckCommentMatched[0].length;
+        replacedText =
+          replacedText.slice(0, insertIndex) +
           this.createImportStatement() +
-          str.slice(insertIndex);
+          replacedText.slice(insertIndex);
       }
-      return str;
+      return replacedText;
     } catch (error: any) {
       if (error.message) {
         error.message = '@ ' + this.fileLocate + ' ' + error.message;
@@ -170,8 +171,8 @@ export class FileReplacer {
   ];
 
   public traverse(node: Node, parentContext?: Context) {
-    const targetHandler = this.nodeHandlers.filter((nodehHandler) =>
-      nodehHandler.match(node, this, parentContext)
+    const targetHandler = this.nodeHandlers.filter((nodeHandler) =>
+      nodeHandler.match(node, this, parentContext)
     );
     if (targetHandler.length > 1) {
       throw new Error('matched more then 1 ');

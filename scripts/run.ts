@@ -17,7 +17,7 @@ if (process.argv.slice(2).length > 0) {
 }
 LocaleReplacer.replace({
   projectDir: process.cwd(),
-  fileReplaceOverwirte: true,
+  fileReplaceOverwrite: true,
   filesOrDirsToReplace: dirsToReplace
     .map((f) => path.join(root, f))
     .filter((f) => {

@@ -176,12 +176,12 @@ export interface OptionOpt {
 
 export type BaseOpt = (
   | {
-      readonly fileReplaceOverwirte: true;
+      readonly fileReplaceOverwrite: true;
       readonly fileReplaceDist?: never;
     }
   | {
       readonly fileReplaceDist: string;
-      readonly fileReplaceOverwirte?: never;
+      readonly fileReplaceOverwrite?: never;
     }
 ) & {
   readonly projectDir: string;

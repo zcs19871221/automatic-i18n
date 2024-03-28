@@ -1,12 +1,12 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import ts, { PropertyAssignment, ScriptTarget } from 'typescript';
 import * as prettier from 'prettier';
 
 import { FileReplacer } from './FileReplacer';
 import { renderEntryFile } from './static-template/entryFile';
 import { renderLocaleFile } from './static-template/localeFile';
 import { Opt } from './types';
-import ts, { PropertyAssignment, ScriptTarget } from 'typescript';
 
 export class BundleReplacer {
   constructor(private readonly opt: Opt) {
@@ -18,6 +18,7 @@ export class BundleReplacer {
       path.join(this.langDir, this.opt.localeToReplace + '.ts'),
       this.opt.tsTarget
     );
+
     this.localeTextMappingKey = Object.entries<string>(keyMappingText).reduce(
       (localeMappingKey: Record<string, string>, [key, text]) => {
         if (!localeMappingKey[text]) {
@@ -177,32 +178,38 @@ export class BundleReplacer {
     filesOrDirs.sort();
     filesOrDirs.forEach((fileOrDir) => {
       if (fs.lstatSync(fileOrDir).isDirectory()) {
+        const dir = fileOrDir;
         return this.replaceAllFiles(
-          fs.readdirSync(fileOrDir).map((d) => path.join(fileOrDir, d))
+          fs.readdirSync(dir).map((d) => path.join(fileLocate, d))
         );
       }
 
-      const fileReplaceInfo = new FileReplacer(
-        fileOrDir,
+      const fileLocate = fileOrDir;
+
+      const fileReplacer = new FileReplacer(
+        fileLocate,
         this,
         this.opt,
-        fs.readFileSync(fileOrDir, 'utf-8')
+        fs.readFileSync(fileLocate, 'utf-8')
       );
-      const file = fileReplaceInfo.replace();
+      const file = fileReplacer.replace();
       if (!file) {
         return;
       }
 
-      if (this.opt.fileReplaceOverwirte) {
-        this.formatAndWrite(fileOrDir, file);
-        console.log(fileOrDir + ' rewrite sucessful! 😃');
+      if (this.opt.fileReplaceOverwrite) {
+        this.formatAndWrite(fileLocate, file);
+        console.log(fileLocate + ' rewrite successful! 😃');
       } else {
         this.formatAndWrite(
-          path.join(this.opt.fileReplaceDist, path.basename(fileOrDir)),
+          path.join(this.opt.fileReplaceDist, path.basename(fileLocate)),
           file
         );
         console.log(
-          fileOrDir + ' write to ' + this.opt.fileReplaceDist + ' sucessful! 😃'
+          fileLocate +
+            ' write to ' +
+            this.opt.fileReplaceDist +
+            ' successful! 😃'
         );
       }
     });

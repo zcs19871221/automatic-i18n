@@ -8,7 +8,7 @@ export interface Opt {
 }
 
 export abstract class Context {
-  protected childs: Context[] = [];
+  protected children: Context[] = [];
   public str: string = '';
   public needReplace = false;
   protected node?: Node;
@@ -30,14 +30,14 @@ export abstract class Context {
     this.start = start;
     this.end = end;
 
-    this.parent?.childs.push(this);
+    this.parent?.children.push(this);
   }
 
-  private sortChildThenCheck() {
-    this.childs.sort((a, b) => a.start - b.start);
-    let prev = this.childs?.[0];
-    for (let i = 1; i < this.childs.length; i++) {
-      if (this.childs[i].start < prev.end) {
+  private sortChildrenThenCheck() {
+    this.children.sort((a, b) => a.start - b.start);
+    let prev = this.children?.[0];
+    for (let i = 1; i < this.children.length; i++) {
+      if (this.children[i].start < prev.end) {
         throw new Error('error parser');
       }
     }
@@ -46,28 +46,28 @@ export abstract class Context {
   protected abstract generatingStrFromChildThenSet(): void;
 
   public generateStrFromChildThenSet() {
-    this.sortChildThenCheck();
+    this.sortChildrenThenCheck();
     this.generatingStrFromChildThenSet();
     this.needReplace =
-      this.needReplace || this.childs.some((c) => c.needReplace);
-    this.childs?.forEach((c) => {
+      this.needReplace || this.children.some((c) => c.needReplace);
+    this.children?.forEach((c) => {
       c.clear();
     });
   }
 
-  protected joinChildsAsParamter(
+  protected joinChildrenAsParameter(
     startSkip: number,
     endSkip: number,
-    hanlder: (str: string, c: Context) => string = (str) => str
+    handler: (str: string, c: Context) => string = (str) => str
   ): { str: string; keyMapValue: Record<string, string> } {
     const valueMapKey: Record<string, string> = {};
     const keyMapValue: Record<string, string> = {};
 
-    const str = this.joinChilds(
+    const str = this.joinChildren(
       startSkip,
       endSkip,
       (str: string, c: Context) => {
-        str = hanlder(str, c);
+        str = handler(str, c);
         if (!valueMapKey[str]) {
           const key = 'v' + (Object.keys(valueMapKey).length + 1);
 
@@ -82,14 +82,14 @@ export abstract class Context {
     return { str, keyMapValue };
   }
 
-  protected joinChilds(
+  protected joinChildren(
     startSkip: number,
     endSkip: number,
     strHandler: (str: string, c: Context) => string = (str) => str
   ): string {
     let str = '';
     let start = this.start + startSkip;
-    this.childs.forEach((c) => {
+    this.children.forEach((c) => {
       str += this.replacer.file.slice(start, c.start);
       str += strHandler(c.str, c);
       start = c.end;
@@ -102,7 +102,7 @@ export abstract class Context {
     (this.node as any) = null;
     this.parent = undefined;
     this.str = '';
-    this.childs = [];
+    this.children = [];
   }
 
   public generateStr(): string {

@@ -66,11 +66,11 @@ class JsxTagAndExpressionList extends Context {
     childs: Context[]
   ) {
     super({ replacer, start, end });
-    this.childs = childs;
+    this.children = childs;
   }
 
   protected override generatingStrFromChildThenSet() {
-    const { str, keyMapValue } = this.joinChildsAsParamter(0, 0, (str) => {
+    const { str, keyMapValue } = this.joinChildrenAsParameter(0, 0, (str) => {
       if (str.startsWith('{') && str.endsWith('}')) {
         return str.slice(1, str.length - 1);
       }
@@ -78,7 +78,7 @@ class JsxTagAndExpressionList extends Context {
     });
 
     if (!this.replacer.includesTargetLocale(str)) {
-      this.str = this.joinChilds(0, 0);
+      this.str = this.joinChildren(0, 0);
       return;
     }
 
@@ -142,10 +142,10 @@ export class Jsx extends Context {
         start = nextStart;
         block = [];
       };
-      let start = this.childs[0].end;
-      newChilds.push(this.childs[0]);
-      for (let i = 1; i < this.childs.length - 1; i++) {
-        const c = this.childs[i];
+      let start = this.children[0].end;
+      newChilds.push(this.children[0]);
+      for (let i = 1; i < this.children.length - 1; i++) {
+        const c = this.children[i];
         if (c instanceof Jsx || (c instanceof JsxExpression && c.includeJsx)) {
           createJsxList(c.start, c.end);
           newChilds.push(c);
@@ -155,18 +155,18 @@ export class Jsx extends Context {
         block.push(c);
       }
 
-      createJsxList(this.childs[this.childs.length - 1].start, -1);
-      newChilds.push(this.childs[this.childs.length - 1]);
-      this.childs = newChilds;
+      createJsxList(this.children[this.children.length - 1].start, -1);
+      newChilds.push(this.children[this.children.length - 1]);
+      this.children = newChilds;
     }
 
-    this.str = this.joinChilds(0, 0);
+    this.str = this.joinChildren(0, 0);
   }
 }
 
 export class JsxExpression extends Context {
   protected override generatingStrFromChildThenSet() {
-    this.str = this.joinChilds(0, 0);
+    this.str = this.joinChildren(0, 0);
   }
 
   public includeJsx = false;
