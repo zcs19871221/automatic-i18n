@@ -114,11 +114,12 @@ export abstract class ReplaceContext {
       if (targetHandler.length > 1) {
         throw new Error('matched more then 1 ');
       }
-      if (targetHandler.length === 1) {
-        targetHandler[0].handle(child, this.replacer, parentContext);
-      } else {
-        this.handleChildren(child, parentContext);
+      const foundHandler = targetHandler[0];
+      if (foundHandler) {
+        foundHandler.handle(child, this.replacer, parentContext);
+        return;
       }
+      this.handleChildren(child, parentContext);
     });
   }
 
