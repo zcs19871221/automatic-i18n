@@ -115,18 +115,20 @@ export class FileReplacer {
     }
   }
 
-  public traverse(node: Node, parentContext?: ReplaceContext) {
-    const targetHandler = tsNodeHandlers.filter((tsNodeHandler) =>
-      tsNodeHandler.match(node, this, parentContext)
-    );
-    if (targetHandler.length > 1) {
-      throw new Error('matched more then 1 ');
-    }
-    if (targetHandler.length === 1) {
-      targetHandler[0].handle(node, this, parentContext);
-    } else {
-      forEachChild(node, (n) => this.traverse(n, parentContext));
-    }
+  public handleChildren(node: Node, parentContext?: ReplaceContext) {
+    forEachChild(node, (child) => {
+      const targetHandler = tsNodeHandlers.filter((tsNodeHandler) =>
+        tsNodeHandler.match(child, this, parentContext)
+      );
+      if (targetHandler.length > 1) {
+        throw new Error('matched more then 1 ');
+      }
+      if (targetHandler.length === 1) {
+        targetHandler[0].handle(child, this, parentContext);
+      } else {
+        this.handleChildren(child, parentContext);
+      }
+    });
   }
 
   public ignore(node: Node) {

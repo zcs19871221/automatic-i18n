@@ -34,7 +34,7 @@ export class JsxTagContext extends ReplaceContext {
           block
         );
 
-        jsxContextList.generateStrFromChildThenSet();
+        jsxContextList.generateStrFromChildrenThenSet();
         if (jsxContextList.replacedText) {
           newChildren.push(jsxContextList);
         }

@@ -1,4 +1,4 @@
-import { Node, forEachChild } from 'typescript';
+import { Node } from 'typescript';
 import { FileReplacer } from '../FileReplacer';
 
 export interface Opt {
@@ -45,7 +45,7 @@ export abstract class ReplaceContext {
 
   protected abstract generatingStrFromChildThenSet(): void;
 
-  public generateStrFromChildThenSet() {
+  public generateStrFromChildrenThenSet() {
     this.sortChildrenThenCheck();
     this.generatingStrFromChildThenSet();
     this.needReplace =
@@ -107,10 +107,10 @@ export abstract class ReplaceContext {
 
   public generateNewText(): string {
     if (this.node) {
-      forEachChild(this.node, (n) => this.replacer.traverse(n, this));
+      this.replacer.handleChildren(this.node, this);
     }
 
-    this.generateStrFromChildThenSet();
+    this.generateStrFromChildrenThenSet();
 
     return this.replacedText;
   }
