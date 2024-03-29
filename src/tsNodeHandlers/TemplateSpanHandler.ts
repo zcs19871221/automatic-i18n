@@ -1,15 +1,15 @@
 import { FileReplacer } from '../FileReplacer';
 import { TsNodeHandler } from './TsNodeHandler';
-import { Context } from '../Context';
+import { ReplaceContext } from '../ReplaceContext/ReplaceContext';
 import { Node, SyntaxKind } from 'typescript';
-import { TemplateExpression } from '../Template';
+import { TemplateExpression } from '../ReplaceContext/TemplateExpressionContext';
 
 export class TemplateSpanHandler implements TsNodeHandler {
   match(node: Node): boolean {
     return node.kind === SyntaxKind.TemplateSpan;
   }
 
-  handle(node: Node, replacer: FileReplacer, parent: Context): void {
+  handle(node: Node, replacer: FileReplacer, parent: ReplaceContext): void {
     const first = node.getChildren()[0];
 
     const start = replacer.file.lastIndexOf(

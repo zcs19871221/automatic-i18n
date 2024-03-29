@@ -1,19 +1,19 @@
 import { Node, forEachChild } from 'typescript';
-import { FileReplacer } from './FileReplacer';
+import { FileReplacer } from '../FileReplacer';
 
 export interface Opt {
   node: Node;
-  parent?: Context;
+  parent?: ReplaceContext;
   replacer: FileReplacer;
 }
 
-export abstract class Context {
-  protected children: Context[] = [];
+export abstract class ReplaceContext {
+  protected children: ReplaceContext[] = [];
   public replacedText: string = '';
   public needReplace = false;
   protected node?: Node;
   protected replacer: FileReplacer;
-  public parent?: Context;
+  public parent?: ReplaceContext;
   public start: number;
   public end: number;
 
@@ -58,7 +58,7 @@ export abstract class Context {
   protected joinChildrenAsParameter(
     startSkip: number,
     endSkip: number,
-    handler: (str: string, c: Context) => string = (str) => str
+    handler: (str: string, c: ReplaceContext) => string = (str) => str
   ): { str: string; keyMapValue: Record<string, string> } {
     const valueMapKey: Record<string, string> = {};
     const keyMapValue: Record<string, string> = {};
@@ -66,7 +66,7 @@ export abstract class Context {
     const str = this.joinChildren(
       startSkip,
       endSkip,
-      (str: string, c: Context) => {
+      (str: string, c: ReplaceContext) => {
         str = handler(str, c);
         if (!valueMapKey[str]) {
           const key = 'v' + (Object.keys(valueMapKey).length + 1);
@@ -85,7 +85,7 @@ export abstract class Context {
   protected joinChildren(
     startSkip: number,
     endSkip: number,
-    strHandler: (str: string, c: Context) => string = (str) => str
+    strHandler: (str: string, c: ReplaceContext) => string = (str) => str
   ): string {
     let str = '';
     let start = this.start + startSkip;

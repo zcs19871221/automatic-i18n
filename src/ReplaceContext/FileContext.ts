@@ -1,6 +1,6 @@
-import { Context } from './Context';
+import { ReplaceContext } from './ReplaceContext';
 
-export class FileContext extends Context {
+export class FileContext extends ReplaceContext {
   protected override generatingStrFromChildThenSet(): void {
     this.children = this.children.filter((c) => c.needReplace);
     if (this.children.length === 0) {

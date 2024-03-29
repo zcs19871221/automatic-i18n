@@ -1,14 +1,14 @@
 import { SyntaxKind } from 'typescript';
-import { Context } from './Context';
+import { ReplaceContext } from './ReplaceContext';
 
-export class StringLiteralContext extends Context {
-  private removeTextVariableSymobl(text: string) {
+export class StringLiteralContext extends ReplaceContext {
+  private removeTextVariableSymbol(text: string) {
     return text.replace(/^['"`]/, '').replace(/['"`]$/, '');
   }
 
   protected override generatingStrFromChildThenSet(): void {
     let newText = this.replacer.createIntlExpressionFromStr({
-      str: this.removeTextVariableSymobl(this.node!.getText()),
+      str: this.removeTextVariableSymbol(this.node!.getText()),
     });
     if (this.node!.parent.kind === SyntaxKind.JsxAttribute) {
       newText = '{' + newText + '}';

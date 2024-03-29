@@ -1,6 +1,7 @@
-import { Context } from './Context';
+import { ReplaceContext } from './ReplaceContext';
+import { TemplateExpression } from './TemplateExpressionContext';
 
-export class Template extends Context {
+export class TemplateStringContext extends ReplaceContext {
   protected override generatingStrFromChildThenSet() {
     const { keyMapValue, str } = this.joinChildrenAsParameter(
       '`'.length,
@@ -22,16 +23,4 @@ export class Template extends Context {
       keyMapValue
     );
   }
-}
-
-export class TemplateExpression extends Context {
-  protected override generatingStrFromChildThenSet() {
-    this.replacedText = this.joinChildren(
-      TemplateExpression.startSymbol.length,
-      TemplateExpression.endSymbol.length
-    );
-  }
-
-  public static readonly startSymbol: string = '${';
-  public static readonly endSymbol: string = '}';
 }

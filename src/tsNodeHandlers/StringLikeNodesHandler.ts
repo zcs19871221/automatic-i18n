@@ -4,10 +4,10 @@ import ts, {
   PropertyAccessExpression,
   SyntaxKind,
 } from 'typescript';
-import { Context } from '../Context';
+import { ReplaceContext } from '../ReplaceContext/ReplaceContext';
 import { FileReplacer } from '../FileReplacer';
 import { TsNodeHandler } from './TsNodeHandler';
-import { StringLiteralContext } from '../StringLiteralContext';
+import { StringLiteralContext } from '../ReplaceContext/StringLiteralContext';
 
 export class StringLikeNodesHandler implements TsNodeHandler {
   match(node: Node, replacer: FileReplacer): boolean {
@@ -48,7 +48,7 @@ export class StringLikeNodesHandler implements TsNodeHandler {
     return true;
   }
 
-  handle(node: Node, replacer: FileReplacer, parent: Context) {
+  handle(node: Node, replacer: FileReplacer, parent: ReplaceContext) {
     const stringLiteral = new StringLiteralContext({
       node,
       start: node.getStart(),

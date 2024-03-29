@@ -1,8 +1,8 @@
 import { Node, forEachChild, createSourceFile } from 'typescript';
 import { BundleReplacer } from './BundleReplacer';
 import { Opt } from './types';
-import { Context } from './Context';
-import { FileContext as FileContext } from './FileContext';
+import { ReplaceContext } from './ReplaceContext/ReplaceContext';
+import { FileContext as FileContext } from './ReplaceContext/FileContext';
 import tsNodeHandlers from './tsNodeHandlers';
 
 interface Warning {
@@ -115,7 +115,7 @@ export class FileReplacer {
     }
   }
 
-  public traverse(node: Node, parentContext?: Context) {
+  public traverse(node: Node, parentContext?: ReplaceContext) {
     const targetHandler = tsNodeHandlers.filter((tsNodeHandler) =>
       tsNodeHandler.match(node, this, parentContext)
     );

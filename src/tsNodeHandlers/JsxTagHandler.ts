@@ -1,8 +1,8 @@
 import { Node, SyntaxKind } from 'typescript';
 import { FileReplacer } from '../FileReplacer';
 import { TsNodeHandler } from './TsNodeHandler';
-import { Context } from '../Context';
-import { Jsx } from '../Jsx';
+import { ReplaceContext } from '../ReplaceContext/ReplaceContext';
+import { JsxTagContext } from '../ReplaceContext/JsxTagContext';
 
 export class JsxTagHandler implements TsNodeHandler {
   match(node: Node): boolean {
@@ -20,9 +20,9 @@ export class JsxTagHandler implements TsNodeHandler {
   handle(
     node: Node,
     replacer: FileReplacer,
-    parent?: Context | undefined
+    parent?: ReplaceContext | undefined
   ): void {
-    const jsx = new Jsx({
+    const jsx = new JsxTagContext({
       node,
       replacer,
       parent,
@@ -30,7 +30,7 @@ export class JsxTagHandler implements TsNodeHandler {
       end: node.getEnd(),
     });
     if (parent) {
-      Jsx.setParentJsxExpressionIncludeJsxFlag(parent);
+      JsxTagContext.setParentJsxExpressionIncludeJsxFlag(parent);
     }
     if ([SyntaxKind.JsxElement, SyntaxKind.JsxFragment].includes(node.kind)) {
       jsx.jsxWrap = true;

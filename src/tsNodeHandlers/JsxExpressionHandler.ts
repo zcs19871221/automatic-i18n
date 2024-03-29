@@ -1,8 +1,8 @@
 import { Node, SyntaxKind } from 'typescript';
 import { FileReplacer } from '../FileReplacer';
 import { TsNodeHandler } from './TsNodeHandler';
-import { Context } from '../Context';
-import { JsxExpression } from '../Jsx';
+import { ReplaceContext } from '../ReplaceContext/ReplaceContext';
+import { JsxExpressionContext } from '../ReplaceContext/JsxExpressionContext';
 
 export class JsxExpressionHandler implements TsNodeHandler {
   match(node: Node): boolean {
@@ -12,9 +12,9 @@ export class JsxExpressionHandler implements TsNodeHandler {
   handle(
     node: Node,
     replacer: FileReplacer,
-    parent?: Context | undefined
+    parent?: ReplaceContext | undefined
   ): void {
-    const jsxExpression = new JsxExpression({
+    const jsxExpression = new JsxExpressionContext({
       node,
       replacer,
       parent,
