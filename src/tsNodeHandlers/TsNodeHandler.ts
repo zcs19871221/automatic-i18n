@@ -1,5 +1,5 @@
 import { Node } from 'typescript';
-import { ReplaceContext } from '../replaceContexts/ReplaceContext';
+import { ReplaceContext } from '../replaceContexts';
 import { FileReplacer } from '../FileReplacer';
 
 export interface TsNodeHandler {

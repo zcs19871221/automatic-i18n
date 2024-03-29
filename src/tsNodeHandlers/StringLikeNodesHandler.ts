@@ -4,10 +4,9 @@ import ts, {
   PropertyAccessExpression,
   SyntaxKind,
 } from 'typescript';
-import { ReplaceContext } from '../replaceContexts/ReplaceContext';
+import { ReplaceContext, StringLiteralContext } from '../replaceContexts';
 import { FileReplacer } from '../FileReplacer';
 import { TsNodeHandler } from './TsNodeHandler';
-import { StringLiteralContext } from '../replaceContexts/StringLiteralContext';
 
 export class StringLikeNodesHandler implements TsNodeHandler {
   match(node: Node, replacer: FileReplacer): boolean {

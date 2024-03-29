@@ -1,8 +1,7 @@
 import { Node, SyntaxKind } from 'typescript';
 import { FileReplacer } from '../FileReplacer';
 import { TsNodeHandler } from './TsNodeHandler';
-import { ReplaceContext } from '../replaceContexts/ReplaceContext';
-import { JsxExpressionContext } from '../replaceContexts/JsxExpressionContext';
+import { ReplaceContext, JsxExpressionContext } from '../replaceContexts';
 
 export class JsxExpressionHandler implements TsNodeHandler {
   match(node: Node): boolean {

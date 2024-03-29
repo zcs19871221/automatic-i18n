@@ -1,10 +1,10 @@
 import { ReplaceContext } from './ReplaceContext';
 
-export class TemplateExpression extends ReplaceContext {
+export class TemplateExpressionContext extends ReplaceContext {
   protected override generatingStrFromChildThenSet() {
     this.replacedText = this.joinChildren(
-      TemplateExpression.startSymbol.length,
-      TemplateExpression.endSymbol.length
+      TemplateExpressionContext.startSymbol.length,
+      TemplateExpressionContext.endSymbol.length
     );
   }
 

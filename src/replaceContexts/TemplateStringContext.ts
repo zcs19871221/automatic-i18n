@@ -1,5 +1,5 @@
 import { ReplaceContext } from './ReplaceContext';
-import { TemplateExpression } from './TemplateExpressionContext';
+import { TemplateExpressionContext } from './TemplateExpressionContext';
 
 export class TemplateStringContext extends ReplaceContext {
   protected override generatingStrFromChildThenSet() {
@@ -12,7 +12,9 @@ export class TemplateStringContext extends ReplaceContext {
         0,
         0,
         (str: string) =>
-          TemplateExpression.startSymbol + str + TemplateExpression.endSymbol
+          TemplateExpressionContext.startSymbol +
+          str +
+          TemplateExpressionContext.endSymbol
       );
       return;
     }

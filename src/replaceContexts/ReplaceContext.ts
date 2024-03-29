@@ -1,5 +1,6 @@
-import { Node } from 'typescript';
+import { Node, forEachChild } from 'typescript';
 import { FileReplacer } from '../FileReplacer';
+import tsNodeHandlers from '../tsNodeHandlers';
 
 export interface Opt {
   node: Node;
@@ -105,9 +106,25 @@ export abstract class ReplaceContext {
     this.children = [];
   }
 
+  public handleChildren(node: Node, parentContext?: ReplaceContext) {
+    forEachChild(node, (child) => {
+      const targetHandler = tsNodeHandlers.filter((tsNodeHandler) =>
+        tsNodeHandler.match(child, this.replacer, parentContext)
+      );
+      if (targetHandler.length > 1) {
+        throw new Error('matched more then 1 ');
+      }
+      if (targetHandler.length === 1) {
+        targetHandler[0].handle(child, this.replacer, parentContext);
+      } else {
+        this.handleChildren(child, parentContext);
+      }
+    });
+  }
+
   public generateNewText(): string {
     if (this.node) {
-      this.replacer.handleChildren(this.node, this);
+      this.handleChildren(this.node, this);
     }
 
     this.generateStrFromChildrenThenSet();

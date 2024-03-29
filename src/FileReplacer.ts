@@ -1,9 +1,7 @@
-import { Node, forEachChild, createSourceFile } from 'typescript';
+import { Node, createSourceFile } from 'typescript';
 import { BundleReplacer } from './BundleReplacer';
 import { Opt } from './types';
-import { ReplaceContext } from './replaceContexts/ReplaceContext';
-import { FileContext as FileContext } from './replaceContexts/FileContext';
-import tsNodeHandlers from './tsNodeHandlers';
+import { FileContext as FileContext } from './replaceContexts';
 
 interface Warning {
   start: number;
@@ -100,22 +98,6 @@ export class FileReplacer {
       this.fileContext.clear();
       this.file = '';
     }
-  }
-
-  public handleChildren(node: Node, parentContext?: ReplaceContext) {
-    forEachChild(node, (child) => {
-      const targetHandler = tsNodeHandlers.filter((tsNodeHandler) =>
-        tsNodeHandler.match(child, this, parentContext)
-      );
-      if (targetHandler.length > 1) {
-        throw new Error('matched more then 1 ');
-      }
-      if (targetHandler.length === 1) {
-        targetHandler[0].handle(child, this, parentContext);
-      } else {
-        this.handleChildren(child, parentContext);
-      }
-    });
   }
 
   public ignore(node: Node) {
