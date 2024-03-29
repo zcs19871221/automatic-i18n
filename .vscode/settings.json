@@ -9,5 +9,6 @@
   "javascript.format.enable": false,
   "typescript.format.enable": false,
   "files.eol": "\n",
-  "workbench.colorTheme": "Default Dark+"
+  "workbench.colorTheme": "Default Dark+",
+  "cSpell.words": ["nocheck"]
 }

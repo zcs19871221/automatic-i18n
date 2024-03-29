@@ -1,8 +1,8 @@
 import { FileReplacer } from '../FileReplacer';
 import { TsNodeHandler } from './TsNodeHandler';
-import { ReplaceContext } from '../ReplaceContext/ReplaceContext';
+import { ReplaceContext } from '../replaceContexts/ReplaceContext';
 import { Node, SyntaxKind } from 'typescript';
-import { TemplateExpression } from '../ReplaceContext/TemplateExpressionContext';
+import { TemplateExpression } from '../replaceContexts/TemplateExpressionContext';
 
 export class TemplateSpanHandler implements TsNodeHandler {
   match(node: Node): boolean {

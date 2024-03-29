@@ -1,8 +1,8 @@
 import { Node, forEachChild, createSourceFile } from 'typescript';
 import { BundleReplacer } from './BundleReplacer';
 import { Opt } from './types';
-import { ReplaceContext } from './ReplaceContext/ReplaceContext';
-import { FileContext as FileContext } from './ReplaceContext/FileContext';
+import { ReplaceContext } from './replaceContexts/ReplaceContext';
+import { FileContext as FileContext } from './replaceContexts/FileContext';
 import tsNodeHandlers from './tsNodeHandlers';
 
 interface Warning {

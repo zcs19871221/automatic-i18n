@@ -1,8 +1,8 @@
 import { Node, SyntaxKind } from 'typescript';
 import { FileReplacer } from '../FileReplacer';
 import { TsNodeHandler } from './TsNodeHandler';
-import { ReplaceContext } from '../ReplaceContext/ReplaceContext';
-import { JsxTagContext } from '../ReplaceContext/JsxTagContext';
+import { ReplaceContext } from '../replaceContexts/ReplaceContext';
+import { JsxTagContext } from '../replaceContexts/JsxTagContext';
 
 export class JsxTagHandler implements TsNodeHandler {
   match(node: Node): boolean {
