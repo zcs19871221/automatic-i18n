@@ -1,7 +1,7 @@
 import { Node, createSourceFile } from 'typescript';
 import { BundleReplacer } from './BundleReplacer';
 import { Opt } from './types';
-import { FileContext as FileContext } from './replaceContexts';
+import { FileContext } from './replaceContexts';
 
 interface Warning {
   start: number;

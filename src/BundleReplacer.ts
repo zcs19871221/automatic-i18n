@@ -192,6 +192,7 @@ export class BundleReplacer {
         this.opt,
         fs.readFileSync(fileLocate, 'utf-8')
       );
+
       const file = fileReplacer.replace();
       if (!file) {
         return;
