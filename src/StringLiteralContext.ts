@@ -55,7 +55,7 @@ export class StringLikeNodesHandler implements NodeHandler {
       parent,
     });
     stringLiteral.needReplace = true;
-    stringLiteral.generateStr();
+    stringLiteral.generateNewText();
   }
 
   private stringLiteralIsChildOfIncludeBlock(node: Node) {
@@ -93,6 +93,6 @@ export class StringLiteralContext extends Context {
     if (this.node!.parent.kind === SyntaxKind.JsxAttribute) {
       newText = '{' + newText + '}';
     }
-    this.str = newText;
+    this.replacedText = newText;
   }
 }

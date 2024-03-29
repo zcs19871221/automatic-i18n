@@ -1,13 +1,13 @@
 import { Context } from './Context';
 
-export class RootContext extends Context {
+export class FileContext extends Context {
   protected override generatingStrFromChildThenSet(): void {
     this.children = this.children.filter((c) => c.needReplace);
     if (this.children.length === 0) {
-      this.str = '';
+      this.replacedText = '';
       return;
     }
 
-    this.str = this.joinChildren(0, 0);
+    this.replacedText = this.joinChildren(0, 0);
   }
 }

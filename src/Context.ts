@@ -9,7 +9,7 @@ export interface Opt {
 
 export abstract class Context {
   protected children: Context[] = [];
-  public str: string = '';
+  public replacedText: string = '';
   public needReplace = false;
   protected node?: Node;
   protected replacer: FileReplacer;
@@ -91,7 +91,7 @@ export abstract class Context {
     let start = this.start + startSkip;
     this.children.forEach((c) => {
       str += this.replacer.file.slice(start, c.start);
-      str += strHandler(c.str, c);
+      str += strHandler(c.replacedText, c);
       start = c.end;
     });
     str += this.replacer.file.slice(start, this.end - endSkip);
@@ -101,17 +101,17 @@ export abstract class Context {
   public clear() {
     (this.node as any) = null;
     this.parent = undefined;
-    this.str = '';
+    this.replacedText = '';
     this.children = [];
   }
 
-  public generateStr(): string {
+  public generateNewText(): string {
     if (this.node) {
       forEachChild(this.node, (n) => this.replacer.traverse(n, this));
     }
 
     this.generateStrFromChildThenSet();
 
-    return this.str;
+    return this.replacedText;
   }
 }

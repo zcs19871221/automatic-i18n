@@ -15,7 +15,7 @@ export class TemplateHandler implements NodeHandler {
       end: node.getEnd(),
       parent,
     });
-    template.generateStr();
+    template.generateNewText();
   }
 }
 
@@ -41,7 +41,7 @@ export class TemplateExpressionHandler implements NodeHandler {
       start,
       end,
     });
-    templateExpression.generateStr();
+    templateExpression.generateNewText();
   }
 }
 export class Template extends Context {
@@ -51,7 +51,7 @@ export class Template extends Context {
       '`'.length
     );
     if (!this.replacer.includesTargetLocale(str)) {
-      this.str = this.joinChildren(
+      this.replacedText = this.joinChildren(
         0,
         0,
         (str: string) =>
@@ -61,7 +61,7 @@ export class Template extends Context {
     }
     this.needReplace = true;
     const intlId = this.replacer.getOrCreateIntlId(str);
-    this.str = this.replacer.createIntlExpressionFromIntlId(
+    this.replacedText = this.replacer.createIntlExpressionFromIntlId(
       intlId,
       keyMapValue
     );
@@ -70,7 +70,7 @@ export class Template extends Context {
 
 export class TemplateExpression extends Context {
   protected override generatingStrFromChildThenSet() {
-    this.str = this.joinChildren(
+    this.replacedText = this.joinChildren(
       TemplateExpression.startSymbol.length,
       TemplateExpression.endSymbol.length
     );

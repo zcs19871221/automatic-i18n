@@ -3,7 +3,7 @@ import { ImportDeclaration, SyntaxKind } from 'typescript';
 import { BundleReplacer } from './BundleReplacer';
 import { Opt } from './types';
 import { Context } from './Context';
-import { RootContext } from './RootContext';
+import { FileContext as FileContext } from './FileContext';
 import { TemplateExpressionHandler, TemplateHandler } from './Template';
 import { StringLikeNodesHandler } from './StringLiteralContext';
 import { JsxExpressionHandler, JsxHandler as JsxLikeNodesHandler } from './Jsx';
@@ -59,7 +59,7 @@ export interface NodeHandler {
 export class FileReplacer {
   public static ignoreWarningKey = '@ignore';
 
-  public rootContext: RootContext;
+  public fileContext: FileContext;
   public hasImportedI18nModules: boolean = false;
 
   constructor(
@@ -70,7 +70,7 @@ export class FileReplacer {
   ) {
     const node = createSourceFile(this.fileLocate, file, opt.tsTarget, true);
 
-    this.rootContext = new RootContext({
+    this.fileContext = new FileContext({
       node,
       replacer: this,
       start: 0,
@@ -133,7 +133,7 @@ export class FileReplacer {
 
   public replace() {
     try {
-      let replacedText = this.rootContext.generateStr();
+      let replacedText = this.fileContext.generateNewText();
       if (replacedText && !this.hasImportedI18nModules) {
         const tsUncheckCommentMatched = this.file.match(
           /(\n|^)\/\/\s*@ts-nocheck[^\n]*\n/
@@ -155,7 +155,7 @@ export class FileReplacer {
       }
       console.error(error);
     } finally {
-      this.rootContext.clear();
+      this.fileContext.clear();
       this.file = '';
     }
   }

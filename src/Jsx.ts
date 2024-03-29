@@ -33,7 +33,7 @@ export class JsxHandler implements NodeHandler {
     if ([SyntaxKind.JsxElement, SyntaxKind.JsxFragment].includes(node.kind)) {
       jsx.jsxWrap = true;
     }
-    jsx.generateStr();
+    jsx.generateNewText();
   }
 }
 
@@ -54,7 +54,7 @@ export class JsxExpressionHandler implements NodeHandler {
       start: node.getStart(),
       end: node.getEnd(),
     });
-    jsxExpression.generateStr();
+    jsxExpression.generateNewText();
   }
 }
 
@@ -78,7 +78,7 @@ class JsxTagAndExpressionList extends Context {
     });
 
     if (!this.replacer.includesTargetLocale(str)) {
-      this.str = this.joinChildren(0, 0);
+      this.replacedText = this.joinChildren(0, 0);
       return;
     }
 
@@ -96,7 +96,7 @@ class JsxTagAndExpressionList extends Context {
     );
 
     const intlId = this.replacer.getOrCreateIntlId(newStr);
-    this.str =
+    this.replacedText =
       '{' +
       this.replacer.createIntlExpressionFromIntlId(intlId, keyMapValue) +
       '}';
@@ -136,7 +136,7 @@ export class Jsx extends Context {
         );
 
         jsxContextList.generateStrFromChildThenSet();
-        if (jsxContextList.str) {
+        if (jsxContextList.replacedText) {
           newChilds.push(jsxContextList);
         }
         start = nextStart;
@@ -160,13 +160,13 @@ export class Jsx extends Context {
       this.children = newChilds;
     }
 
-    this.str = this.joinChildren(0, 0);
+    this.replacedText = this.joinChildren(0, 0);
   }
 }
 
 export class JsxExpression extends Context {
   protected override generatingStrFromChildThenSet() {
-    this.str = this.joinChildren(0, 0);
+    this.replacedText = this.joinChildren(0, 0);
   }
 
   public includeJsx = false;
