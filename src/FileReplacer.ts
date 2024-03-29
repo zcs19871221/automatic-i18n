@@ -53,7 +53,7 @@ export class FileReplacer {
     return `${this.bundleReplacer.exportName}.${this.property}.formatMessage({id: '${intlId}'}${paramsString})`;
   }
 
-  public createImportStatement() {
+  private createImportStatement() {
     return `import { ${this.bundleReplacer.exportName} } from '${this.opt.importPath}';\n`;
   }
 
@@ -71,18 +71,6 @@ export class FileReplacer {
     }
 
     return intlId;
-  }
-
-  public createIntlExpressionFromStr({
-    str,
-    params,
-  }: {
-    str: string;
-    params?: Record<string, string>;
-  }) {
-    const intl = this.getOrCreateIntlId(str);
-
-    return this.createIntlExpressionFromIntlId(intl, params);
   }
 
   public replace() {
