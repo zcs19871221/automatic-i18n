@@ -1,59 +1,14 @@
 import { Node, forEachChild, createSourceFile } from 'typescript';
-import { ImportDeclaration, SyntaxKind } from 'typescript';
 import { BundleReplacer } from './BundleReplacer';
 import { Opt } from './types';
 import { Context } from './Context';
 import { FileContext as FileContext } from './FileContext';
-import { TemplateExpressionHandler, TemplateHandler } from './Template';
-import { StringLikeNodesHandler } from './StringLiteralContext';
-import { JsxExpressionHandler, JsxHandler as JsxLikeNodesHandler } from './Jsx';
+import tsNodeHandlers from './tsNodeHandlers';
 
 interface Warning {
   start: number;
   end: number;
   text: string;
-}
-
-class ImportHandler implements NodeHandler {
-  match(node: Node): boolean {
-    return node.kind === SyntaxKind.ImportDeclaration;
-  }
-
-  handle(node: Node, replacer: FileReplacer): void {
-    const importNode = node as ImportDeclaration;
-    if (
-      importNode.moduleSpecifier.getText().includes(replacer.opt.importPath) &&
-      importNode.importClause
-        ?.getText()
-        .includes(replacer.bundleReplacer.exportName)
-    ) {
-      replacer.hasImportedI18nModules = true;
-    }
-  }
-}
-
-class IdentifierHandler implements NodeHandler {
-  match(node: Node): boolean {
-    return node.kind === SyntaxKind.Identifier;
-  }
-
-  handle(node: Node, replacer: FileReplacer): void {
-    if (
-      replacer.opt.localeToReplace !== 'en-us' &&
-      replacer.includesTargetLocale(node.getText()) &&
-      !replacer.ignore(node)
-    ) {
-      replacer.addWarningInfo({
-        text: 'property name of object should be english',
-        start: node.getStart(),
-        end: node.getEnd(),
-      });
-    }
-  }
-}
-export interface NodeHandler {
-  match(node: Node, replacer: FileReplacer, parentContext?: Context): boolean;
-  handle(node: Node, replacer: FileReplacer, parentContext?: Context): void;
 }
 
 export class FileReplacer {
@@ -160,19 +115,9 @@ export class FileReplacer {
     }
   }
 
-  private nodeHandlers: NodeHandler[] = [
-    new StringLikeNodesHandler(),
-    new TemplateHandler(),
-    new TemplateExpressionHandler(),
-    new ImportHandler(),
-    new IdentifierHandler(),
-    new JsxLikeNodesHandler(),
-    new JsxExpressionHandler(),
-  ];
-
   public traverse(node: Node, parentContext?: Context) {
-    const targetHandler = this.nodeHandlers.filter((nodeHandler) =>
-      nodeHandler.match(node, this, parentContext)
+    const targetHandler = tsNodeHandlers.filter((tsNodeHandler) =>
+      tsNodeHandler.match(node, this, parentContext)
     );
     if (targetHandler.length > 1) {
       throw new Error('matched more then 1 ');
