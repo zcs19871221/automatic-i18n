@@ -12,9 +12,10 @@ interface Warning {
 }
 
 export class FileReplacer {
+  private property = 'intl';
+  private fileContext: FileContext;
   public static ignoreWarningKey = '@ignore';
 
-  public fileContext: FileContext;
   public hasImportedI18nModules: boolean = false;
 
   constructor(
@@ -32,8 +33,6 @@ export class FileReplacer {
       end: file.length,
     });
   }
-
-  private property = 'intl';
 
   public createIntlExpressionFromIntlId(
     intlId: string,
