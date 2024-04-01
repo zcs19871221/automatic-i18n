@@ -9,7 +9,7 @@ export class LocaleReplacer {
   public static replace(opt: InputOption) {
     try {
       console.time('usedTime');
-      let tsTarget = opt.tsTarget;
+      let tsTarget: ScriptTarget | undefined = opt.tsTarget;
       if (
         !tsTarget &&
         fs.existsSync(path.join(opt.projectDir, 'tsconfig.json'))
