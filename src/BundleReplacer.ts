@@ -211,7 +211,7 @@ export class BundleReplacer {
         });
 
         replacedText = fileContext.generateNewText();
-        if (replacedText && fileContext.hasImportedI18nModules) {
+        if (replacedText && !fileContext.hasImportedI18nModules) {
           const tsUncheckCommentMatched = file.match(
             /(\n|^)\/\/\s*@ts-nocheck[^\n]*\n/
           );
