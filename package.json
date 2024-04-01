@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "tsc": "tsc",
-    "test": "jest",
+    "test": "npm run tsc && jest",
     "tp": "npm run tsc && node ./lib/src/tianPing/index.js"
   },
   "author": "",
