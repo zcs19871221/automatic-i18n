@@ -1,5 +1,5 @@
 import { Node, SyntaxKind } from 'typescript';
-import { FileReplacer } from '../FileReplacer';
+import { FileContext } from '../replaceContexts';
 import { TsNodeHandler } from './TsNodeHandler';
 import { ReplaceContext, JsxExpressionContext } from '../replaceContexts';
 
@@ -10,12 +10,12 @@ export class JsxExpressionHandler implements TsNodeHandler {
 
   handle(
     node: Node,
-    replacer: FileReplacer,
+    fileContext: FileContext,
     parent?: ReplaceContext | undefined
   ): void {
     const jsxExpression = new JsxExpressionContext({
       node,
-      replacer,
+      fileContext,
       parent,
       start: node.getStart(),
       end: node.getEnd(),

@@ -5,11 +5,11 @@ import ts, {
   SyntaxKind,
 } from 'typescript';
 import { ReplaceContext, StringLiteralContext } from '../replaceContexts';
-import { FileReplacer } from '../FileReplacer';
+import { FileContext } from '../replaceContexts';
 import { TsNodeHandler } from './TsNodeHandler';
 
 export class StringLikeNodesHandler implements TsNodeHandler {
-  match(node: Node, replacer: FileReplacer): boolean {
+  match(node: Node, fileContext: FileContext): boolean {
     if (
       ![SyntaxKind.StringLiteral, SyntaxKind.FirstTemplateToken].includes(
         node.kind
@@ -17,14 +17,14 @@ export class StringLikeNodesHandler implements TsNodeHandler {
     ) {
       return false;
     }
-    if (!replacer.includesTargetLocale(node.getText())) {
+    if (!fileContext.bundleReplacer.includesTargetLocale(node.getText())) {
       return false;
     }
     if (node.parent?.kind === ts.SyntaxKind.ImportDeclaration) {
       return false;
     }
     if (node.kind === SyntaxKind.StringLiteral) {
-      if (replacer.ignore(node)) {
+      if (fileContext.bundleReplacer.ignore(node)) {
         return false;
       }
 
@@ -32,13 +32,14 @@ export class StringLikeNodesHandler implements TsNodeHandler {
         this.stringLiteralIsInEqualBlock(node) ||
         this.stringLiteralIsChildOfIncludeBlock(node)
       ) {
-        replacer.addWarningInfo({
+        fileContext.bundleReplacer.addWarningInfo({
           text:
             'do not use locale literal to do [===] or [includes], maybe an error! use /* ' +
-            FileReplacer.ignoreWarningKey +
+            fileContext.bundleReplacer.ignoreWarningKey +
             ' */ before text to ignore warning or refactor code!',
           start: node.getStart(),
           end: node.getEnd(),
+          fileContext,
         });
         return false;
       }
@@ -47,12 +48,12 @@ export class StringLikeNodesHandler implements TsNodeHandler {
     return true;
   }
 
-  handle(node: Node, replacer: FileReplacer, parent: ReplaceContext) {
+  handle(node: Node, fileContext: FileContext, parent: ReplaceContext) {
     const stringLiteral = new StringLiteralContext({
       node,
       start: node.getStart(),
       end: node.getEnd(),
-      replacer,
+      fileContext,
       parent,
     });
     stringLiteral.needReplace = true;

@@ -1,4 +1,4 @@
-import { FileReplacer } from '../FileReplacer';
+import { FileContext } from '../replaceContexts';
 import { TsNodeHandler } from './TsNodeHandler';
 import { ReplaceContext, TemplateStringContext } from '../replaceContexts';
 import { Node, SyntaxKind } from 'typescript';
@@ -8,10 +8,10 @@ export class TemplateExpressionHandler implements TsNodeHandler {
     return node.kind === SyntaxKind.TemplateExpression;
   }
 
-  handle(node: Node, replacer: FileReplacer, parent: ReplaceContext): void {
+  handle(node: Node, fileContext: FileContext, parent: ReplaceContext): void {
     const template = new TemplateStringContext({
       node,
-      replacer,
+      fileContext,
       start: node.getStart(),
       end: node.getEnd(),
       parent,

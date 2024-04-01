@@ -1,4 +1,4 @@
-import { FileReplacer } from '../FileReplacer';
+import { FileContext } from '../replaceContexts';
 import { TsNodeHandler } from './TsNodeHandler';
 import { ReplaceContext, TemplateExpressionContext } from '../replaceContexts';
 import { Node, SyntaxKind } from 'typescript';
@@ -7,19 +7,19 @@ export class TemplateSpanHandler implements TsNodeHandler {
     return node.kind === SyntaxKind.TemplateSpan;
   }
 
-  handle(node: Node, replacer: FileReplacer, parent: ReplaceContext): void {
+  handle(node: Node, fileContext: FileContext, parent: ReplaceContext): void {
     const first = node.getChildren()[0];
 
-    const start = replacer.file.lastIndexOf(
+    const start = fileContext.file.lastIndexOf(
       TemplateExpressionContext.startSymbol,
       node.getStart()
     );
     const end =
-      replacer.file.indexOf('}', first.getEnd()) +
+      fileContext.file.indexOf('}', first.getEnd()) +
       TemplateExpressionContext.endSymbol.length;
     const templateExpression = new TemplateExpressionContext({
       node,
-      replacer,
+      fileContext,
       parent,
       start,
       end,

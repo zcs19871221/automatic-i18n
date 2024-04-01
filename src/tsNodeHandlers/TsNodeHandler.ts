@@ -1,16 +1,15 @@
 import { Node } from 'typescript';
-import { ReplaceContext } from '../replaceContexts';
-import { FileReplacer } from '../FileReplacer';
+import { FileContext, ReplaceContext } from '../replaceContexts';
 
 export interface TsNodeHandler {
   match(
     node: Node,
-    replacer: FileReplacer,
+    fileContext: FileContext,
     parentContext?: ReplaceContext
   ): boolean;
   handle(
     node: Node,
-    replacer: FileReplacer,
+    fileContext: FileContext,
     parentContext?: ReplaceContext
   ): void;
 }

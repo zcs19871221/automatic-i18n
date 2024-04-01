@@ -7,11 +7,12 @@ export class StringLiteralContext extends ReplaceContext {
   }
 
   protected override generatingStrFromChildThenSet(): void {
-    const intl = this.replacer.getOrCreateIntlId(
+    const intl = this.fileContext.bundleReplacer.getOrCreateIntlId(
       this.removeTextVariableSymbol(this.node!.getText())
     );
 
-    let newText = this.replacer.createIntlExpressionFromIntlId(intl);
+    let newText =
+      this.fileContext.bundleReplacer.createIntlExpressionFromIntlId(intl);
 
     if (this.node!.parent.kind === SyntaxKind.JsxAttribute) {
       newText = '{' + newText + '}';

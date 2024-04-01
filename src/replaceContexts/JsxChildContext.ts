@@ -1,14 +1,14 @@
-import { FileReplacer } from '../FileReplacer';
+import { FileContext } from './FileContext';
 import { ReplaceContext } from './ReplaceContext';
 
 export class JsxChildContext extends ReplaceContext {
   constructor(
-    replacer: FileReplacer,
+    fileContext: FileContext,
     start: number,
     end: number,
     children: ReplaceContext[]
   ) {
-    super({ replacer, start, end });
+    super({ fileContext, start, end });
     this.children = children;
   }
 
@@ -20,7 +20,7 @@ export class JsxChildContext extends ReplaceContext {
       return str;
     });
 
-    if (!this.replacer.includesTargetLocale(str)) {
+    if (!this.fileContext.bundleReplacer.includesTargetLocale(str)) {
       this.replacedText = this.joinChildren(0, 0);
       return;
     }
@@ -38,10 +38,13 @@ export class JsxChildContext extends ReplaceContext {
       }
     );
 
-    const intlId = this.replacer.getOrCreateIntlId(newStr);
+    const intlId = this.fileContext.bundleReplacer.getOrCreateIntlId(newStr);
     this.replacedText =
       '{' +
-      this.replacer.createIntlExpressionFromIntlId(intlId, keyMapValue) +
+      this.fileContext.bundleReplacer.createIntlExpressionFromIntlId(
+        intlId,
+        keyMapValue
+      ) +
       '}';
   }
 }

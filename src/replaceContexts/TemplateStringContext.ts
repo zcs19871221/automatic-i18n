@@ -7,7 +7,7 @@ export class TemplateStringContext extends ReplaceContext {
       '`'.length,
       '`'.length
     );
-    if (!this.replacer.includesTargetLocale(str)) {
+    if (!this.fileContext.bundleReplacer.includesTargetLocale(str)) {
       this.replacedText = this.joinChildren(
         0,
         0,
@@ -19,10 +19,11 @@ export class TemplateStringContext extends ReplaceContext {
       return;
     }
     this.needReplace = true;
-    const intlId = this.replacer.getOrCreateIntlId(str);
-    this.replacedText = this.replacer.createIntlExpressionFromIntlId(
-      intlId,
-      keyMapValue
-    );
+    const intlId = this.fileContext.bundleReplacer.getOrCreateIntlId(str);
+    this.replacedText =
+      this.fileContext.bundleReplacer.createIntlExpressionFromIntlId(
+        intlId,
+        keyMapValue
+      );
   }
 }

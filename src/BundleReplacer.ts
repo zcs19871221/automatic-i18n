@@ -1,15 +1,20 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import ts, { PropertyAssignment, ScriptTarget } from 'typescript';
+import ts, {
+  PropertyAssignment,
+  ScriptTarget,
+  Node,
+  createSourceFile,
+} from 'typescript';
 import * as prettier from 'prettier';
 
-import { FileReplacer } from './FileReplacer';
 import { renderEntryFile } from './static-template/entryFile';
 import { renderLocaleFile } from './static-template/localeFile';
 import { Opt } from './types';
+import { FileContext } from './replaceContexts';
 
 export class BundleReplacer {
-  constructor(private readonly opt: Opt) {
+  constructor(public readonly opt: Opt) {
     this.langDir = path.join(this.opt.projectDir, this.opt.i18nDirName);
   }
 
@@ -186,25 +191,60 @@ export class BundleReplacer {
 
       const fileLocate = fileOrDir;
 
-      const fileReplacer = new FileReplacer(
-        fileLocate,
-        this,
-        this.opt,
-        fs.readFileSync(fileLocate, 'utf-8')
-      );
+      const file = fs.readFileSync(fileLocate, 'utf-8');
+      let replacedText = '';
 
-      const file = fileReplacer.replace();
-      if (!file) {
+      let fileContext: FileContext | null = null;
+      try {
+        const node = createSourceFile(
+          fileLocate,
+          file,
+          this.opt.tsTarget,
+          true
+        );
+
+        fileContext = new FileContext({
+          node,
+          file,
+          fileLocate,
+          bundleReplacer: this,
+        });
+
+        replacedText = fileContext.generateNewText();
+        if (replacedText && fileContext.hasImportedI18nModules) {
+          const tsUncheckCommentMatched = file.match(
+            /(\n|^)\/\/\s*@ts-nocheck[^\n]*\n/
+          );
+          const insertIndex =
+            tsUncheckCommentMatched === null
+              ? 0
+              : (tsUncheckCommentMatched.index ?? 0) +
+                tsUncheckCommentMatched[0].length;
+          replacedText =
+            replacedText.slice(0, insertIndex) +
+            this.createImportStatement() +
+            replacedText.slice(insertIndex);
+        }
+      } catch (error: any) {
+        if (error.message) {
+          error.message = '@ ' + fileLocate + ' ' + error.message;
+        }
+        console.error(error);
+      } finally {
+        fileContext?.clear();
+      }
+
+      if (!replacedText) {
         return;
       }
 
       if (this.opt.fileReplaceOverwrite) {
-        this.formatAndWrite(fileLocate, file);
+        this.formatAndWrite(fileLocate, replacedText);
         console.log(fileLocate + ' rewrite successful! 😃');
       } else {
         this.formatAndWrite(
           path.join(this.opt.fileReplaceDist, path.basename(fileLocate)),
-          file
+          replacedText
         );
         console.log(
           fileLocate +
@@ -217,4 +257,79 @@ export class BundleReplacer {
   }
 
   public exportName = 'i18';
+
+  public createIntlExpressionFromIntlId(
+    intlId: string,
+    param?: Record<string, string>
+  ) {
+    let paramsString = '';
+    if (param && Object.keys(param).length > 0) {
+      paramsString += ',';
+      paramsString +=
+        Object.entries<string>(param).reduce((text: string, [key, value]) => {
+          if (key === value) {
+            return text + key + ',';
+          } else {
+            return text + `${key}: ${value === '' ? "''" : value}` + ',';
+          }
+        }, '{') + '}';
+    }
+    return `${this.exportName}.${this.property}.formatMessage({id: '${intlId}'}${paramsString})`;
+  }
+
+  private createImportStatement() {
+    return `import { ${this.exportName} } from '${this.opt.importPath}';\n`;
+  }
+
+  public getOrCreateIntlId(localeText: string) {
+    localeText = localeText.replace(/\n/g, '\\n');
+    let intlId = '';
+    const localeTextMappingKey = this.localeTextMappingKey;
+    if (localeTextMappingKey[localeText]) {
+      intlId = localeTextMappingKey[localeText];
+    } else {
+      do {
+        intlId = `key${String(this.key++).padStart(4, '0')}`;
+      } while (Object.values(localeTextMappingKey).includes(intlId));
+      localeTextMappingKey[localeText] = intlId;
+    }
+
+    return intlId;
+  }
+
+  public ignore(node: Node) {
+    return node.getFullText().includes(this.ignoreWarningKey);
+  }
+
+  public addWarningInfo({
+    start,
+    end,
+    text,
+    fileContext,
+  }: {
+    start: number;
+    end: number;
+    text: string;
+    fileContext: FileContext;
+  }) {
+    this.warnings.add(
+      text +
+        '\nfile at: ' +
+        fileContext.fileLocate +
+        '\ntext: ' +
+        fileContext.file.slice(Math.max(0, start - 3), start) +
+        '【' +
+        fileContext.file.slice(start, end) +
+        '】' +
+        fileContext.file.slice(end + 1, end + 4) +
+        '\n'
+    );
+  }
+
+  public includesTargetLocale(text: string) {
+    return /[\u4e00-\u9fa5]+/g.test(text);
+  }
+
+  private property = 'intl';
+  public ignoreWarningKey = '@ignore';
 }

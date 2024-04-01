@@ -1,5 +1,5 @@
 import { Node, SyntaxKind } from 'typescript';
-import { FileReplacer } from '../FileReplacer';
+import { FileContext } from '../replaceContexts';
 import { TsNodeHandler } from './TsNodeHandler';
 import { ReplaceContext, JsxTagContext } from '../replaceContexts';
 
@@ -18,12 +18,12 @@ export class JsxTagHandler implements TsNodeHandler {
 
   handle(
     node: Node,
-    replacer: FileReplacer,
+    fileContext: FileContext,
     parent?: ReplaceContext | undefined
   ): void {
     const jsx = new JsxTagContext({
       node,
-      replacer,
+      fileContext,
       parent,
       start: node.getStart(),
       end: node.getEnd(),

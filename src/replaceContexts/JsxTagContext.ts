@@ -28,7 +28,7 @@ export class JsxTagContext extends ReplaceContext {
           return;
         }
         const jsxContextList = new JsxChildContext(
-          this.replacer,
+          this.fileContext,
           start,
           end,
           block

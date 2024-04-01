@@ -1,11 +1,11 @@
 import { Node, forEachChild } from 'typescript';
-import { FileReplacer } from '../FileReplacer';
 import tsNodeHandlers from '../tsNodeHandlers';
+import { FileContext } from './FileContext';
 
 export interface Opt {
   node: Node;
   parent?: ReplaceContext;
-  replacer: FileReplacer;
+  fileContext: FileContext;
 }
 
 export abstract class ReplaceContext {
@@ -13,7 +13,7 @@ export abstract class ReplaceContext {
   public replacedText: string = '';
   public needReplace = false;
   protected node?: Node;
-  protected replacer: FileReplacer;
+  protected fileContext: FileContext;
   public parent?: ReplaceContext;
   public start: number;
   public end: number;
@@ -22,11 +22,23 @@ export abstract class ReplaceContext {
     node,
     start,
     end,
-    replacer,
+    fileContext,
     parent,
-  }: Omit<Opt, 'node'> & { start: number; end: number; node?: Node }) {
+  }: {
+    start: number;
+    end: number;
+    node?: Node;
+    parent?: ReplaceContext;
+    fileContext?: FileContext;
+  }) {
     this.node = node;
-    this.replacer = replacer;
+    if (fileContext) {
+      this.fileContext = fileContext;
+    } else if (this instanceof FileContext) {
+      this.fileContext = this;
+    } else {
+      throw new Error('fileContest should not be null');
+    }
     this.parent = parent;
     this.start = start;
     this.end = end;
@@ -91,11 +103,11 @@ export abstract class ReplaceContext {
     let str = '';
     let start = this.start + startSkip;
     this.children.forEach((c) => {
-      str += this.replacer.file.slice(start, c.start);
+      str += this.fileContext.file.slice(start, c.start);
       str += strHandler(c.replacedText, c);
       start = c.end;
     });
-    str += this.replacer.file.slice(start, this.end - endSkip);
+    str += this.fileContext.file.slice(start, this.end - endSkip);
     return str;
   }
 
@@ -109,14 +121,14 @@ export abstract class ReplaceContext {
   public handleChildren(node: Node, parentContext?: ReplaceContext) {
     forEachChild(node, (child) => {
       const targetHandler = tsNodeHandlers.filter((tsNodeHandler) =>
-        tsNodeHandler.match(child, this.replacer, parentContext)
+        tsNodeHandler.match(child, this.fileContext, parentContext)
       );
       if (targetHandler.length > 1) {
         throw new Error('matched more then 1 ');
       }
       const foundHandler = targetHandler[0];
       if (foundHandler) {
-        foundHandler.handle(child, this.replacer, parentContext);
+        foundHandler.handle(child, this.fileContext, parentContext);
         return;
       }
       this.handleChildren(child, parentContext);
