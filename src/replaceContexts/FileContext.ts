@@ -1,23 +1,34 @@
-import { Node } from 'typescript';
+import { ImportDeclaration, Node } from 'typescript';
 
 import { ReplaceContext } from './ReplaceContext';
-import { BundleReplacer } from '../BundleReplacer';
+import { I18nReplacer } from '..';
+import { AddImportNameContext } from './AddImportNameContext';
+import { NewImportContext } from './NewImportContext';
+
 export class FileContext extends ReplaceContext {
   public readonly file: string;
   public readonly fileLocate: string;
-  public readonly bundleReplacer: BundleReplacer;
-  public hasImportedI18nModules: boolean = false;
+  public readonly i18nReplacer: I18nReplacer;
+
+  private requiredImports: {
+    [module: string]: {
+      moduleName: string;
+      names: Set<string>;
+    };
+  } = {};
+
+  private importNodes: ImportDeclaration[] = [];
 
   constructor({
     node,
     file,
     fileLocate,
-    bundleReplacer,
+    i18nReplacer,
   }: {
     node: Node;
     file: string;
     fileLocate: string;
-    bundleReplacer: BundleReplacer;
+    i18nReplacer: I18nReplacer;
   }) {
     super({
       node,
@@ -26,7 +37,7 @@ export class FileContext extends ReplaceContext {
     });
     this.file = file;
     this.fileLocate = fileLocate;
-    this.bundleReplacer = bundleReplacer;
+    this.i18nReplacer = i18nReplacer;
   }
 
   protected override generatingStrFromChildThenSet(): void {
@@ -37,5 +48,59 @@ export class FileContext extends ReplaceContext {
     }
 
     this.replacedText = this.joinChildren(0, 0);
+  }
+
+  public addRequiredImports(moduleName: string, names: string | string[]) {
+    this.requiredImports[moduleName] ??= {
+      moduleName,
+      names: new Set(),
+    };
+    if (typeof names === 'string') {
+      this.requiredImports[moduleName].names.add(names);
+    } else {
+      names.forEach((name) => {
+        this.requiredImports[moduleName].names.add(name);
+      });
+    }
+  }
+
+  public addImportNode(importNode: ImportDeclaration) {
+    this.importNodes.push(importNode);
+  }
+
+  public override generateNewText(): string {
+    if (this.node) {
+      this.handleChildren(this.node, this);
+    }
+
+    this.addRequiredImportsIfMissing();
+    this.generateStrFromChildrenThenSet();
+
+    return this.replacedText;
+  }
+
+  private addRequiredImportsIfMissing() {
+    const newImports: { moduleName: string; names: Set<string> }[] = [];
+    Object.values(this.requiredImports).forEach(({ moduleName, names }) => {
+      const foundNode = this.importNodes.find((importNode) =>
+        importNode.moduleSpecifier.getText().includes(moduleName)
+      );
+      if (!foundNode) {
+        newImports.push({ moduleName, names });
+      } else {
+        const addImportNameContext = new AddImportNameContext(
+          this.fileContext,
+          names,
+          foundNode
+        );
+        addImportNameContext.generateNewText();
+        this.children.push(addImportNameContext);
+      }
+    });
+    if (newImports.length > 0) {
+      const newImportContext = new NewImportContext(this, newImports);
+      newImportContext.generateNewText();
+      this.children.push(newImportContext);
+    }
   }
 }

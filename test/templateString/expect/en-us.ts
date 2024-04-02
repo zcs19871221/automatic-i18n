@@ -2,9 +2,9 @@
  * This file will be changed by automatic program.
  * You can only change variable's property and value.
  */
-import { Locales } from './zh-cn';
+import { LocalKey } from './types.ts';
 
-export const locales: Locales = {
+const locale: Record<LocalKey, string> = {
   key0001: '里面{v1}',
   key0002: '你好',
   key0003: '不好',
@@ -12,3 +12,5 @@ export const locales: Locales = {
   key0005: '张三',
   key0006: 's张三dsf',
 };
+
+export default locale;

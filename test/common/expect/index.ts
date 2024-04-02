@@ -1,6 +1,7 @@
 import { createIntl, createIntlCache, IntlCache, IntlShape } from 'react-intl';
-import { locales as enUs } from './en-us';
-import { locales as zhCn, LocalKey } from './zh-cn';
+import type { LocalKey } from './types';
+import zhCn from './zh-cn';
+import enUs from './en-us';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -12,13 +13,13 @@ declare global {
 }
 
 const messages = {
-  'en-us': enUs,
   'zh-cn': zhCn,
+  'en-us': enUs,
 };
 
-const availableLocales = ['en-us', 'zh-cn'] as const;
+const availableLocales = ['zh-cn', 'en-us'] as const;
 
-export type AvailabeLocales = (typeof availableLocales)[number];
+export type AvailableLocales = (typeof availableLocales)[number];
 
 export class I18n {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,7 +43,7 @@ export class I18n {
     return this.currentIntl;
   }
 
-  public changeLocales(locale: AvailabeLocales) {
+  public changeLocales(locale: AvailableLocales) {
     if (locale === this.currentLocale) {
       return;
     }
@@ -52,13 +53,13 @@ export class I18n {
     }
   }
 
-  private currentLocale: AvailabeLocales;
+  private currentLocale: AvailableLocales;
 
   private cache: IntlCache = createIntlCache();
 
   private currentIntl: IntlShape;
 
-  private createLocaleIntl(local: AvailabeLocales): IntlShape {
+  private createLocaleIntl(local: AvailableLocales): IntlShape {
     this.cache = createIntlCache();
     return createIntl(
       {

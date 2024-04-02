@@ -10,11 +10,11 @@ export class IdentifierHandler implements TsNodeHandler {
 
   handle(node: Node, fileContext: FileContext): void {
     if (
-      fileContext.bundleReplacer.opt.localeToReplace !== 'en-us' &&
-      fileContext.bundleReplacer.includesTargetLocale(node.getText()) &&
-      !fileContext.bundleReplacer.ignore(node)
+      fileContext.i18nReplacer.opt.localeToReplace !== 'en-us' &&
+      fileContext.i18nReplacer.includesTargetLocale(node.getText()) &&
+      !fileContext.i18nReplacer.ignore(node)
     ) {
-      fileContext.bundleReplacer.addWarningInfo({
+      fileContext.i18nReplacer.addWarningInfo({
         text: 'property name of object should be english',
         start: node.getStart(),
         end: node.getEnd(),

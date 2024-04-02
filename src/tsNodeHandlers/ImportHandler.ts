@@ -10,15 +10,7 @@ export class ImportHandler implements TsNodeHandler {
 
   handle(node: Node, fileContext: FileContext): void {
     const importNode = node as ImportDeclaration;
-    if (
-      importNode.moduleSpecifier
-        .getText()
-        .includes(fileContext.bundleReplacer.opt.importPath) &&
-      importNode.importClause
-        ?.getText()
-        .includes(fileContext.bundleReplacer.exportName)
-    ) {
-      fileContext.hasImportedI18nModules = true;
-    }
+    fileContext.addRequiredImports;
+    fileContext.addImportNode(importNode);
   }
 }

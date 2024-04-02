@@ -1,6 +1,7 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { LocaleReplacer } from '../src';
+import { I18nReplacer } from '../src';
+import { GlobalI18nFormatter } from '../src/formatter';
 
 const testBaseDir = path.join(process.cwd(), 'test');
 const expectName = 'expect';
@@ -33,18 +34,17 @@ export const runAndExpect = (dirName: string) => {
   fs.removeSync(distDir);
   fs.ensureDirSync(distDir);
 
-  LocaleReplacer.replace({
-    projectDir: distDir,
+  I18nReplacer.init({
+    targetDir: distDir,
     i18nDirName: '',
-    fileReplaceDist: distDir,
-    fileFilter: () => true,
+    outputToNewDir: distDir,
     filesOrDirsToReplace: [template],
-    localesToGenerate: ['en-us', 'zh-cn'],
+    localesToGenerate: ['en-us'],
     localeToReplace: 'zh-cn',
-    importPath: './',
+    formatter: new GlobalI18nFormatter('./'),
     prettierConfig: {
       singleQuote: true,
     },
-  });
+  }).replace();
   expectDirEqualDistDirAt(dirName);
 };

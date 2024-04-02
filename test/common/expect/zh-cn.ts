@@ -2,7 +2,9 @@
  * This file will be changed by automatic program.
  * You can only change variable's property and value.
  */
-export const locales = {
+import { LocalKey } from './types.ts';
+
+const locale: Record<LocalKey, string> = {
   key0001: '默认名称',
   key0002: '男',
   key0003: '好的',
@@ -31,10 +33,6 @@ export const locales = {
   key0026: '空节点',
   key0027: '`${v1}html中纯文本`',
   key0028: '然后分割\n      {v1}然后分割',
-} as const;
-
-export type LocalKey = keyof typeof locales;
-export type Locales = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key in LocalKey]: any;
 };
+
+export default locale;

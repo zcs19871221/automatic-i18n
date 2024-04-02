@@ -20,31 +20,26 @@ export class JsxChildContext extends ReplaceContext {
       return str;
     });
 
-    if (!this.fileContext.bundleReplacer.includesTargetLocale(str)) {
+    if (!this.i18nReplacer.includesTargetLocale(str)) {
       this.replacedText = this.joinChildren(0, 0);
       return;
     }
 
     this.needReplace = true;
-    const newStr = str.replace(
-      /(^[\s\n]+)|([\s\n]+$)/g,
-      (_match, start, end) => {
-        if (start) {
-          this.start += _match.length;
-        } else {
-          this.end -= _match.length;
-        }
-        return '';
+    const newStr = str.replace(/(^[\s\n]+)|([\s\n]+$)/g, (_match, start) => {
+      if (start) {
+        this.start += _match.length;
+      } else {
+        this.end -= _match.length;
       }
-    );
+      return '';
+    });
 
-    const intlId = this.fileContext.bundleReplacer.getOrCreateIntlId(newStr);
-    this.replacedText =
-      '{' +
-      this.fileContext.bundleReplacer.createIntlExpressionFromIntlId(
-        intlId,
-        keyMapValue
-      ) +
-      '}';
+    const intlId = this.i18nReplacer.getOrCreateIntlId(newStr);
+    this.replacedText = this.i18nReplacer.formatter.format(this, {
+      intlId,
+      params: keyMapValue,
+      defaultMessage: newStr,
+    });
   }
 }

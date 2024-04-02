@@ -1,6 +1,7 @@
 import { Node, forEachChild } from 'typescript';
 import tsNodeHandlers from '../tsNodeHandlers';
 import { FileContext } from './FileContext';
+import { I18nReplacer } from '..';
 
 export interface Opt {
   node: Node;
@@ -13,7 +14,8 @@ export abstract class ReplaceContext {
   public replacedText: string = '';
   public needReplace = false;
   protected node?: Node;
-  protected fileContext: FileContext;
+  public fileContext: FileContext;
+  protected i18nReplacer: I18nReplacer;
   public parent?: ReplaceContext;
   public start: number;
   public end: number;
@@ -44,6 +46,7 @@ export abstract class ReplaceContext {
     this.end = end;
 
     this.parent?.children.push(this);
+    this.i18nReplacer = this.fileContext.i18nReplacer;
   }
 
   private sortChildrenThenCheck() {
@@ -118,7 +121,7 @@ export abstract class ReplaceContext {
     this.children = [];
   }
 
-  public handleChildren(node: Node, parentContext?: ReplaceContext) {
+  public handleChildren(node: Node, parentContext: ReplaceContext) {
     forEachChild(node, (child) => {
       const targetHandler = tsNodeHandlers.filter((tsNodeHandler) =>
         tsNodeHandler.match(child, this.fileContext, parentContext)
@@ -128,6 +131,7 @@ export abstract class ReplaceContext {
       }
       const foundHandler = targetHandler[0];
       if (foundHandler) {
+        // has invoked generateNewText TODO make it more readable
         foundHandler.handle(child, this.fileContext, parentContext);
         return;
       }

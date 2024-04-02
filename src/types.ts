@@ -1,34 +1,24 @@
 import { ScriptTarget } from 'typescript';
 import { Options as PrettierOptions } from 'prettier';
+import { I18nFormatter } from './formatter';
 
 export type localeTypes = 'en-us' | 'zh-cn';
 
-export interface OptionOpt {
+export interface ReplacerOpt {
   i18nDirName?: string;
   localesToGenerate?: localeTypes[];
   localeToReplace?: localeTypes;
   tsTarget?: ScriptTarget;
+  formatter?: 'global' | 'hook' | I18nFormatter;
+  targetDir?: string;
+  filesOrDirsToReplace?: string[];
+  fileFilter?: (fileName: string) => boolean;
+  prettierConfig?: PrettierOptions;
+  outputToNewDir?: false | string;
 }
 
-export type BaseOpt = (
-  | {
-      readonly fileReplaceOverwrite: true;
-      readonly fileReplaceDist?: never;
-    }
-  | {
-      readonly fileReplaceDist: string;
-      readonly fileReplaceOverwrite?: never;
-    }
-) & {
-  readonly projectDir: string;
-  readonly importPath: string;
-  readonly filesOrDirsToReplace: string[];
-  readonly fileFilter?: (fileName: string) => boolean;
-  prettierConfig?: PrettierOptions;
+export type HandledOpt = {
+  [key in keyof ReplacerOpt]-?: key extends 'formatter'
+    ? I18nFormatter
+    : ReplacerOpt[key];
 };
-
-export type Opt = BaseOpt & {
-  readonly [key in keyof OptionOpt]-?: OptionOpt[key];
-};
-
-export type InputOption = BaseOpt & OptionOpt;

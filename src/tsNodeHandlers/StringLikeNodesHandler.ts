@@ -17,14 +17,14 @@ export class StringLikeNodesHandler implements TsNodeHandler {
     ) {
       return false;
     }
-    if (!fileContext.bundleReplacer.includesTargetLocale(node.getText())) {
+    if (!fileContext.i18nReplacer.includesTargetLocale(node.getText())) {
       return false;
     }
     if (node.parent?.kind === ts.SyntaxKind.ImportDeclaration) {
       return false;
     }
     if (node.kind === SyntaxKind.StringLiteral) {
-      if (fileContext.bundleReplacer.ignore(node)) {
+      if (fileContext.i18nReplacer.ignore(node)) {
         return false;
       }
 
@@ -32,10 +32,10 @@ export class StringLikeNodesHandler implements TsNodeHandler {
         this.stringLiteralIsInEqualBlock(node) ||
         this.stringLiteralIsChildOfIncludeBlock(node)
       ) {
-        fileContext.bundleReplacer.addWarningInfo({
+        fileContext.i18nReplacer.addWarningInfo({
           text:
             'do not use locale literal to do [===] or [includes], maybe an error! use /* ' +
-            fileContext.bundleReplacer.ignoreWarningKey +
+            fileContext.i18nReplacer.ignoreWarningKey +
             ' */ before text to ignore warning or refactor code!',
           start: node.getStart(),
           end: node.getEnd(),
