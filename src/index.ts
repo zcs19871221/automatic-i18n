@@ -1,7 +1,13 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import type { Options as PrettierOptions } from 'prettier';
-import ts, { PropertyAssignment, Node, createSourceFile } from 'typescript';
+import {
+  PropertyAssignment,
+  Node,
+  createSourceFile,
+  SyntaxKind,
+  forEachChild,
+} from 'typescript';
 import * as prettier from 'prettier';
 
 import { FileContext } from './replaceContexts';
@@ -14,7 +20,47 @@ import {
 } from './formatter';
 
 export class I18nReplacer {
-  private static getTsTarget(targetDir: string): ScriptTarget {
+  public static createI18nReplacer({
+    localesToGenerate,
+    localeToReplace,
+    tsTarget,
+    formatter: render,
+    targetDir,
+    filesOrDirsToReplace,
+    fileFilter,
+    prettierConfig,
+    outputToNewDir,
+    i18nDirName,
+  }: ReplacerOpt = {}): I18nReplacer {
+    let usedTargetDir = targetDir ?? process.cwd();
+    const handledOpt: HandledOpt = {
+      targetDir: usedTargetDir,
+      localeToReplace: localeToReplace ?? 'zh-cn',
+      localesToGenerate: localesToGenerate ?? ['en-us', 'zh-cn'],
+      i18nDirName: i18nDirName ?? 'i18n',
+      tsTarget:
+        tsTarget ??
+        I18nReplacer.getTypeScriptTargetCompilerOption(usedTargetDir),
+      formatter: I18nReplacer.getFormatter(render),
+      filesOrDirsToReplace: filesOrDirsToReplace ?? [usedTargetDir],
+      fileFilter: fileFilter ?? (() => true),
+      prettierConfig: I18nReplacer.getPrettierConfig(
+        usedTargetDir,
+        prettierConfig
+      ),
+      outputToNewDir:
+        typeof outputToNewDir === 'string' ? outputToNewDir : false,
+    };
+    handledOpt.localesToGenerate = [
+      ...new Set([handledOpt.localeToReplace, ...handledOpt.localesToGenerate]),
+    ];
+
+    return new I18nReplacer(handledOpt);
+  }
+
+  private static getTypeScriptTargetCompilerOption(
+    targetDir: string
+  ): ScriptTarget {
     if (fs.existsSync(path.join(targetDir, 'tsconfig.json'))) {
       const tsConfig =
         fs.readJsonSync(path.join(targetDir, 'tsconfig.json'), {
@@ -39,6 +85,24 @@ export class I18nReplacer {
     return usedFormatter;
   }
 
+  public static getIntlIdMapLocaleTextFromExistingLocaleTextFile(
+    fileLocate: string,
+    target: ScriptTarget
+  ) {
+    if (!fs.existsSync(fileLocate)) {
+      return {};
+    }
+    const source = createSourceFile(
+      fileLocate,
+      fs.readFileSync(fileLocate, 'utf-8'),
+      target,
+      true
+    );
+    const obj = {};
+    I18nReplacer.createMapFromAstNodeRecursively(source, obj);
+    return obj;
+  }
+
   private static getPrettierConfig(
     targetDir: string,
     prettierConfig?: PrettierOptions
@@ -60,41 +124,8 @@ export class I18nReplacer {
     return usedPrettierConfig;
   }
 
-  public static init({
-    localesToGenerate,
-    localeToReplace,
-    tsTarget,
-    formatter: render,
-    targetDir,
-    filesOrDirsToReplace,
-    fileFilter,
-    prettierConfig,
-    outputToNewDir,
-    i18nDirName,
-  }: ReplacerOpt = {}): I18nReplacer {
-    let usedTargetDir = targetDir ?? process.cwd();
-    const handledOpt: HandledOpt = {
-      targetDir: usedTargetDir,
-      localeToReplace: localeToReplace ?? 'zh-cn',
-      localesToGenerate: localesToGenerate ?? ['en-us', 'zh-cn'],
-      i18nDirName: i18nDirName ?? 'i18n',
-      tsTarget: tsTarget ?? I18nReplacer.getTsTarget(usedTargetDir),
-      formatter: I18nReplacer.getFormatter(render),
-      filesOrDirsToReplace: filesOrDirsToReplace ?? [usedTargetDir],
-      fileFilter: fileFilter ?? (() => true),
-      prettierConfig: I18nReplacer.getPrettierConfig(
-        usedTargetDir,
-        prettierConfig
-      ),
-      outputToNewDir:
-        typeof outputToNewDir === 'string' ? outputToNewDir : false,
-    };
-    handledOpt.localesToGenerate = [
-      ...new Set([handledOpt.localeToReplace, ...handledOpt.localesToGenerate]),
-    ];
-
-    return new I18nReplacer(handledOpt);
-  }
+  private warnings: Set<string> = new Set();
+  private ignoreComment = '@ignore';
 
   public readonly formatter: I18nFormatter;
   private constructor(public readonly opt: HandledOpt) {
@@ -103,28 +134,28 @@ export class I18nReplacer {
   }
 
   public replace() {
-    const keyMappingText = I18nReplacer.parseLocaleTsFile(
-      path.join(this.langDir, this.opt.localeToReplace + '.ts'),
-      this.opt.tsTarget
-    );
+    const intlIdMapLocaleText =
+      I18nReplacer.getIntlIdMapLocaleTextFromExistingLocaleTextFile(
+        path.join(this.langDir, this.opt.localeToReplace + '.ts'),
+        this.opt.tsTarget
+      );
 
-    this.localeTextMappingKey = Object.entries<string>(keyMappingText).reduce(
-      (localeMappingKey: Record<string, string>, [key, text]) => {
-        if (!localeMappingKey[text]) {
-          localeMappingKey[text] = key;
-        }
-        return localeMappingKey;
-      },
-      {}
-    );
+    this.localeTextMappingIntlId = Object.entries<string>(
+      intlIdMapLocaleText
+    ).reduce((localeMappingKey: Record<string, string>, [key, text]) => {
+      if (!localeMappingKey[text]) {
+        localeMappingKey[text] = key;
+      }
+      return localeMappingKey;
+    }, {});
 
     if (this.opt.outputToNewDir) {
       fs.ensureDirSync(this.opt.outputToNewDir);
     }
 
-    this.replaceAllFiles();
+    this.replaceLocaleTextWithFormattedIntl(this.opt.filesOrDirsToReplace);
 
-    this.generateLocaleFiles();
+    this.generateLocaleTextFiles();
 
     this.warnings.forEach((warn) => {
       console.warn(warn);
@@ -132,9 +163,44 @@ export class I18nReplacer {
     });
   }
 
-  private warnings: Set<string> = new Set();
+  public getIgnoreComment() {
+    return this.ignoreComment;
+  }
 
-  private generateLocaleFiles() {
+  public ignore(node: Node) {
+    return node.getFullText().includes(this.ignoreComment);
+  }
+
+  public addWarning({
+    start,
+    end,
+    text,
+    fileContext,
+  }: {
+    start: number;
+    end: number;
+    text: string;
+    fileContext: FileContext;
+  }) {
+    this.warnings.add(
+      text +
+        '\nfile at: ' +
+        fileContext.fileLocate +
+        '\ntext: ' +
+        fileContext.file.slice(Math.max(0, start - 3), start) +
+        '【' +
+        fileContext.file.slice(start, end) +
+        '】' +
+        fileContext.file.slice(end + 1, end + 4) +
+        '\n'
+    );
+  }
+
+  public includesTargetLocale(text: string) {
+    return /[\u4e00-\u9fa5]+/g.test(text);
+  }
+
+  private generateLocaleTextFiles() {
     let textKeys: null | string[] = null;
 
     fs.ensureDirSync(this.langDir);
@@ -142,11 +208,14 @@ export class I18nReplacer {
     this.opt.localesToGenerate.forEach((name) => {
       const localeFile = path.join(this.langDir, `${name}.ts`);
       let keyMappingText: Record<string, string> =
-        I18nReplacer.parseLocaleTsFile(localeFile, this.opt.tsTarget);
+        I18nReplacer.getIntlIdMapLocaleTextFromExistingLocaleTextFile(
+          localeFile,
+          this.opt.tsTarget
+        );
 
       let changed = false;
-      Object.keys(this.localeTextMappingKey).forEach((text) => {
-        let key = this.localeTextMappingKey[text];
+      Object.keys(this.localeTextMappingIntlId).forEach((text) => {
+        let key = this.localeTextMappingIntlId[text];
 
         if (!keyMappingText[key]) {
           keyMappingText[key] = text;
@@ -172,7 +241,7 @@ export class I18nReplacer {
       }
 
       try {
-        return this.formatAndWrite(
+        return this.formatThenWrite(
           localeFile,
           this.formatter.generateLocaleFiles(keyMappingText)
         );
@@ -192,14 +261,14 @@ export class I18nReplacer {
       return;
     }
 
-    this.formatAndWrite(
+    this.formatThenWrite(
       templateDist,
       this.formatter.entryFile(
         this.opt.localesToGenerate,
         this.opt.localeToReplace
       )
     );
-    this.formatAndWrite(
+    this.formatThenWrite(
       path.join(this.opt.targetDir, this.opt.i18nDirName, 'types.ts'),
       this.formatter.generateTypeFile(
         this.opt.localesToGenerate,
@@ -208,7 +277,7 @@ export class I18nReplacer {
     );
   }
 
-  private formatAndWrite(dist: string, file: string) {
+  private formatThenWrite(dist: string, file: string) {
     if (this.opt.prettierConfig) {
       try {
         file = prettier.format(file, this.opt.prettierConfig);
@@ -220,33 +289,23 @@ export class I18nReplacer {
     return fs.writeFileSync(dist, file);
   }
 
-  public static parseLocaleTsFile(fileLocate: string, target: ScriptTarget) {
-    if (!fs.existsSync(fileLocate)) {
-      return {};
+  private static createMapFromAstNodeRecursively(
+    astNode: Node,
+    intlIdMapLocaleText: Record<string, string> = {}
+  ) {
+    if (astNode.kind === SyntaxKind.PropertyAssignment) {
+      const name = (astNode as PropertyAssignment).name.getText();
+      const value = (astNode as PropertyAssignment).initializer.getText();
+      intlIdMapLocaleText[name] = value.replace(/(^['"])|(['"]$)/g, '');
     }
-    const source = ts.createSourceFile(
-      fileLocate,
-      fs.readFileSync(fileLocate, 'utf-8'),
-      target,
-      true
+    forEachChild(astNode, (n) =>
+      I18nReplacer.createMapFromAstNodeRecursively(n, intlIdMapLocaleText)
     );
-    const obj = {};
-    I18nReplacer.parse(source, obj);
-    return obj;
   }
 
-  private static parse(node: ts.Node, obj: Record<string, string>) {
-    if (node.kind === ts.SyntaxKind.PropertyAssignment) {
-      const name = (node as PropertyAssignment).name.getText();
-      const value = (node as PropertyAssignment).initializer.getText();
-      obj[name] = value.replace(/(^['"])|(['"]$)/g, '');
-    }
-    ts.forEachChild(node, (n) => I18nReplacer.parse(n, obj));
-  }
+  private localeTextMappingIntlId: Record<string, string> = {};
 
-  private localeTextMappingKey: Record<string, string> = {};
-
-  private key: number = 1;
+  private intlSeq: number = 1;
 
   private readonly langDir: string;
 
@@ -270,15 +329,15 @@ export class I18nReplacer {
     return true;
   };
 
-  private replaceAllFiles(
-    filesOrDirs: string[] = this.opt.filesOrDirsToReplace
+  private replaceLocaleTextWithFormattedIntl(
+    filesOrDirsToReplace: string[]
   ): void {
-    filesOrDirs = filesOrDirs.filter(this.fileFilter);
-    filesOrDirs.sort();
-    filesOrDirs.forEach((fileOrDir) => {
+    filesOrDirsToReplace = filesOrDirsToReplace.filter(this.fileFilter);
+    filesOrDirsToReplace.sort();
+    filesOrDirsToReplace.forEach((fileOrDir) => {
       if (fs.lstatSync(fileOrDir).isDirectory()) {
         const dir = fileOrDir;
-        return this.replaceAllFiles(
+        return this.replaceLocaleTextWithFormattedIntl(
           fs.readdirSync(dir).map((d) => path.join(fileLocate, d))
         );
       }
@@ -319,7 +378,7 @@ export class I18nReplacer {
       }
 
       if (this.opt.outputToNewDir) {
-        this.formatAndWrite(
+        this.formatThenWrite(
           path.join(this.opt.outputToNewDir, path.basename(fileLocate)),
           replacedText
         );
@@ -330,7 +389,7 @@ export class I18nReplacer {
             ' successful! 😃'
         );
       } else {
-        this.formatAndWrite(fileLocate, replacedText);
+        this.formatThenWrite(fileLocate, replacedText);
         console.log(fileLocate + ' rewrite successful! 😃');
       }
     });
@@ -339,51 +398,15 @@ export class I18nReplacer {
   public getOrCreateIntlId(localeText: string) {
     localeText = localeText.replace(/\n/g, '\\n');
     let intlId = '';
-    const localeTextMappingKey = this.localeTextMappingKey;
-    if (localeTextMappingKey[localeText]) {
-      intlId = localeTextMappingKey[localeText];
+    if (this.localeTextMappingIntlId[localeText]) {
+      intlId = this.localeTextMappingIntlId[localeText];
     } else {
       do {
-        intlId = `key${String(this.key++).padStart(4, '0')}`;
-      } while (Object.values(localeTextMappingKey).includes(intlId));
-      localeTextMappingKey[localeText] = intlId;
+        intlId = `key${String(this.intlSeq++).padStart(4, '0')}`;
+      } while (Object.values(this.localeTextMappingIntlId).includes(intlId));
+      this.localeTextMappingIntlId[localeText] = intlId;
     }
 
     return intlId;
   }
-
-  public ignore(node: Node) {
-    return node.getFullText().includes(this.ignoreWarningKey);
-  }
-
-  public addWarningInfo({
-    start,
-    end,
-    text,
-    fileContext,
-  }: {
-    start: number;
-    end: number;
-    text: string;
-    fileContext: FileContext;
-  }) {
-    this.warnings.add(
-      text +
-        '\nfile at: ' +
-        fileContext.fileLocate +
-        '\ntext: ' +
-        fileContext.file.slice(Math.max(0, start - 3), start) +
-        '【' +
-        fileContext.file.slice(start, end) +
-        '】' +
-        fileContext.file.slice(end + 1, end + 4) +
-        '\n'
-    );
-  }
-
-  public includesTargetLocale(text: string) {
-    return /[\u4e00-\u9fa5]+/g.test(text);
-  }
-
-  public ignoreWarningKey = '@ignore';
 }

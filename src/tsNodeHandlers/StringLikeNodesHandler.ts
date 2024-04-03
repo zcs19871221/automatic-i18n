@@ -32,10 +32,10 @@ export class StringLikeNodesHandler implements TsNodeHandler {
         this.stringLiteralIsInEqualBlock(node) ||
         this.stringLiteralIsChildOfIncludeBlock(node)
       ) {
-        fileContext.i18nReplacer.addWarningInfo({
+        fileContext.i18nReplacer.addWarning({
           text:
             'do not use locale literal to do [===] or [includes], maybe an error! use /* ' +
-            fileContext.i18nReplacer.ignoreWarningKey +
+            fileContext.i18nReplacer.getIgnoreComment() +
             ' */ before text to ignore warning or refactor code!',
           start: node.getStart(),
           end: node.getEnd(),

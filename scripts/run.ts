@@ -15,7 +15,7 @@ let dirsToReplace = [
 if (process.argv.slice(2).length > 0) {
   dirsToReplace = process.argv.slice(2);
 }
-I18nReplacer.init({
+I18nReplacer.createI18nReplacer({
   filesOrDirsToReplace: dirsToReplace
     .map((f) => path.join(root, f))
     .filter((f) => {

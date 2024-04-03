@@ -34,7 +34,7 @@ export const runAndExpect = (dirName: string) => {
   fs.removeSync(distDir);
   fs.ensureDirSync(distDir);
 
-  I18nReplacer.init({
+  I18nReplacer.createI18nReplacer({
     targetDir: distDir,
     i18nDirName: '',
     outputToNewDir: distDir,
