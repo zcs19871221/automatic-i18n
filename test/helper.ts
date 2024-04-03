@@ -27,6 +27,11 @@ export const expectDirEqualDistDirAt = (dir: string) => {
   doEqual(expectDir);
 };
 
+class TestFormatter extends GlobalI18nFormatter {
+  constructor() {
+    super('./');
+  }
+}
 export const runAndExpect = (dirName: string) => {
   const testDir = path.join(testBaseDir, dirName);
   const distDir = path.join(testDir, distName);
@@ -41,7 +46,7 @@ export const runAndExpect = (dirName: string) => {
     filesOrDirsToReplace: [template],
     localesToGenerate: ['en-us'],
     localeToReplace: 'zh-cn',
-    formatter: new GlobalI18nFormatter('./'),
+    I18nFormatter: TestFormatter,
     prettierConfig: {
       singleQuote: true,
     },

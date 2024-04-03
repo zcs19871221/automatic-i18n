@@ -13,18 +13,14 @@ import * as prettier from 'prettier';
 import { FileContext } from './replaceContexts';
 import { HandledOpt, ReplacerOpt } from './types';
 import { ScriptTarget } from 'typescript';
-import {
-  HookI18nFormatter,
-  GlobalI18nFormatter,
-  I18nFormatter,
-} from './formatter';
+import { GlobalI18nFormatter, I18nFormatter } from './formatter';
 
 export class I18nReplacer {
   public static createI18nReplacer({
     localesToGenerate,
     localeToReplace,
     tsTarget,
-    formatter: render,
+    I18nFormatter,
     targetDir,
     filesOrDirsToReplace,
     fileFilter,
@@ -41,7 +37,7 @@ export class I18nReplacer {
       tsTarget:
         tsTarget ??
         I18nReplacer.getTypeScriptTargetCompilerOption(usedTargetDir),
-      formatter: I18nReplacer.getFormatter(render),
+      I18nFormatter: I18nFormatter ?? GlobalI18nFormatter,
       filesOrDirsToReplace: filesOrDirsToReplace ?? [usedTargetDir],
       fileFilter: fileFilter ?? (() => true),
       prettierConfig: I18nReplacer.getPrettierConfig(
@@ -71,18 +67,6 @@ export class I18nReplacer {
       ] as unknown as ScriptTarget;
     }
     return ScriptTarget.ES2015;
-  }
-
-  private static getFormatter(formatter: ReplacerOpt['formatter']) {
-    let usedFormatter: I18nFormatter = new GlobalI18nFormatter();
-    if (formatter === 'hook') {
-      usedFormatter = new HookI18nFormatter();
-    } else if (formatter === 'global') {
-      usedFormatter = new GlobalI18nFormatter();
-    } else if (formatter != undefined) {
-      usedFormatter = formatter;
-    }
-    return usedFormatter;
   }
 
   public static getIntlIdMapLocaleTextFromExistingLocaleTextFile(
@@ -127,10 +111,10 @@ export class I18nReplacer {
   private warnings: Set<string> = new Set();
   private ignoreComment = '@ignore';
 
-  public readonly formatter: I18nFormatter;
+  public readonly i18nFormatter: I18nFormatter;
   private constructor(public readonly opt: HandledOpt) {
     this.langDir = path.join(this.opt.targetDir, this.opt.i18nDirName);
-    this.formatter = opt.formatter;
+    this.i18nFormatter = new opt.I18nFormatter();
   }
 
   public replace() {
@@ -243,7 +227,7 @@ export class I18nReplacer {
       try {
         return this.formatThenWrite(
           localeFile,
-          this.formatter.generateLocaleFiles(keyMappingText)
+          this.i18nFormatter.generateLocaleFiles(keyMappingText)
         );
       } catch (error) {
         console.log(localeFile);
@@ -263,14 +247,14 @@ export class I18nReplacer {
 
     this.formatThenWrite(
       templateDist,
-      this.formatter.entryFile(
+      this.i18nFormatter.entryFile(
         this.opt.localesToGenerate,
         this.opt.localeToReplace
       )
     );
     this.formatThenWrite(
       path.join(this.opt.targetDir, this.opt.i18nDirName, 'types.ts'),
-      this.formatter.generateTypeFile(
+      this.i18nFormatter.generateTypeFile(
         this.opt.localesToGenerate,
         textKeys ?? []
       )

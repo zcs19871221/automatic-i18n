@@ -4,12 +4,16 @@ import { I18nFormatter } from './formatter';
 
 export type localeTypes = 'en-us' | 'zh-cn';
 
+export interface I18nFormatterCtr<A extends I18nFormatter = I18nFormatter> {
+  new (): A;
+}
+
 export interface ReplacerOpt {
   i18nDirName?: string;
   localesToGenerate?: localeTypes[];
   localeToReplace?: localeTypes;
   tsTarget?: ScriptTarget;
-  formatter?: 'global' | 'hook' | I18nFormatter;
+  I18nFormatter?: I18nFormatterCtr;
   targetDir?: string;
   filesOrDirsToReplace?: string[];
   fileFilter?: (fileName: string) => boolean;
@@ -18,7 +22,5 @@ export interface ReplacerOpt {
 }
 
 export type HandledOpt = {
-  [key in keyof ReplacerOpt]-?: key extends 'formatter'
-    ? I18nFormatter
-    : ReplacerOpt[key];
+  [key in keyof ReplacerOpt]-?: ReplacerOpt[key];
 };

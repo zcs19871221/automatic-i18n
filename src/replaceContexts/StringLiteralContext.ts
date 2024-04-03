@@ -10,7 +10,7 @@ export class StringLiteralContext extends ReplaceContext {
     const originStr = this.removeTextVariableSymbol(this.node!.getText());
     const intlId = this.i18nReplacer.getOrCreateIntlId(originStr);
 
-    let newText = this.i18nReplacer.formatter.format(this, {
+    let newText = this.i18nReplacer.i18nFormatter.format(this, {
       intlId,
       defaultMessage: originStr,
     });
