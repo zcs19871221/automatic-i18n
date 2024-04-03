@@ -35,9 +35,7 @@ export class JsxChildContext extends ReplaceContext {
       return '';
     });
 
-    const intlId = this.i18nReplacer.getOrCreateIntlId(newStr);
     this.replacedText = this.i18nReplacer.i18nFormatter.format(this, {
-      intlId,
       params: keyMapValue,
       defaultMessage: newStr,
     });

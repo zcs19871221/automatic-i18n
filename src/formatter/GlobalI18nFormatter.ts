@@ -25,7 +25,8 @@ export default class GlobalI18nFormatter extends I18nFormatter {
   private commonDependencies: { moduleName: string; names: string[] };
   renderJsxChildContext(
     context: JsxChildContext,
-    { intlId, params }: FormatOptions
+    { params }: FormatOptions,
+    intlId: string
   ): FormatReturnType {
     const newText =
       '{' + this.createIntlExpressionFromIntlId(intlId, params) + '}';
@@ -37,9 +38,10 @@ export default class GlobalI18nFormatter extends I18nFormatter {
 
   renderTemplateStringContext(
     context: TemplateStringContext,
-    opt: FormatOptions
+    opt: FormatOptions,
+    intlId: string
   ): FormatReturnType {
-    const newText = this.createIntlExpressionFromIntlId(opt.intlId, opt.params);
+    const newText = this.createIntlExpressionFromIntlId(intlId, opt.params);
     return {
       newText,
       dependencies: this.commonDependencies,
@@ -47,9 +49,10 @@ export default class GlobalI18nFormatter extends I18nFormatter {
   }
   renderStringLiteralContext(
     context: StringLiteralContext,
-    opt: FormatOptions
+    opt: FormatOptions,
+    intlId: string
   ): FormatReturnType {
-    const newText = this.createIntlExpressionFromIntlId(opt.intlId, opt.params);
+    const newText = this.createIntlExpressionFromIntlId(intlId, opt.params);
     return {
       newText,
       dependencies: this.commonDependencies,

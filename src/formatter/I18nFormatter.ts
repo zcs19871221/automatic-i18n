@@ -7,10 +7,10 @@ import {
 import { localeTypes } from '../types';
 
 export interface FormatOptions {
-  intlId: string;
   params?: Record<string, string>;
   defaultMessage: string;
 }
+
 export interface FormatReturnType {
   newText: string;
   dependencies?: {
@@ -24,11 +24,31 @@ export abstract class I18nFormatter {
     defaultLocale: localeTypes
   ): string;
 
+  private intlSeq: number = 1;
+
+  public getOrCreateIntlId(message: string) {
+    message = message.replace(/\n/g, '\\n');
+    let intlId = '';
+    if (this.messageMapIntlId[message]) {
+      intlId = this.messageMapIntlId[message];
+    } else {
+      do {
+        intlId = `key${String(this.intlSeq++).padStart(4, '0')}`;
+      } while (Object.values(this.messageMapIntlId).includes(intlId));
+      this.messageMapIntlId[message] = intlId;
+      this.newIntlMapMessages[intlId] = message;
+    }
+
+    return intlId;
+  }
+
   public format(context: ReplaceContext, opt: FormatOptions) {
+    const intlId = this.getOrCreateIntlId(opt.defaultMessage);
     if (context instanceof JsxChildContext) {
       const { newText, dependencies } = this.renderJsxChildContext(
         context,
-        opt
+        opt,
+        intlId
       );
       if (dependencies) {
         context.fileContext.addRequiredImports(
@@ -41,7 +61,8 @@ export abstract class I18nFormatter {
     if (context instanceof TemplateStringContext) {
       const { newText, dependencies } = this.renderTemplateStringContext(
         context,
-        opt
+        opt,
+        intlId
       );
       if (dependencies) {
         context.fileContext.addRequiredImports(
@@ -55,7 +76,8 @@ export abstract class I18nFormatter {
     if (context instanceof StringLiteralContext) {
       const { newText, dependencies } = this.renderStringLiteralContext(
         context,
-        opt
+        opt,
+        intlId
       );
       if (dependencies) {
         context.fileContext.addRequiredImports(
@@ -73,15 +95,18 @@ export abstract class I18nFormatter {
 
   abstract renderJsxChildContext(
     context: JsxChildContext,
-    opt: FormatOptions
+    opt: FormatOptions,
+    intlId: string
   ): FormatReturnType;
   abstract renderTemplateStringContext(
     context: TemplateStringContext,
-    opt: FormatOptions
+    opt: FormatOptions,
+    intlId: string
   ): FormatReturnType;
   abstract renderStringLiteralContext(
     context: StringLiteralContext,
-    opt: FormatOptions
+    opt: FormatOptions,
+    intlId: string
   ): FormatReturnType;
 
   private unionType(types: string[]) {
@@ -101,7 +126,13 @@ export abstract class I18nFormatter {
           `;
   }
 
-  public generateLocaleFiles(keyMapValue: Record<string, string>) {
+  private newIntlMapMessages: Record<string, string> = {};
+
+  public getNewIntlMapMessages() {
+    return this.newIntlMapMessages;
+  }
+
+  public generateMessageFile(keyMapValue: Record<string, string>) {
     return `
         /*
           * This file will be changed by automatic program.
@@ -126,5 +157,14 @@ export abstract class I18nFormatter {
 
         export default locale;
       `;
+  }
+
+  private messageMapIntlId: Record<string, string> = {};
+
+  public setMessageMapIntlId(messageMapIntlId: Record<string, string>) {
+    this.messageMapIntlId = messageMapIntlId;
+  }
+  public getMessageMapIntlId() {
+    return this.messageMapIntlId;
   }
 }

@@ -19,9 +19,7 @@ export class TemplateStringContext extends ReplaceContext {
       return;
     }
     this.needReplace = true;
-    const intlId = this.i18nReplacer.getOrCreateIntlId(str);
     this.replacedText = this.i18nReplacer.i18nFormatter.format(this, {
-      intlId,
       params: keyMapValue,
       defaultMessage: str,
     });
