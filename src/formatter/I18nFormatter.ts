@@ -133,6 +133,8 @@ export abstract class I18nFormatter {
   }
 
   public generateMessageFile(keyMapValue: Record<string, string>) {
+    const ids = Object.keys(keyMapValue);
+    ids.sort();
     return `
         /*
           * This file will be changed by automatic program.
@@ -141,7 +143,7 @@ export abstract class I18nFormatter {
         import { LocalKey } from './types.ts';
 
         const locale: Record<LocalKey, string> = {
-          ${Object.keys(keyMapValue)
+          ${ids
             .map((key) => {
               if (key.includes('-')) {
                 key = `'"' + key + '"'`;

@@ -99,37 +99,6 @@ export class I18nReplacer {
     this.i18nFormatter = new opt.I18nFormatter();
   }
 
-  private forEachMessageFiles(
-    func: (args: {
-      intlIdMapMessage: Record<string, string>;
-      fileLocate: string;
-      locale: localeTypes;
-      targetLocale: boolean;
-    }) => void
-  ) {
-    this.opt.localesToGenerate.forEach((locale) => {
-      const fileLocate = path.join(this.langDir, locale + '.ts');
-
-      let intlIdMapMessage: Record<string, string> = {};
-      if (fs.existsSync(fileLocate)) {
-        const source = createSourceFile(
-          fileLocate,
-          fs.readFileSync(fileLocate, 'utf-8'),
-          this.opt.tsTarget,
-          true
-        );
-        intlIdMapMessage =
-          I18nReplacer.intlIdMapMessageFromAstNodeRecursively(source);
-      }
-
-      func({
-        intlIdMapMessage,
-        fileLocate,
-        locale,
-        targetLocale: locale === this.opt.localeToReplace,
-      });
-    });
-  }
   public replace() {
     let intlIds: string[] | undefined;
     let intlIdMapMessage: Record<string, string> = {};
@@ -168,18 +137,16 @@ export class I18nReplacer {
       fs.ensureDirSync(this.opt.outputToNewDir);
     }
 
-    this.replaceTargetLocaleWithMessageRecursively(
+    const newIntlMapMessages = this.replaceTargetLocaleWithMessageRecursively(
       this.opt.filesOrDirsToReplace
     );
-
-    const newIntlMapMessages = this.i18nFormatter.getNewIntlMapMessages();
 
     if (Object.keys(newIntlMapMessages).length > 0) {
       this.forEachMessageFiles(
         ({ intlIdMapMessage, fileLocate, targetLocale }) => {
           Object.assign(intlIdMapMessage, newIntlMapMessages);
           if (targetLocale) {
-            intlIds = Object.keys(intlIdMapMessage);
+            intlIds = Object.keys(intlIdMapMessage).sort();
           }
           this.formatAndWrite(
             fileLocate,
@@ -195,23 +162,19 @@ export class I18nReplacer {
       'index.ts'
     );
 
-    if (fs.existsSync(templateDist)) {
-      return;
+    if (!fs.existsSync(templateDist)) {
+      this.formatAndWrite(
+        templateDist,
+        this.i18nFormatter.entryFile(
+          this.opt.localesToGenerate,
+          this.opt.localeToReplace
+        )
+      );
     }
 
     this.formatAndWrite(
-      templateDist,
-      this.i18nFormatter.entryFile(
-        this.opt.localesToGenerate,
-        this.opt.localeToReplace
-      )
-    );
-    this.formatAndWrite(
       path.join(this.opt.targetDir, this.opt.i18nDirName, 'types.ts'),
-      this.i18nFormatter.generateTypeFile(
-        this.opt.localesToGenerate,
-        intlIds ?? []
-      )
+      this.i18nFormatter.generateTypeFile(this.opt.localesToGenerate, intlIds!)
     );
 
     this.warnings.forEach((warn) => {
@@ -255,6 +218,38 @@ export class I18nReplacer {
 
   public includesTargetLocale(text: string) {
     return /[\u4e00-\u9fa5]+/g.test(text);
+  }
+
+  private forEachMessageFiles(
+    func: (args: {
+      intlIdMapMessage: Record<string, string>;
+      fileLocate: string;
+      locale: localeTypes;
+      targetLocale: boolean;
+    }) => void
+  ) {
+    this.opt.localesToGenerate.forEach((locale) => {
+      const fileLocate = path.join(this.langDir, locale + '.ts');
+
+      let intlIdMapMessage: Record<string, string> = {};
+      if (fs.existsSync(fileLocate)) {
+        const source = createSourceFile(
+          fileLocate,
+          fs.readFileSync(fileLocate, 'utf-8'),
+          this.opt.tsTarget,
+          true
+        );
+        intlIdMapMessage =
+          I18nReplacer.intlIdMapMessageFromAstNodeRecursively(source);
+      }
+
+      func({
+        intlIdMapMessage,
+        fileLocate,
+        locale,
+        targetLocale: locale === this.opt.localeToReplace,
+      });
+    });
   }
 
   private formatAndWrite(dist: string, file: string) {
@@ -308,67 +303,67 @@ export class I18nReplacer {
 
   private replaceTargetLocaleWithMessageRecursively(
     filesOrDirsToReplace: string[]
-  ): void {
-    filesOrDirsToReplace = filesOrDirsToReplace.filter(this.fileFilter);
-    filesOrDirsToReplace.sort();
-    filesOrDirsToReplace.forEach((fileOrDir) => {
-      if (fs.lstatSync(fileOrDir).isDirectory()) {
-        const dir = fileOrDir;
-        return this.replaceTargetLocaleWithMessageRecursively(
-          fs.readdirSync(dir).map((d) => path.join(fileLocate, d))
-        );
-      }
+  ): Record<string, string> {
+    filesOrDirsToReplace
+      .filter(this.fileFilter)
+      .sort()
+      .forEach((fileOrDir) => {
+        if (fs.lstatSync(fileOrDir).isDirectory()) {
+          const dir = fileOrDir;
+          this.replaceTargetLocaleWithMessageRecursively(
+            fs.readdirSync(dir).map((d) => path.join(dir, d))
+          );
+        }
 
-      const fileLocate = fileOrDir;
+        const fileLocation = fileOrDir;
 
-      const file = fs.readFileSync(fileLocate, 'utf-8');
-      let replacedText = '';
-
-      let fileContext: FileContext | null = null;
-      try {
+        const file = fs.readFileSync(fileLocation, 'utf-8');
         const node = createSourceFile(
-          fileLocate,
+          fileLocation,
           file,
           this.opt.tsTarget,
           true
         );
 
-        fileContext = new FileContext({
+        let fileContext: FileContext = new FileContext({
           node,
           file,
-          fileLocate,
+          fileLocate: fileLocation,
           i18nReplacer: this,
         });
+        let replacedText = '';
 
-        replacedText = fileContext.generateNewText();
-      } catch (error: any) {
-        if (error.message) {
-          error.message = '@ ' + fileLocate + ' ' + error.message;
+        try {
+          replacedText = fileContext.generateNewText();
+        } catch (error: any) {
+          if (error.message) {
+            error.message = '@ ' + fileLocation + ' ' + error.message;
+          }
+          console.error(error);
+        } finally {
+          fileContext.clear();
         }
-        console.error(error);
-      } finally {
-        fileContext?.clear();
-      }
 
-      if (!replacedText) {
-        return;
-      }
+        if (!replacedText) {
+          return this.i18nFormatter.getNewIntlMapMessages();
+        }
 
-      if (this.opt.outputToNewDir) {
-        this.formatAndWrite(
-          path.join(this.opt.outputToNewDir, path.basename(fileLocate)),
-          replacedText
-        );
-        console.log(
-          fileLocate +
-            ' write to ' +
-            this.opt.outputToNewDir +
-            ' successful! 😃'
-        );
-      } else {
-        this.formatAndWrite(fileLocate, replacedText);
-        console.log(fileLocate + ' rewrite successful! 😃');
-      }
-    });
+        if (this.opt.outputToNewDir) {
+          this.formatAndWrite(
+            path.join(this.opt.outputToNewDir, path.basename(fileLocation)),
+            replacedText
+          );
+          console.log(
+            fileLocation +
+              ' write to ' +
+              this.opt.outputToNewDir +
+              ' successful! 😃'
+          );
+        } else {
+          this.formatAndWrite(fileLocation, replacedText);
+          console.log(fileLocation + ' rewrite successful! 😃');
+        }
+      });
+    return this.i18nFormatter.getNewIntlMapMessages();
   }
 }
