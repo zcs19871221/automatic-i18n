@@ -20,6 +20,6 @@ export class JsxExpressionHandler implements TsNodeHandler {
       start: node.getStart(),
       end: node.getEnd(),
     });
-    jsxExpression.generateNewText();
+    jsxExpression.generateMessage();
   }
 }

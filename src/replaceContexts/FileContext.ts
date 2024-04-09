@@ -40,7 +40,7 @@ export class FileContext extends ReplaceContext {
     this.i18nReplacer = i18nReplacer;
   }
 
-  protected override generatingStrFromChildThenSet(): void {
+  protected override generatingMessageFromChildrenThenSet(): void {
     this.children = this.children.filter((c) => c.needReplace);
     if (this.children.length === 0) {
       this.replacedText = '';
@@ -68,15 +68,8 @@ export class FileContext extends ReplaceContext {
     this.importNodes.push(importNode);
   }
 
-  public override generateNewText(): string {
-    if (this.node) {
-      this.handleChildren(this.node, this);
-    }
-
+  protected override childrenHandledHook() {
     this.addRequiredImportsIfMissing();
-    this.generateStrFromChildrenThenSet();
-
-    return this.replacedText;
   }
 
   private addRequiredImportsIfMissing() {
@@ -93,13 +86,13 @@ export class FileContext extends ReplaceContext {
           names,
           foundNode
         );
-        addImportNameContext.generateNewText();
+        addImportNameContext.generateMessage();
         this.children.push(addImportNameContext);
       }
     });
     if (newImports.length > 0) {
       const newImportContext = new NewImportContext(this, newImports);
-      newImportContext.generateNewText();
+      newImportContext.generateMessage();
       this.children.push(newImportContext);
     }
   }

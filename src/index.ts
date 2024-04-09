@@ -334,7 +334,7 @@ export class I18nReplacer {
         let replacedText = '';
 
         try {
-          replacedText = fileContext.generateNewText();
+          replacedText = fileContext.generateMessage();
         } catch (error: any) {
           if (error.message) {
             error.message = '@ ' + fileLocation + ' ' + error.message;

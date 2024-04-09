@@ -57,7 +57,7 @@ export class StringLikeNodesHandler implements TsNodeHandler {
       parent,
     });
     stringLiteral.needReplace = true;
-    stringLiteral.generateNewText();
+    stringLiteral.generateMessage();
   }
 
   private stringLiteralIsChildOfIncludeBlock(node: Node) {

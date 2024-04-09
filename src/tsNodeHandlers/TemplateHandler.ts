@@ -16,6 +16,6 @@ export class TemplateExpressionHandler implements TsNodeHandler {
       end: node.getEnd(),
       parent,
     });
-    template.generateNewText();
+    template.generateMessage();
   }
 }

@@ -24,6 +24,6 @@ export class TemplateSpanHandler implements TsNodeHandler {
       start,
       end,
     });
-    templateExpression.generateNewText();
+    templateExpression.generateMessage();
   }
 }

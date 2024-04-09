@@ -34,6 +34,6 @@ export class JsxTagHandler implements TsNodeHandler {
     if ([SyntaxKind.JsxElement, SyntaxKind.JsxFragment].includes(node.kind)) {
       jsx.jsxWrap = true;
     }
-    jsx.generateNewText();
+    jsx.generateMessage();
   }
 }

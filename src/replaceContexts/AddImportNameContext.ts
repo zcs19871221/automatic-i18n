@@ -21,7 +21,7 @@ export class AddImportNameContext extends ReplaceContext {
       fileContext,
     });
   }
-  protected generatingStrFromChildThenSet(): void {
+  protected override generatingMessageFromChildrenThenSet(): void {
     const wholeText = this.node?.getText() ?? '';
     const importStr = (this.node as ImportDeclaration)?.importClause?.getText();
     const requiredNames: string[] = [];

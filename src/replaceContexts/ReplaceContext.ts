@@ -59,11 +59,11 @@ export abstract class ReplaceContext {
     }
   }
 
-  protected abstract generatingStrFromChildThenSet(): void;
+  protected abstract generatingMessageFromChildrenThenSet(): void;
 
-  public generateStrFromChildrenThenSet() {
+  public generateMessageFromChildrenThenSet() {
     this.sortChildrenThenCheck();
-    this.generatingStrFromChildThenSet();
+    this.generatingMessageFromChildrenThenSet();
     this.needReplace =
       this.needReplace || this.children.some((c) => c.needReplace);
     this.children?.forEach((c) => {
@@ -121,31 +121,38 @@ export abstract class ReplaceContext {
     this.children = [];
   }
 
-  public handleChildren(node: Node, parentContext: ReplaceContext) {
+  public traverseChildrenNodeAndGenerateMessage(
+    node: Node,
+    parentContext: ReplaceContext
+  ) {
     forEachChild(node, (child) => {
-      const targetHandler = tsNodeHandlers.filter((tsNodeHandler) =>
+      const matchedTsNodeHandlers = tsNodeHandlers.filter((tsNodeHandler) =>
         tsNodeHandler.match(child, this.fileContext, parentContext)
       );
-      if (targetHandler.length > 1) {
+      if (matchedTsNodeHandlers.length > 1) {
         throw new Error('matched more then 1 ');
       }
-      const foundHandler = targetHandler[0];
-      if (foundHandler) {
+      const tsNodeHandler = matchedTsNodeHandlers[0];
+      if (tsNodeHandler) {
         // has invoked generateNewText TODO make it more readable
-        foundHandler.handle(child, this.fileContext, parentContext);
+        tsNodeHandler.handle(child, this.fileContext, parentContext);
         return;
       }
-      this.handleChildren(child, parentContext);
+      this.traverseChildrenNodeAndGenerateMessage(child, parentContext);
     });
   }
 
-  public generateNewText(): string {
+  public generateMessage(): string {
     if (this.node) {
-      this.handleChildren(this.node, this);
+      this.traverseChildrenNodeAndGenerateMessage(this.node, this);
     }
 
-    this.generateStrFromChildrenThenSet();
+    this.childrenHandledHook();
+
+    this.generateMessageFromChildrenThenSet();
 
     return this.replacedText;
   }
+
+  protected childrenHandledHook() {}
 }

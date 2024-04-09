@@ -1,7 +1,7 @@
 import { ReplaceContext } from './ReplaceContext';
 
 export class TemplateExpressionContext extends ReplaceContext {
-  protected override generatingStrFromChildThenSet() {
+  protected override generatingMessageFromChildrenThenSet() {
     this.replacedText = this.joinChildren(
       TemplateExpressionContext.startSymbol.length,
       TemplateExpressionContext.endSymbol.length

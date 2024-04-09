@@ -19,7 +19,7 @@ export class JsxTagContext extends ReplaceContext {
     }
   }
 
-  protected override generatingStrFromChildThenSet(): void {
+  protected override generatingMessageFromChildrenThenSet(): void {
     if (this.jsxWrap) {
       const newChildren: ReplaceContext[] = [];
       let block: ReplaceContext[] = [];
@@ -34,7 +34,7 @@ export class JsxTagContext extends ReplaceContext {
           block
         );
 
-        jsxContextList.generateStrFromChildrenThenSet();
+        jsxContextList.generateMessageFromChildrenThenSet();
         if (jsxContextList.replacedText) {
           newChildren.push(jsxContextList);
         }

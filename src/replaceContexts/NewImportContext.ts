@@ -28,7 +28,7 @@ export class NewImportContext extends ReplaceContext {
     });
   }
 
-  protected generatingStrFromChildThenSet(): void {
+  protected generatingMessageFromChildrenThenSet(): void {
     let newText = '';
     this.imports.forEach(({ moduleName, names }) => {
       newText += `import { ${[...names].join(', ')} } from '${moduleName}'\n`;

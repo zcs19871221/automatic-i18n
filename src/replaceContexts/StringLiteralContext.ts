@@ -6,7 +6,7 @@ export class StringLiteralContext extends ReplaceContext {
     return text.replace(/^['"`]/, '').replace(/['"`]$/, '');
   }
 
-  protected override generatingStrFromChildThenSet(): void {
+  protected override generatingMessageFromChildrenThenSet(): void {
     const originStr = this.removeTextVariableSymbol(this.node!.getText());
 
     let newText = this.i18nReplacer.i18nFormatter.format(this, {

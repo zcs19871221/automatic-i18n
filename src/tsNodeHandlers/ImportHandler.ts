@@ -10,7 +10,6 @@ export class ImportHandler implements TsNodeHandler {
 
   handle(node: Node, fileContext: FileContext): void {
     const importNode = node as ImportDeclaration;
-    fileContext.addRequiredImports;
     fileContext.addImportNode(importNode);
   }
 }
