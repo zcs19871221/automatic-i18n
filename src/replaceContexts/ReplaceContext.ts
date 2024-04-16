@@ -49,7 +49,7 @@ export abstract class ReplaceContext {
     this.i18nReplacer = this.fileContext.i18nReplacer;
   }
 
-  private sortChildrenThenCheck() {
+  private sortChildrenByStartIndexThenCheck() {
     this.children.sort((a, b) => a.start - b.start);
     let prev = this.children?.[0];
     for (let i = 1; i < this.children.length; i++) {
@@ -62,7 +62,7 @@ export abstract class ReplaceContext {
   protected abstract generatingMessageFromChildrenThenSet(): void;
 
   public generateMessageFromChildrenThenSet() {
-    this.sortChildrenThenCheck();
+    this.sortChildrenByStartIndexThenCheck();
     this.generatingMessageFromChildrenThenSet();
     this.needReplace =
       this.needReplace || this.children.some((c) => c.needReplace);

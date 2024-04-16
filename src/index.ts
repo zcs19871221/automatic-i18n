@@ -21,19 +21,19 @@ export class I18nReplacer {
     localeToReplace,
     tsTarget,
     I18nFormatter,
-    targetDir,
+    workingDir,
     filesOrDirsToReplace,
     fileFilter,
     prettierConfig,
     outputToNewDir,
-    i18nDirName,
+    generatedFilesDir,
   }: ReplacerOpt = {}): I18nReplacer {
-    let usedTargetDir = targetDir ?? process.cwd();
+    let usedTargetDir = workingDir ?? process.cwd();
     const handledOpt: HandledOpt = {
-      targetDir: usedTargetDir,
+      workingDir: usedTargetDir,
       localeToReplace: localeToReplace ?? 'zh-cn',
       localesToGenerate: localesToGenerate ?? ['en-us', 'zh-cn'],
-      i18nDirName: i18nDirName ?? 'i18n',
+      generatedFilesDir: generatedFilesDir ?? 'i18n',
       tsTarget:
         tsTarget ??
         I18nReplacer.getTypeScriptTargetCompilerOption(usedTargetDir),
@@ -95,15 +95,15 @@ export class I18nReplacer {
 
   public readonly i18nFormatter: I18nFormatter;
   private constructor(public readonly opt: HandledOpt) {
-    this.langDir = path.join(this.opt.targetDir, this.opt.i18nDirName);
+    this.langDir = path.join(this.opt.workingDir, this.opt.generatedFilesDir);
     this.i18nFormatter = new opt.I18nFormatter();
   }
 
   public replace() {
     let intlIds: string[] | undefined;
-    let intlIdMapMessage: Record<string, string> = {};
+    let intlIdMapDefaultMessage: Record<string, string> = {};
     this.forEachMessageFiles(
-      ({ intlIdMapMessage: currentIntlIdMapMessage, targetLocale }) => {
+      ({ intlIdMapMessage: currentIntlIdMapMessage, localeToReplace }) => {
         const currentIntlIds = Object.keys(currentIntlIdMapMessage);
         if (!intlIds) {
           intlIds = currentIntlIds;
@@ -114,15 +114,15 @@ export class I18nReplacer {
             this.opt.localesToGenerate.join(',') + ' exits different keys'
           );
         }
-        if (targetLocale) {
-          intlIdMapMessage = currentIntlIdMapMessage;
+        if (localeToReplace) {
+          intlIdMapDefaultMessage = currentIntlIdMapMessage;
         }
       }
     );
 
     intlIds = undefined;
     this.i18nFormatter.setMessageMapIntlId(
-      Object.entries<string>(intlIdMapMessage).reduce(
+      Object.entries<string>(intlIdMapDefaultMessage).reduce(
         (messageMapIntlId: Record<string, string>, [intlId, message]) => {
           if (!messageMapIntlId[message]) {
             messageMapIntlId[message] = intlId;
@@ -143,7 +143,7 @@ export class I18nReplacer {
 
     if (Object.keys(newIntlMapMessages).length > 0) {
       this.forEachMessageFiles(
-        ({ intlIdMapMessage, fileLocate, targetLocale }) => {
+        ({ intlIdMapMessage, fileLocate, localeToReplace: targetLocale }) => {
           Object.assign(intlIdMapMessage, newIntlMapMessages);
           if (targetLocale) {
             intlIds = Object.keys(intlIdMapMessage).sort();
@@ -157,8 +157,8 @@ export class I18nReplacer {
     }
 
     const templateDist = path.join(
-      this.opt.targetDir,
-      this.opt.i18nDirName,
+      this.opt.workingDir,
+      this.opt.generatedFilesDir,
       'index.ts'
     );
 
@@ -173,7 +173,7 @@ export class I18nReplacer {
     }
 
     this.formatAndWrite(
-      path.join(this.opt.targetDir, this.opt.i18nDirName, 'types.ts'),
+      path.join(this.opt.workingDir, this.opt.generatedFilesDir, 'types.ts'),
       this.i18nFormatter.generateTypeFile(this.opt.localesToGenerate, intlIds!)
     );
 
@@ -225,7 +225,7 @@ export class I18nReplacer {
       intlIdMapMessage: Record<string, string>;
       fileLocate: string;
       locale: localeTypes;
-      targetLocale: boolean;
+      localeToReplace: boolean;
     }) => void
   ) {
     this.opt.localesToGenerate.forEach((locale) => {
@@ -247,7 +247,7 @@ export class I18nReplacer {
         intlIdMapMessage,
         fileLocate,
         locale,
-        targetLocale: locale === this.opt.localeToReplace,
+        localeToReplace: locale === this.opt.localeToReplace,
       });
     });
   }

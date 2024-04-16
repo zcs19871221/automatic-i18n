@@ -9,12 +9,12 @@ export interface I18nFormatterCtr<A extends I18nFormatter = I18nFormatter> {
 }
 
 export interface ReplacerOpt {
-  i18nDirName?: string;
+  generatedFilesDir?: string;
   localesToGenerate?: localeTypes[];
   localeToReplace?: localeTypes;
   tsTarget?: ScriptTarget;
   I18nFormatter?: I18nFormatterCtr;
-  targetDir?: string;
+  workingDir?: string;
   filesOrDirsToReplace?: string[];
   fileFilter?: (fileName: string) => boolean;
   prettierConfig?: PrettierOptions;

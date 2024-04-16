@@ -40,8 +40,8 @@ export const runAndExpect = (dirName: string) => {
   fs.ensureDirSync(distDir);
 
   I18nReplacer.createI18nReplacer({
-    targetDir: distDir,
-    i18nDirName: '',
+    workingDir: distDir,
+    generatedFilesDir: '',
     outputToNewDir: distDir,
     filesOrDirsToReplace: [template],
     localesToGenerate: ['en-us'],
