@@ -43,11 +43,11 @@ export class FileContext extends ReplaceContext {
   protected override generatingMessageFromChildrenThenSet(): void {
     this.children = this.children.filter((c) => c.needReplace);
     if (this.children.length === 0) {
-      this.replacedText = '';
+      this.content = '';
       return;
     }
 
-    this.replacedText = this.joinChildren(0, 0);
+    this.content = this.joinChildren(0, 0);
   }
 
   public addRequiredImports(moduleName: string, names: string | string[]) {
@@ -68,7 +68,7 @@ export class FileContext extends ReplaceContext {
     this.importNodes.push(importNode);
   }
 
-  protected override childrenHandledHook() {
+  protected override afterChildrenMessageGenerated() {
     this.addRequiredImportsIfMissing();
   }
 

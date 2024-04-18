@@ -17,6 +17,6 @@ export class StringLiteralContext extends ReplaceContext {
       newText = '{' + newText + '}';
     }
 
-    this.replacedText = newText;
+    this.content = newText;
   }
 }

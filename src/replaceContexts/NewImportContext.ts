@@ -34,6 +34,6 @@ export class NewImportContext extends ReplaceContext {
       newText += `import { ${[...names].join(', ')} } from '${moduleName}'\n`;
     });
     this.needReplace = true;
-    this.replacedText = newText;
+    this.content = newText;
   }
 }

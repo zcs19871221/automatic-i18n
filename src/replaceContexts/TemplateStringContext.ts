@@ -8,7 +8,7 @@ export class TemplateStringContext extends ReplaceContext {
       '`'.length
     );
     if (!this.i18nReplacer.includesTargetLocale(str)) {
-      this.replacedText = this.joinChildren(
+      this.content = this.joinChildren(
         0,
         0,
         (str: string) =>
@@ -19,7 +19,7 @@ export class TemplateStringContext extends ReplaceContext {
       return;
     }
     this.needReplace = true;
-    this.replacedText = this.i18nReplacer.i18nFormatter.format(this, {
+    this.content = this.i18nReplacer.i18nFormatter.format(this, {
       params: keyMapValue,
       defaultMessage: str,
     });

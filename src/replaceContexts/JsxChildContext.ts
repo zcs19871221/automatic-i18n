@@ -21,7 +21,7 @@ export class JsxChildContext extends ReplaceContext {
     });
 
     if (!this.i18nReplacer.includesTargetLocale(str)) {
-      this.replacedText = this.joinChildren(0, 0);
+      this.content = this.joinChildren(0, 0);
       return;
     }
 
@@ -35,7 +35,7 @@ export class JsxChildContext extends ReplaceContext {
       return '';
     });
 
-    this.replacedText = this.i18nReplacer.i18nFormatter.format(this, {
+    this.content = this.i18nReplacer.i18nFormatter.format(this, {
       params: keyMapValue,
       defaultMessage: newStr,
     });

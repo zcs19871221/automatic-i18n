@@ -34,8 +34,8 @@ export class JsxTagContext extends ReplaceContext {
           block
         );
 
-        jsxContextList.generateMessageFromChildrenThenSet();
-        if (jsxContextList.replacedText) {
+        jsxContextList.joinChildrenMessage();
+        if (jsxContextList.content) {
           newChildren.push(jsxContextList);
         }
         start = nextStart;
@@ -62,6 +62,6 @@ export class JsxTagContext extends ReplaceContext {
       this.children = newChildren;
     }
 
-    this.replacedText = this.joinChildren(0, 0);
+    this.content = this.joinChildren(0, 0);
   }
 }

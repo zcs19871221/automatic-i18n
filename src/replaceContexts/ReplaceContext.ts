@@ -11,7 +11,7 @@ export interface Opt {
 
 export abstract class ReplaceContext {
   protected children: ReplaceContext[] = [];
-  public replacedText: string = '';
+  public content: string = '';
   public needReplace = false;
   protected node?: Node;
   public fileContext: FileContext;
@@ -49,7 +49,7 @@ export abstract class ReplaceContext {
     this.i18nReplacer = this.fileContext.i18nReplacer;
   }
 
-  private sortChildrenByStartIndexThenCheck() {
+  private sortChildrenByStartIndexThenCheckIfOverlap() {
     this.children.sort((a, b) => a.start - b.start);
     let prev = this.children?.[0];
     for (let i = 1; i < this.children.length; i++) {
@@ -61,14 +61,17 @@ export abstract class ReplaceContext {
 
   protected abstract generatingMessageFromChildrenThenSet(): void;
 
-  public generateMessageFromChildrenThenSet() {
-    this.sortChildrenByStartIndexThenCheck();
-    this.generatingMessageFromChildrenThenSet();
-    this.needReplace =
-      this.needReplace || this.children.some((c) => c.needReplace);
-    this.children?.forEach((c) => {
-      c.clear();
-    });
+  public joinChildrenMessage() {
+    try {
+      this.sortChildrenByStartIndexThenCheckIfOverlap();
+      this.generatingMessageFromChildrenThenSet();
+      this.needReplace =
+        this.needReplace || this.children.some((c) => c.needReplace);
+    } finally {
+      this.children?.forEach((c) => {
+        c.clear();
+      });
+    }
   }
 
   protected joinChildrenAsParameter(
@@ -107,7 +110,7 @@ export abstract class ReplaceContext {
     let start = this.start + startSkip;
     this.children.forEach((c) => {
       str += this.fileContext.file.slice(start, c.start);
-      str += strHandler(c.replacedText, c);
+      str += strHandler(c.content, c);
       start = c.end;
     });
     str += this.fileContext.file.slice(start, this.end - endSkip);
@@ -117,7 +120,7 @@ export abstract class ReplaceContext {
   public clear() {
     (this.node as any) = null;
     this.parent = undefined;
-    this.replacedText = '';
+    this.content = '';
     this.children = [];
   }
 
@@ -147,12 +150,12 @@ export abstract class ReplaceContext {
       this.traverseChildrenNodeAndGenerateMessage(this.node, this);
     }
 
-    this.childrenHandledHook();
+    this.afterChildrenMessageGenerated();
 
-    this.generateMessageFromChildrenThenSet();
+    this.joinChildrenMessage();
 
-    return this.replacedText;
+    return this.content;
   }
 
-  protected childrenHandledHook() {}
+  protected afterChildrenMessageGenerated() {}
 }

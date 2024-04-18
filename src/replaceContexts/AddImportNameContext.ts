@@ -36,7 +36,7 @@ export class AddImportNameContext extends ReplaceContext {
       this.needReplace = false;
     } else {
       this.needReplace = true;
-      this.replacedText =
+      this.content =
         wholeText.slice(0, -1) + requiredNames.join(',') + wholeText.slice(-1);
     }
   }
