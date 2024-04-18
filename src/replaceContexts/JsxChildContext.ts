@@ -12,7 +12,7 @@ export class JsxChildContext extends ReplaceContext {
     this.children = children;
   }
 
-  protected override generatingMessageFromChildrenThenSet() {
+  protected override joinChildrenMessage() {
     const { str, keyMapValue } = this.joinChildrenAsParameter(0, 0, (str) => {
       if (str.startsWith('{') && str.endsWith('}')) {
         return str.slice(1, str.length - 1);

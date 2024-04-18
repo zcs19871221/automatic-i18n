@@ -40,7 +40,7 @@ export class FileContext extends ReplaceContext {
     this.i18nReplacer = i18nReplacer;
   }
 
-  protected override generatingMessageFromChildrenThenSet(): void {
+  protected override joinChildrenMessage(): void {
     this.children = this.children.filter((c) => c.needReplace);
     if (this.children.length === 0) {
       this.content = '';

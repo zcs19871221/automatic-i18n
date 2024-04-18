@@ -2,7 +2,7 @@ import { ReplaceContext } from './ReplaceContext';
 import { TemplateExpressionContext } from './TemplateExpressionContext';
 
 export class TemplateStringContext extends ReplaceContext {
-  protected override generatingMessageFromChildrenThenSet() {
+  protected override joinChildrenMessage() {
     const { keyMapValue, str } = this.joinChildrenAsParameter(
       '`'.length,
       '`'.length

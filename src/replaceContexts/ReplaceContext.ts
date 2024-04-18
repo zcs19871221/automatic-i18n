@@ -59,20 +59,7 @@ export abstract class ReplaceContext {
     }
   }
 
-  protected abstract generatingMessageFromChildrenThenSet(): void;
-
-  public joinChildrenMessage() {
-    try {
-      this.sortChildrenByStartIndexThenCheckIfOverlap();
-      this.generatingMessageFromChildrenThenSet();
-      this.needReplace =
-        this.needReplace || this.children.some((c) => c.needReplace);
-    } finally {
-      this.children?.forEach((c) => {
-        c.clear();
-      });
-    }
-  }
+  protected abstract joinChildrenMessage(): void;
 
   protected joinChildrenAsParameter(
     startSkip: number,
@@ -146,13 +133,21 @@ export abstract class ReplaceContext {
   }
 
   public generateMessage(): string {
-    if (this.node) {
-      this.traverseChildrenNodeAndGenerateMessage(this.node, this);
+    try {
+      if (this.node) {
+        this.traverseChildrenNodeAndGenerateMessage(this.node, this);
+      }
+
+      this.afterChildrenMessageGenerated();
+      this.sortChildrenByStartIndexThenCheckIfOverlap();
+      this.joinChildrenMessage();
+      this.needReplace =
+        this.needReplace || this.children.some((c) => c.needReplace);
+    } finally {
+      this.children?.forEach((c) => {
+        c.clear();
+      });
     }
-
-    this.afterChildrenMessageGenerated();
-
-    this.joinChildrenMessage();
 
     return this.content;
   }

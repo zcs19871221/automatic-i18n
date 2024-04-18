@@ -1,7 +1,7 @@
 import { ReplaceContext } from './ReplaceContext';
 
 export class JsxExpressionContext extends ReplaceContext {
-  protected override generatingMessageFromChildrenThenSet() {
+  protected override joinChildrenMessage() {
     this.content = this.joinChildren(0, 0);
   }
 
