@@ -9,6 +9,7 @@ import { localeTypes } from '../types';
 export interface FormatOptions {
   params?: Record<string, string>;
   defaultMessage: string;
+  originStr: string;
 }
 
 export interface FormatReturnType {
@@ -29,27 +30,27 @@ export abstract class I18nFormatter {
   public getOrCreateIntlId(message: string) {
     message = message.replace(/\n/g, '\\n');
     let intlId = '';
-    if (this.messageMapIntlId[message]) {
+    if (this.messageMapIntlId[message] !== undefined) {
       intlId = this.messageMapIntlId[message];
     } else {
       do {
         intlId = `key${String(this.intlSeq++).padStart(4, '0')}`;
       } while (Object.values(this.messageMapIntlId).includes(intlId));
-      this.messageMapIntlId[message] = intlId;
-      this.newIntlMapMessages[intlId] = message;
     }
 
-    return intlId;
+    return [intlId, message];
   }
 
   public format(context: ReplaceContext, opt: FormatOptions) {
-    const intlId = this.getOrCreateIntlId(opt.defaultMessage);
-    if (context instanceof JsxChildContext) {
-      const { newText, dependencies } = this.renderJsxChildContext(
-        context,
-        opt,
-        intlId
-      );
+    const [intlId, message] = this.getOrCreateIntlId(opt.defaultMessage);
+    opt.defaultMessage = message;
+    const handleResult = (result: null | FormatReturnType) => {
+      if (result === null) {
+        return opt.originStr;
+      }
+      this.messageMapIntlId[message] = intlId;
+      this.newIntlMapMessages[intlId] = message;
+      const { newText, dependencies } = result;
       if (dependencies) {
         context.fileContext.addRequiredImports(
           dependencies.moduleName,
@@ -57,35 +58,19 @@ export abstract class I18nFormatter {
         );
       }
       return newText;
+    };
+    if (context instanceof JsxChildContext) {
+      const result = this.renderJsxChildContext(context, opt, intlId);
+      return handleResult(result);
     }
     if (context instanceof TemplateStringContext) {
-      const { newText, dependencies } = this.renderTemplateStringContext(
-        context,
-        opt,
-        intlId
-      );
-      if (dependencies) {
-        context.fileContext.addRequiredImports(
-          dependencies.moduleName,
-          dependencies.names
-        );
-      }
-      return newText;
+      const result = this.renderTemplateStringContext(context, opt, intlId);
+      return handleResult(result);
     }
 
     if (context instanceof StringLiteralContext) {
-      const { newText, dependencies } = this.renderStringLiteralContext(
-        context,
-        opt,
-        intlId
-      );
-      if (dependencies) {
-        context.fileContext.addRequiredImports(
-          dependencies.moduleName,
-          dependencies.names
-        );
-      }
-      return newText;
+      const result = this.renderStringLiteralContext(context, opt, intlId);
+      return handleResult(result);
     }
 
     throw new Error(
@@ -97,17 +82,44 @@ export abstract class I18nFormatter {
     context: JsxChildContext,
     opt: FormatOptions,
     intlId: string
-  ): FormatReturnType;
+  ): FormatReturnType | null;
   abstract renderTemplateStringContext(
     context: TemplateStringContext,
     opt: FormatOptions,
     intlId: string
-  ): FormatReturnType;
+  ): FormatReturnType | null;
   abstract renderStringLiteralContext(
     context: StringLiteralContext,
     opt: FormatOptions,
     intlId: string
-  ): FormatReturnType;
+  ): FormatReturnType | null;
+
+  protected camel(naming: string) {
+    const splitIndex = naming.indexOf('-');
+    if (splitIndex > -1) {
+      return (
+        naming.slice(0, splitIndex) +
+        naming[splitIndex + 1].toUpperCase() +
+        naming.slice(splitIndex + 2)
+      );
+    }
+    return naming;
+  }
+
+  protected paramsString(param?: Record<string, string>) {
+    let paramsString = '';
+    if (param && Object.keys(param).length > 0) {
+      paramsString +=
+        Object.entries<string>(param).reduce((text: string, [key, value]) => {
+          if (key === value) {
+            return text + key + ',';
+          } else {
+            return text + `${key}: ${value === '' ? "''" : value}` + ',';
+          }
+        }, '{') + '}';
+    }
+    return paramsString;
+  }
 
   private unionType(types: string[]) {
     return types.map((type) => `'${type}'`).join('|');

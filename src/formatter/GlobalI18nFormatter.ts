@@ -59,18 +59,6 @@ export default class GlobalI18nFormatter extends I18nFormatter {
     };
   }
 
-  private camel(naming: string) {
-    const splitIndex = naming.indexOf('-');
-    if (splitIndex > -1) {
-      return (
-        naming.slice(0, splitIndex) +
-        naming[splitIndex + 1].toUpperCase() +
-        naming.slice(splitIndex + 2)
-      );
-    }
-    return naming;
-  }
-
   entryFile(localeFiles: string[], defaultLocale: string) {
     return `
       import { createIntl, createIntlCache, IntlCache, IntlShape } from 'react-intl';
@@ -166,18 +154,8 @@ export default class GlobalI18nFormatter extends I18nFormatter {
     intlId: string,
     param?: Record<string, string>
   ) {
-    let paramsString = '';
-    if (param && Object.keys(param).length > 0) {
-      paramsString += ',';
-      paramsString +=
-        Object.entries<string>(param).reduce((text: string, [key, value]) => {
-          if (key === value) {
-            return text + key + ',';
-          } else {
-            return text + `${key}: ${value === '' ? "''" : value}` + ',';
-          }
-        }, '{') + '}';
-    }
+    let paramsString = ',' + this.paramsString(param);
+
     return `${this.exportName}.${this.property}.formatMessage({id: '${intlId}'}${paramsString})`;
   }
 }

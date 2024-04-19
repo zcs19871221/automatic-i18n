@@ -11,6 +11,7 @@ export class StringLiteralContext extends ReplaceContext {
 
     let newText = this.i18nReplacer.i18nFormatter.format(this, {
       defaultMessage: originStr,
+      originStr: this.node!.getText(),
     });
 
     if (this.node!.parent.kind === SyntaxKind.JsxAttribute) {

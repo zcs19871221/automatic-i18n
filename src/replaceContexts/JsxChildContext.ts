@@ -38,6 +38,7 @@ export class JsxChildContext extends ReplaceContext {
     this.content = this.i18nReplacer.i18nFormatter.format(this, {
       params: keyMapValue,
       defaultMessage: newStr,
+      originStr: newStr,
     });
   }
 }

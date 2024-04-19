@@ -49,6 +49,18 @@ export abstract class ReplaceContext {
     this.i18nReplacer = this.fileContext.i18nReplacer;
   }
 
+  public getNode() {
+    return this.node;
+  }
+
+  public addChildren(context: ReplaceContext) {
+    this.children.push(context);
+  }
+
+  public getChildren() {
+    return this.children;
+  }
+
   private sortChildrenByStartIndexThenCheckIfOverlap() {
     this.children.sort((a, b) => a.start - b.start);
     let prev = this.children?.[0];

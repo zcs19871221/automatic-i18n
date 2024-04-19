@@ -22,6 +22,7 @@ export class TemplateStringContext extends ReplaceContext {
     this.content = this.i18nReplacer.i18nFormatter.format(this, {
       params: keyMapValue,
       defaultMessage: str,
+      originStr: this.node!.getText(),
     });
   }
 }

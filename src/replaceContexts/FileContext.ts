@@ -2,8 +2,8 @@ import { ImportDeclaration, Node } from 'typescript';
 
 import { ReplaceContext } from './ReplaceContext';
 import { I18nReplacer } from '..';
-import { AddImportNameContext } from './AddImportNameContext';
 import { NewImportContext } from './NewImportContext';
+import { TextInsertContext } from './TextInsertContext';
 
 export class FileContext extends ReplaceContext {
   public readonly file: string;
@@ -80,20 +80,40 @@ export class FileContext extends ReplaceContext {
       );
       if (!foundNode) {
         newImports.push({ moduleName, names });
+        const newImportContext = new NewImportContext(this, newImports);
+        newImportContext.generateMessage();
+        this.children.push(newImportContext);
+      }
+      if (!foundNode?.importClause) {
+        return;
+      }
+
+      if (foundNode.importClause.namedBindings) {
+        const requiredNames: string[] = [];
+        const start = foundNode.importClause?.namedBindings.getStart() + 1;
+        const importStr = foundNode.importClause?.namedBindings.getText();
+        for (const name of names) {
+          if (importStr?.includes(name)) {
+            continue;
+          }
+          requiredNames.push(name);
+        }
+        if (requiredNames.length > 0) {
+          TextInsertContext.addContext(
+            start,
+            start,
+            this.fileContext,
+            requiredNames.join(',') + ','
+          );
+        }
       } else {
-        const addImportNameContext = new AddImportNameContext(
+        TextInsertContext.addContext(
+          foundNode.importClause?.getEnd() + 1,
+          foundNode.importClause?.getEnd() + 1,
           this.fileContext,
-          names,
-          foundNode
+          `, {${[...names].join(',')}}`
         );
-        addImportNameContext.generateMessage();
-        this.children.push(addImportNameContext);
       }
     });
-    if (newImports.length > 0) {
-      const newImportContext = new NewImportContext(this, newImports);
-      newImportContext.generateMessage();
-      this.children.push(newImportContext);
-    }
   }
 }

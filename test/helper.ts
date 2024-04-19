@@ -32,7 +32,7 @@ class TestFormatter extends GlobalI18nFormatter {
     super('./');
   }
 }
-export const runAndExpect = (dirName: string) => {
+export const runAndExpect = (dirName: string, opt = {}) => {
   const testDir = path.join(testBaseDir, dirName);
   const distDir = path.join(testDir, distName);
   const template = path.join(testDir, 'template.tsx');
@@ -50,6 +50,7 @@ export const runAndExpect = (dirName: string) => {
     prettierConfig: {
       singleQuote: true,
     },
+    ...opt,
   }).replace();
   expectDirEqualDistDirAt(dirName);
 };

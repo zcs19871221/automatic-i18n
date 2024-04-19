@@ -13,7 +13,11 @@ import * as prettier from 'prettier';
 import { FileContext } from './replaceContexts';
 import { HandledOpt, ReplacerOpt, localeTypes } from './types';
 import { ScriptTarget } from 'typescript';
-import { GlobalI18nFormatter, I18nFormatter } from './formatter';
+import {
+  GlobalI18nFormatter,
+  HookI18nFormatter,
+  I18nFormatter,
+} from './formatter';
 
 export class I18nReplacer {
   public static createI18nReplacer({
@@ -159,7 +163,7 @@ export class I18nReplacer {
     const templateDist = path.join(
       this.opt.workingDir,
       this.opt.generatedFilesDir,
-      'index.ts'
+      'index.ts' + (this.i18nFormatter instanceof HookI18nFormatter ? 'x' : '')
     );
 
     if (!fs.existsSync(templateDist)) {
