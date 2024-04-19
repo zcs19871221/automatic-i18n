@@ -4,14 +4,14 @@ import type { Options as PrettierOptions } from 'prettier';
 import {
   PropertyAssignment,
   Node,
+  forEachChild,
   createSourceFile,
   SyntaxKind,
-  forEachChild,
 } from 'typescript';
 import * as prettier from 'prettier';
 
 import { FileContext } from './replaceContexts';
-import { HandledOpt, ReplacerOpt, localeTypes } from './types';
+import { HandledOpt, ReplacerOpt, LocaleTypes } from './types';
 import { ScriptTarget } from 'typescript';
 import {
   GlobalI18nFormatter,
@@ -103,28 +103,27 @@ export class I18nReplacer {
     this.i18nFormatter = new opt.I18nFormatter();
   }
 
-  public replace() {
-    let intlIds: string[] | undefined;
-    let intlIdMapDefaultMessage: Record<string, string> = {};
-    this.forEachMessageFiles(
-      ({ intlIdMapMessage: currentIntlIdMapMessage, localeToReplace }) => {
-        const currentIntlIds = Object.keys(currentIntlIdMapMessage);
-        if (!intlIds) {
-          intlIds = currentIntlIds;
-        } else if (
-          intlIds.join(',') !== Object.keys(currentIntlIdMapMessage).join(',')
-        ) {
-          throw new Error(
-            this.opt.localesToGenerate.join(',') + ' exits different keys'
-          );
-        }
-        if (localeToReplace) {
-          intlIdMapDefaultMessage = currentIntlIdMapMessage;
-        }
-      }
-    );
+  private getIntlIdMapMessage(locale: LocaleTypes) {
+    const defaultLocaleFile = path.join(this.langDir, locale + '.ts');
+    let intlIdMapMessage: Record<string, string> = {};
+    if (fs.existsSync(defaultLocaleFile)) {
+      const file = fs.readFileSync(defaultLocaleFile, 'utf-8');
+      const source = createSourceFile(
+        defaultLocaleFile,
+        file,
+        this.opt.tsTarget,
+        true
+      );
+      intlIdMapMessage =
+        I18nReplacer.intlIdMapMessageFromAstNodeRecursively(source);
+    }
+    return intlIdMapMessage;
+  }
 
-    intlIds = undefined;
+  public replace() {
+    const intlIdMapDefaultMessage: Record<string, string> =
+      this.getIntlIdMapMessage(this.opt.localeToReplace);
+
     this.i18nFormatter.setMessageMapIntlId(
       Object.entries<string>(intlIdMapDefaultMessage).reduce(
         (messageMapIntlId: Record<string, string>, [intlId, message]) => {
@@ -145,20 +144,24 @@ export class I18nReplacer {
       this.opt.filesOrDirsToReplace
     );
 
-    if (Object.keys(newIntlMapMessages).length > 0) {
-      this.forEachMessageFiles(
-        ({ intlIdMapMessage, fileLocate, localeToReplace: targetLocale }) => {
-          Object.assign(intlIdMapMessage, newIntlMapMessages);
-          if (targetLocale) {
-            intlIds = Object.keys(intlIdMapMessage).sort();
+    Object.assign(intlIdMapDefaultMessage, newIntlMapMessages);
+
+    this.opt.localesToGenerate.forEach((locale) => {
+      let currentIntlIdMapMessage = intlIdMapDefaultMessage;
+      if (locale !== this.opt.localeToReplace) {
+        currentIntlIdMapMessage = this.getIntlIdMapMessage(locale);
+        Object.keys(intlIdMapDefaultMessage).forEach((intlId) => {
+          if (currentIntlIdMapMessage[intlId] === undefined) {
+            currentIntlIdMapMessage[intlId] = intlIdMapDefaultMessage[intlId];
           }
-          this.formatAndWrite(
-            fileLocate,
-            this.i18nFormatter.generateMessageFile(intlIdMapMessage)
-          );
-        }
+        });
+      }
+
+      this.formatAndWrite(
+        path.join(this.langDir, locale + '.ts'),
+        this.i18nFormatter.generateMessageFile(currentIntlIdMapMessage)
       );
-    }
+    });
 
     const templateDist = path.join(
       this.opt.workingDir,
@@ -178,7 +181,10 @@ export class I18nReplacer {
 
     this.formatAndWrite(
       path.join(this.opt.workingDir, this.opt.generatedFilesDir, 'types.ts'),
-      this.i18nFormatter.generateTypeFile(this.opt.localesToGenerate, intlIds!)
+      this.i18nFormatter.generateTypeFile(
+        this.opt.localesToGenerate,
+        Object.keys(intlIdMapDefaultMessage).sort()
+      )
     );
 
     this.warnings.forEach((warn) => {
@@ -221,40 +227,13 @@ export class I18nReplacer {
   }
 
   public includesTargetLocale(text: string) {
-    return /[\u4e00-\u9fa5]+/g.test(text);
+    return this.localeMapReg[this.opt.localeToReplace].test(text);
   }
 
-  private forEachMessageFiles(
-    func: (args: {
-      intlIdMapMessage: Record<string, string>;
-      fileLocate: string;
-      locale: localeTypes;
-      localeToReplace: boolean;
-    }) => void
-  ) {
-    this.opt.localesToGenerate.forEach((locale) => {
-      const fileLocate = path.join(this.langDir, locale + '.ts');
-
-      let intlIdMapMessage: Record<string, string> = {};
-      if (fs.existsSync(fileLocate)) {
-        const source = createSourceFile(
-          fileLocate,
-          fs.readFileSync(fileLocate, 'utf-8'),
-          this.opt.tsTarget,
-          true
-        );
-        intlIdMapMessage =
-          I18nReplacer.intlIdMapMessageFromAstNodeRecursively(source);
-      }
-
-      func({
-        intlIdMapMessage,
-        fileLocate,
-        locale,
-        localeToReplace: locale === this.opt.localeToReplace,
-      });
-    });
-  }
+  private localeMapReg: Record<LocaleTypes, RegExp> = {
+    'en-us': /[a-z]+/i,
+    'zh-cn': /[\u4e00-\u9fa5]+/,
+  };
 
   private formatAndWrite(dist: string, file: string) {
     if (this.opt.prettierConfig) {
@@ -272,14 +251,15 @@ export class I18nReplacer {
     astNode: Node,
     intlIdMapMessage: Record<string, string> = {}
   ) {
+    console.log(astNode.getText());
     if (astNode.kind === SyntaxKind.PropertyAssignment) {
       const name = (astNode as PropertyAssignment).name.getText();
       const value = (astNode as PropertyAssignment).initializer.getText();
       intlIdMapMessage[name] = value.replace(/(^['"])|(['"]$)/g, '');
     }
-    forEachChild(astNode, (n) =>
-      I18nReplacer.intlIdMapMessageFromAstNodeRecursively(n, intlIdMapMessage)
-    );
+    forEachChild(astNode, function (n) {
+      I18nReplacer.intlIdMapMessageFromAstNodeRecursively(n, intlIdMapMessage);
+    });
     return intlIdMapMessage;
   }
 

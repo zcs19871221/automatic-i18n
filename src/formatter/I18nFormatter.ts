@@ -4,7 +4,7 @@ import {
   StringLiteralContext,
   TemplateStringContext,
 } from '../replaceContexts';
-import { localeTypes } from '../types';
+import { LocaleTypes } from '../types';
 
 export interface FormatOptions {
   params?: Record<string, string>;
@@ -21,8 +21,8 @@ export interface FormatReturnType {
 }
 export abstract class I18nFormatter {
   public abstract entryFile(
-    localeFiles: localeTypes[],
-    defaultLocale: localeTypes
+    localeFiles: LocaleTypes[],
+    defaultLocale: LocaleTypes
   ): string;
 
   private intlSeq: number = 1;
@@ -125,7 +125,7 @@ export abstract class I18nFormatter {
     return types.map((type) => `'${type}'`).join('|');
   }
 
-  public generateTypeFile(locales: localeTypes[], keys: string[]) {
+  public generateTypeFile(locales: LocaleTypes[], keys: string[]) {
     return `export type AvailableLocale = ${this.unionType(locales)};
 
             export interface LocaleContextValue {

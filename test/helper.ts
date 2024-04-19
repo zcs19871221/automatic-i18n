@@ -32,13 +32,17 @@ class TestFormatter extends GlobalI18nFormatter {
     super('./');
   }
 }
-export const runAndExpect = (dirName: string, opt = {}) => {
+export const runAndExpect = (
+  dirName: string,
+  opt = {},
+  afterHook = (testDir: string, distDir: string) => {}
+) => {
   const testDir = path.join(testBaseDir, dirName);
   const distDir = path.join(testDir, distName);
   const template = path.join(testDir, 'template.tsx');
   fs.removeSync(distDir);
   fs.ensureDirSync(distDir);
-
+  afterHook(testDir, distDir);
   I18nReplacer.createI18nReplacer({
     workingDir: distDir,
     generatedFilesDir: '',
