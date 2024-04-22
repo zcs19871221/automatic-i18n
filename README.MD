@@ -2,22 +2,22 @@
 
 ## Introduction
 
-I18n replacer is an internationalization tool that automatically replaces language text in the source code and generates multi-language files through syntax analysis of ts source code.
+I18n replacer is an internationalization tool that automatically replaces language text in the source code(typescript) and generates multi-language files through syntax analysis of ts source code.
 
 I hope that websites in different languages ​​can benefit more people in the world, hope world peace.
 
 features:
 
-- Write code as if the i18n does not exist. Then run one line command to replace all the locale text with i18n key and generate message files.
+- Write the code as if it were not an international project. Then run a one-line command to replace all locale text with i18n keys and generate a message file.
 - The languages ​​to be replaced and the languages ​​to be generated can be configured.
-- Automatically handle template strings and jsx text node with variables.
-- Integrated with `react-intl` library and you could write your custom render class by implement `I18nFormatter` and pass your class as params.
+- Automatically merge template strings(jsx text) with variables.
+- Integrated with `react-intl` library. (you could write your own custom render class by implement `I18nFormatter` and pass your class as params.)
 - Supports hook mode (changing language in real time) and global mode, and can use custom render classes to determine how to replace source code and generate language files.
 - Test coverage 98%.
 
 ## Example
 
-Before:
+Your code Before:
 
     import React from 'react';
 
@@ -33,7 +33,7 @@ Before:
         );
     }
 
-After run command:
+Your code will be replaced with the below after run command:
 
     import { useIntl, FormattedMessage } from 'react-intl';
     import React from 'react';
@@ -70,7 +70,7 @@ After run command:
 
 `npm install i18n-replacer`
 
-write your own node script like this and run it:
+write your own node script like this and run it, the below codes show all the option, the values is the options's default value if you pass nothing.
 
     import { I18nReplacer,GlobalI18nFormatter } from 'i18-replacer';
     import { ScriptTarget } from 'typescript';
@@ -79,11 +79,14 @@ write your own node script like this and run it:
         // dir to work
         workingDir: process.cwd(),
 
-        // The automatically generated folder name will be used to store the generated language files.
+        // The automatically generated folder name will be used to store the generated language files. will create a folder in workingDir/generatedFilesDir
         generatedFilesDir: 'i18n',
 
         // tell the project which file or dirs could be replaced
         filesOrDirsToReplace: [process.cwd],
+
+        // filter to decide which files could be replaced
+        fileFilter: () => true,
 
         // The locale message files in the following array will be generated
         localesToGenerate: ['en-us', 'zh-cn'],
