@@ -1,15 +1,14 @@
 {
-  "name": "i18n-text-replacer",
+  "name": "i18n-replacer",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "lib/src/index.js",
   "scripts": {
     "tsc": "tsc",
-    "test": "npm run tsc && jest",
-    "tp": "npm run tsc && node ./lib/src/tianPing/index.js"
+    "test": "npm run tsc && jest"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Chengsi Zhang",
+  "license": "MIT",
   "dependencies": {
     "fs-extra": "^11.2.0",
     "prettier": "^2.8.8",

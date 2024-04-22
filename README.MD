@@ -1,0 +1,109 @@
+# I18n-Replacer
+
+## Introduction
+
+I18n replacer is an internationalization tool that automatically replaces language text in the source code and generates multi-language files through syntax analysis of ts source code.
+
+I hope that websites in different languages ​​can benefit more people in the world, hope world peace.
+
+features:
+
+- Write code as if the i18n does not exist. Then run one line command to replace all the locale text with i18n key and generate message files.
+- The languages ​​to be replaced and the languages ​​to be generated can be configured.
+- Automatically handle template strings and jsx text node with variables.
+- Integrated with `react-intl` library and you could write your custom render class by implement `I18nFormatter` and pass your class as params.
+- Supports hook mode (changing language in real time) and global mode, and can use custom render classes to determine how to replace source code and generate language files.
+- Test coverage 98%.
+
+## Example
+
+Before:
+
+    import React from 'react';
+
+    function Component() {
+        const en = 'English';
+        const cn = 'Chinese';
+        const locales = `${en} and ${cn}`;
+
+        return (
+            <div>
+                Please choose your locale from: {en} {cn}
+            </div>
+        );
+    }
+
+After run command:
+
+    import { useIntl, FormattedMessage } from 'react-intl';
+    import React from 'react';
+
+    function Component() {
+        const intl = useIntl();
+
+        const en = intl.formatMessage({
+            id: 'key0001',
+            defaultMessage: 'English',
+        });
+        const cn = intl.formatMessage({
+            id: 'key0002',
+            defaultMessage: 'Chinese',
+        });
+        const locales = intl.formatMessage({
+            id: 'key0003',
+            defaultMessage: '{v1} and {v2}',
+            values: { v1: en, v2: cn },
+        });
+
+        return (
+            <div>
+                <FormattedMessage
+                    id="key0004"
+                    defaultMessage="Please choose your locale from: {v1} {v2}"
+                    values={{ v1: en, v2: cn }}
+                />
+            </div>
+        );
+    }
+
+# Quick start
+
+`npm install i18n-replacer`
+
+write your own node script like this and run it:
+
+    import { I18nReplacer,GlobalI18nFormatter } from 'i18-replacer';
+    import { ScriptTarget } from 'typescript';
+
+    I18nReplacer.createI18nReplacer({
+        // dir to work
+        workingDir: process.cwd(),
+
+        // The automatically generated folder name will be used to store the generated language files.
+        generatedFilesDir: 'i18n',
+
+        // tell the project which file or dirs could be replaced
+        filesOrDirsToReplace: [process.cwd],
+
+        // The locale message files in the following array will be generated
+        localesToGenerate: ['en-us', 'zh-cn'],
+
+        // The following language will be searched in source file and extract and replace
+        localeToReplace: 'zh-cn',
+
+        // class to implement generate file and code, there are two default class: HookI18nFormatter and GlobalI18nFormatter
+        I18nFormatter: GlobalI18nFormatter,
+
+        // pass to typescript compiler to generate ast tree for searching and replacing
+        tsTarget: ScriptTarget.ES2015
+
+        // will use this config to format generated code
+        prettierConfig: {
+            singleQuote: true,
+            tabWidth: 2,
+        },
+    }).replace();
+
+## License
+
+The MIT License.
