@@ -12,11 +12,13 @@ function Component() {
     id: 'key0002',
     defaultMessage: 'Chinese',
   });
-  const locales = intl.formatMessage({
-    id: 'key0003',
-    defaultMessage: '{v1} and {v2}',
-    values: { v1: en, v2: cn },
-  });
+  const locales = intl.formatMessage(
+    {
+      id: 'key0003',
+      defaultMessage: '{v1} and {v2}',
+    },
+    { v1: en, v2: cn }
+  );
 
   return (
     <div>

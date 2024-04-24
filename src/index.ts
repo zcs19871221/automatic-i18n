@@ -19,7 +19,8 @@ import {
   I18nFormatter,
 } from './formatter';
 
-export class I18nReplacer {
+export { GlobalI18nFormatter, HookI18nFormatter, I18nFormatter };
+export default class I18nReplacer {
   public static createI18nReplacer({
     localesToGenerate,
     localeToReplace,
@@ -140,6 +141,10 @@ export class I18nReplacer {
       fs.ensureDirSync(this.opt.outputToNewDir);
     }
 
+    if (!fs.existsSync(this.langDir)) {
+      fs.ensureDirSync(this.langDir);
+    }
+
     const newIntlMapMessages = this.replaceTargetLocaleWithMessageRecursively(
       this.opt.filesOrDirsToReplace
     );
@@ -213,16 +218,21 @@ export class I18nReplacer {
     fileContext: FileContext;
   }) {
     this.warnings.add(
-      text +
-        '\nfile at: ' +
+      'warning: ' +
+        text +
+        '\nfile: ' +
         fileContext.fileLocate +
-        '\ntext: ' +
+        ' start:' +
+        start +
+        ' end: ' +
+        end +
+        '\ntext: |' +
         fileContext.file.slice(Math.max(0, start - 3), start) +
-        '【' +
-        fileContext.file.slice(start, end) +
-        '】' +
-        fileContext.file.slice(end + 1, end + 4) +
-        '\n'
+        '[' +
+        fileContext.file.slice(start, end).replace(/(\n)+/g, '\\n') +
+        ']' +
+        fileContext.file.slice(end + 1, end + 4).replace(/(\n)+/g, '\\n') +
+        '|\n'
     );
   }
 
@@ -251,7 +261,6 @@ export class I18nReplacer {
     astNode: Node,
     intlIdMapMessage: Record<string, string> = {}
   ) {
-    console.log(astNode.getText());
     if (astNode.kind === SyntaxKind.PropertyAssignment) {
       const name = (astNode as PropertyAssignment).name.getText();
       const value = (astNode as PropertyAssignment).initializer.getText();
@@ -278,6 +287,10 @@ export class I18nReplacer {
       return false;
     }
 
+    if (/(en-us)|(zh-cn)\.ts/.test(name)) {
+      return false;
+    }
+
     if (this.opt.fileFilter) {
       return this.opt.fileFilter(name);
     }
@@ -297,6 +310,7 @@ export class I18nReplacer {
           this.replaceTargetLocaleWithMessageRecursively(
             fs.readdirSync(dir).map((d) => path.join(dir, d))
           );
+          return;
         }
 
         const fileLocation = fileOrDir;

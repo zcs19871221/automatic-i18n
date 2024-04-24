@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import * as path from 'path';
 import * as fs from 'fs';
-import { I18nReplacer } from '../src';
+import I18nReplacer from '../src';
 
 const root = process.cwd();
 let dirsToReplace = [

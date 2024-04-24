@@ -147,10 +147,15 @@ export default class HookI18nFormatter extends I18nFormatter {
       context.getNode()!
     );
     if (!parentFunctionBlockNode) {
-      console.error(
-        'can not replace text in non component context at: ' +
-          context.getNode()!.getText()
-      );
+      context.i18nReplacer.addWarning({
+        text: `unable to replace ${context
+          .getNode()!
+          .getText()} in non component context, put it in React component or use GlobalFormatter `,
+        start: context.getNode()?.getStart() ?? 0,
+        end: context.getNode()?.getEnd() ?? 0,
+        fileContext: context.fileContext,
+      });
+
       return null;
     }
     const existingIntlExpression = parentFunctionBlockNode
@@ -213,8 +218,7 @@ export default class HookI18nFormatter extends I18nFormatter {
     return `
     ${intlObj}.formatMessage({
             id: '${intlId}',
-            defaultMessage: '${defaultMessage}',
-            ${paramString ? `values: ${paramString}` : ''}
-          })`;
+            defaultMessage: '${defaultMessage}'
+          }${paramString ? ',' + paramString : ''})`;
   }
 }

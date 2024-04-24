@@ -12,6 +12,9 @@
     "alwaysStrict": true,
     "strictFunctionTypes": false,
     "allowSyntheticDefaultImports": true,
+    "allowJs": true,
+    "declaration": true,
+    "declarationMap": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "module": "CommonJS"

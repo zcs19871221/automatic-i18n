@@ -1,7 +1,7 @@
 import { ImportDeclaration, Node } from 'typescript';
 
 import { ReplaceContext } from './ReplaceContext';
-import { I18nReplacer } from '..';
+import I18nReplacer from '..';
 import { NewImportContext } from './NewImportContext';
 import { TextInsertContext } from './TextInsertContext';
 

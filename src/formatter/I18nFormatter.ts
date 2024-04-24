@@ -122,7 +122,9 @@ export abstract class I18nFormatter {
   }
 
   private unionType(types: string[]) {
-    return types.map((type) => `'${type}'`).join('|');
+    return types.length > 0
+      ? types.map((type) => `'${type}'`).join('|')
+      : 'any';
   }
 
   public generateTypeFile(locales: LocaleTypes[], keys: string[]) {

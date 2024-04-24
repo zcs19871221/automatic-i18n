@@ -7,7 +7,6 @@ export interface LocaleContextValue {
 }
 
 export type LocalKey =
-  | 'key0002'
   | 'key0003'
   | 'key0004'
   | 'key0005'
@@ -33,4 +32,5 @@ export type LocalKey =
   | 'key0025'
   | 'key0026'
   | 'key0027'
-  | 'key0028';
+  | 'key0028'
+  | 'key0029';

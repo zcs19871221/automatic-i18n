@@ -3,8 +3,12 @@
   "version": "1.0.0",
   "description": "",
   "main": "lib/src/index.js",
+  "files": [
+    "./lib"
+  ],
   "scripts": {
     "tsc": "tsc",
+    "prepublish": "npm test && npm run tsc",
     "test": "npm run tsc && jest"
   },
   "author": "Chengsi Zhang",

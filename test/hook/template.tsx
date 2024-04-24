@@ -7,6 +7,7 @@ import React from 'react';
 // //@ts-ignore
 // import file2 from "./报告.doc"
 interface Custom<CustomT> {}
+const name = '张成思';
 export const App = ({
   name = '默认名称',
   flag,

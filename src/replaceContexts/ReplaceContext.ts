@@ -1,7 +1,7 @@
 import { Node, forEachChild } from 'typescript';
 import tsNodeHandlers from '../tsNodeHandlers';
 import { FileContext } from './FileContext';
-import { I18nReplacer } from '..';
+import I18nReplacer from '..';
 
 export interface Opt {
   node: Node;
@@ -15,7 +15,7 @@ export abstract class ReplaceContext {
   public needReplace = false;
   protected node?: Node;
   public fileContext: FileContext;
-  protected i18nReplacer: I18nReplacer;
+  public i18nReplacer: I18nReplacer;
   public parent?: ReplaceContext;
   public start: number;
   public end: number;

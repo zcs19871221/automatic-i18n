@@ -1,6 +1,6 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { I18nReplacer } from '../src';
+import I18nReplacer from '../src';
 import { GlobalI18nFormatter } from '../src/formatter';
 
 const testBaseDir = path.join(process.cwd(), 'test');
@@ -32,11 +32,22 @@ class TestFormatter extends GlobalI18nFormatter {
     super('./');
   }
 }
-export const runAndExpect = (
-  dirName: string,
+export const runAndExpect = ({
+  dirName,
   opt = {},
-  afterHook = (testDir: string, distDir: string) => {}
-) => {
+  afterHook = (testDir: string, distDir: string) => {},
+  hideConsole = true,
+}: {
+  dirName: string;
+  opt?: {};
+  afterHook?: (testDir: string, distDir: string) => void;
+  hideConsole?: boolean;
+}) => {
+  const originWarning = console.warn;
+  if (hideConsole) {
+    console.warn = () => {};
+    console.log = () => {};
+  }
   const testDir = path.join(testBaseDir, dirName);
   const distDir = path.join(testDir, distName);
   const template = path.join(testDir, 'template.tsx');
@@ -57,4 +68,5 @@ export const runAndExpect = (
     ...opt,
   }).replace();
   expectDirEqualDistDirAt(dirName);
+  console.warn = originWarning;
 };

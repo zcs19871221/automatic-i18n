@@ -3,7 +3,10 @@ import { runAndExpect } from '../helper';
 import { HookI18nFormatter } from '../../src/formatter';
 
 it('hook edge case', async () => {
-  runAndExpect(path.basename(__dirname), {
-    I18nFormatter: HookI18nFormatter,
+  runAndExpect({
+    dirName: path.basename(__dirname),
+    opt: {
+      I18nFormatter: HookI18nFormatter,
+    },
   });
 });

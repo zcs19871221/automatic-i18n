@@ -66,13 +66,30 @@ Your code will be replaced with the below after run command:
         );
     }
 
+You will get some new files including some locale message files and a provider which you could import and put it in your root file.
+
+    /*
+    * This file will be changed by automatic program.
+    * You can only change variable's property and value.
+    */
+    import { LocalKey } from './types.ts';
+
+    const locale: Record<LocalKey, string> = {
+        key0001: 'English',
+        key0002: 'Chinese',
+        key0003: '{v1} and {v2}',
+        key0004: 'Please choose your locale from: {v1} {v2}',
+    };
+
+    export default locale;
+
 # Quick start
 
 `npm install i18n-replacer`
 
 write your own node script like this and run it, the below codes show all the option, the values is the options's default value if you pass nothing.
 
-    import { I18nReplacer,GlobalI18nFormatter } from 'i18-replacer';
+    import I18nReplacer, { GlobalI18nFormatter } from 'i18-replacer';
     import { ScriptTarget } from 'typescript';
 
     I18nReplacer.createI18nReplacer({
