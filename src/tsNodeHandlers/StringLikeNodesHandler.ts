@@ -1,8 +1,9 @@
-import ts, {
+import {
   BinaryExpression,
   Node,
   PropertyAccessExpression,
   SyntaxKind,
+  isTypeNode,
 } from 'typescript';
 import { ReplaceContext, StringLiteralContext } from '../replaceContexts';
 import { FileContext } from '../replaceContexts';
@@ -17,12 +18,18 @@ export class StringLikeNodesHandler implements TsNodeHandler {
     ) {
       return false;
     }
+
     if (!fileContext.i18nReplacer.includesTargetLocale(node.getText())) {
       return false;
     }
-    if (node.parent?.kind === ts.SyntaxKind.ImportDeclaration) {
+    if (node.parent?.kind === SyntaxKind.ImportDeclaration) {
       return false;
     }
+
+    if (isTypeNode(node) || isTypeNode(node.parent)) {
+      return false;
+    }
+
     if (node.kind === SyntaxKind.StringLiteral) {
       if (fileContext.i18nReplacer.ignore(node)) {
         return false;
