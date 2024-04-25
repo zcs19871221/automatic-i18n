@@ -42,7 +42,7 @@ export default class I18nReplacer {
       tsTarget:
         tsTarget ??
         I18nReplacer.getTypeScriptTargetCompilerOption(usedTargetDir),
-      I18nFormatter: I18nFormatter ?? GlobalI18nFormatter,
+      I18nFormatter: I18nFormatter ?? HookI18nFormatter,
       filesOrDirsToReplace: filesOrDirsToReplace ?? [usedTargetDir],
       fileFilter: fileFilter ?? (() => true),
       prettierConfig: I18nReplacer.getPrettierConfig(

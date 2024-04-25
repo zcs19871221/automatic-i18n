@@ -2,7 +2,7 @@
 
 ## Introduction
 
-I18n replacer is an internationalization tool that automatically replaces language text in the source code(typescript) and generates multi-language files through syntax analysis of ts source code.
+I18n replacer is an internationalization tool that automatically replaces language text in the source code(typescript) and generates multi-language files through syntax analysis of ts source code(based on **typescript compiler**).
 
 I hope that websites in different languages ​​can benefit more people in the world, hope world peace.
 
@@ -123,6 +123,17 @@ write your own node script like this and run it, the below codes show all the op
             tabWidth: 2,
         },
     }).replace();
+
+or use pure node to run it:
+
+    const { HookI18nFormatter } = require("i18-replacer")
+
+    const I18nReplacer = require("i18-replacer").default;
+
+    I18nReplacer.createI18nReplacer({
+        I18nFormatter: HookI18nFormatter,
+        workingDir: 'c:/work/home/web/src'
+    }).replace()
 
 ## License
 
