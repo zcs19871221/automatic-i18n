@@ -28,7 +28,7 @@ export abstract class I18nFormatter {
   private intlSeq: number = 1;
 
   public getOrCreateIntlId(message: string) {
-    message = message.replace(/\n/g, '\\n');
+    message = message.replace(/(\r)?\n/g, '\\n');
     let intlId = '';
     if (this.messageMapIntlId[message] !== undefined) {
       intlId = this.messageMapIntlId[message];

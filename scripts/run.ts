@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import * as path from 'path';
 import * as fs from 'fs';
-import I18nReplacer from '../src';
+import I18nReplacer, { GlobalI18nFormatter } from '../src';
 
 const root = process.cwd();
 let dirsToReplace = [
@@ -21,4 +21,5 @@ I18nReplacer.createI18nReplacer({
     .filter((f) => {
       return fs.lstatSync(f).isDirectory();
     }),
-});
+  I18nFormatter: GlobalI18nFormatter,
+}).replace();

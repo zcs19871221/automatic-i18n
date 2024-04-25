@@ -13,6 +13,7 @@ import { IntlProvider } from 'react-intl';
 import type { AvailableLocale, LocalKey } from './types.ts';
 
 export interface LocaleContextValue {
+  readonly availableLocales: AvailableLocale[];
   readonly locale: AvailableLocale;
   readonly setLocale: React.Dispatch<React.SetStateAction<AvailableLocale>>;
 }
@@ -81,6 +82,9 @@ export function LocaleProvider({
 
   const value = useMemo(
     (): LocaleContextValue => ({
+      availableLocales: [${localeFiles
+        .map((locale) => `'${locale}'`)
+        .join(',')}],
       locale,
       setLocale,
     }),
