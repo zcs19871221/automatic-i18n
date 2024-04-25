@@ -11,10 +11,8 @@ import { IntlProvider } from 'react-intl';
 import type { AvailableLocale, LocalKey } from './types.ts';
 
 export interface LocaleContextValue {
-  readonly fetching: boolean;
   readonly locale: AvailableLocale;
   readonly setLocale: React.Dispatch<React.SetStateAction<AvailableLocale>>;
-  readonly fetchingMessages: boolean;
 }
 
 interface LocaleFile {
@@ -48,26 +46,23 @@ export function useLocale(): LocaleContextValue {
 
 export function LocaleProvider({
   children,
+  fallback,
   defaultLocale,
-  defaultMessages,
 }: {
   defaultLocale: AvailableLocale;
   children: ReactNode;
-  defaultMessages?: Readonly<Record<string, string>>;
+  fallback?: React.ReactNode;
 }) {
-  const [messages, setMessages] = useState(defaultMessages);
+  const [messages, setMessages] = useState<Record<string, string> | null>(null);
   const [locale, setLocale] = useState(defaultLocale);
-  const [fetching, setFetching] = useState(false);
 
   useLayoutEffect(() => {
     let cancelled = false;
 
     async function fetchMessages() {
-      setFetching(true);
       const importedMessages = await importMessages(locale);
       if (!cancelled) {
         setMessages(importedMessages.default);
-        setFetching(false);
         document.documentElement.lang = locale;
       }
     }
@@ -83,17 +78,19 @@ export function LocaleProvider({
     (): LocaleContextValue => ({
       locale,
       setLocale,
-      fetching,
-      fetchingMessages: !messages,
     }),
-    [locale, messages, fetching]
+    [locale]
   );
 
   return (
     <LocaleContext.Provider value={value}>
-      <IntlProvider locale={locale} messages={messages}>
-        {children}
-      </IntlProvider>
+      {messages ? (
+        <IntlProvider locale={locale} messages={messages}>
+          {children}
+        </IntlProvider>
+      ) : (
+        fallback
+      )}
     </LocaleContext.Provider>
   );
 }
