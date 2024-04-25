@@ -130,12 +130,6 @@ export abstract class I18nFormatter {
   public generateTypeFile(locales: LocaleTypes[], keys: string[]) {
     return `export type AvailableLocale = ${this.unionType(locales)};
 
-            export interface LocaleContextValue {
-              readonly locale: AvailableLocale;
-              readonly setLocale: React.Dispatch<React.SetStateAction<AvailableLocale>>;
-              readonly fetchingMessages: boolean;
-            }
-
             export type LocalKey = ${this.unionType(keys)};
           `;
   }

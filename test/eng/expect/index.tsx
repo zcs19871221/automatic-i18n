@@ -8,20 +8,25 @@ import React, {
 } from 'react';
 import { IntlProvider } from 'react-intl';
 
-import type { AvailableLocale, LocaleContextValue, LocalKey } from './types.ts';
+import type { AvailableLocale, LocalKey } from './types.ts';
 
-export function importMessages(
-  locale: AvailableLocale
-): Promise<Record<LocalKey, string>> {
+export interface LocaleContextValue {
+  readonly fetching: boolean;
+  readonly locale: AvailableLocale;
+  readonly setLocale: React.Dispatch<React.SetStateAction<AvailableLocale>>;
+  readonly fetchingMessages: boolean;
+}
+
+interface LocaleFile {
+  default: Record<LocalKey, string>;
+}
+
+export function importMessages(locale: AvailableLocale): Promise<LocaleFile> {
   switch (locale) {
     case 'en-us':
-      return import('./en-us.ts') as unknown as Promise<
-        Record<LocalKey, string>
-      >;
+      return import('./en-us.ts') as unknown as Promise<LocaleFile>;
     case 'zh-cn':
-      return import('./zh-cn.ts') as unknown as Promise<
-        Record<LocalKey, string>
-      >;
+      return import('./zh-cn.ts') as unknown as Promise<LocaleFile>;
     default: {
       const error: never = locale;
       throw new Error(error);
@@ -52,14 +57,17 @@ export function LocaleProvider({
 }) {
   const [messages, setMessages] = useState(defaultMessages);
   const [locale, setLocale] = useState(defaultLocale);
+  const [fetching, setFetching] = useState(false);
 
   useLayoutEffect(() => {
     let cancelled = false;
 
     async function fetchMessages() {
+      setFetching(true);
       const importedMessages = await importMessages(locale);
       if (!cancelled) {
-        setMessages(importedMessages);
+        setMessages(importedMessages.default);
+        setFetching(false);
         document.documentElement.lang = locale;
       }
     }
@@ -75,9 +83,10 @@ export function LocaleProvider({
     (): LocaleContextValue => ({
       locale,
       setLocale,
+      fetching,
       fetchingMessages: !messages,
     }),
-    [locale, messages]
+    [locale, messages, fetching]
   );
 
   return (

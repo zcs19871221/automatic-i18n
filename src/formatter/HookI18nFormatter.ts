@@ -10,104 +10,13 @@ import {
   FormatOptions,
   FormatReturnType,
 } from './I18nFormatter';
+import hookEntryFileTemplate from './hookEntryFileTemplate';
 
 export default class HookI18nFormatter extends I18nFormatter {
   entryFile(localeFiles: string[], defaultLocale: string): string {
-    return `
-      import React, {
-        ReactNode,
-        useState,
-        createContext,
-        useContext,
-        useMemo,
-        useLayoutEffect,
-      } from 'react';
-      import { IntlProvider } from 'react-intl';
-
-      import type { AvailableLocale, LocaleContextValue, LocalKey } from './types.ts';
-
-      export function importMessages(
-        locale: AvailableLocale,
-      ): Promise<Record<LocalKey, string>> {
-        switch (locale) {
-          ${localeFiles
-            .map(
-              (name) => `
-            case '${name}':
-              return import('./${name}.ts') as unknown as Promise<
-                Record<LocalKey, string>
-              >;`
-            )
-            .join('')}
-          default: {
-            const error: never = locale;
-            throw new Error(error);
-          }
-        }
-      }
-
-      const LocaleContext = createContext<LocaleContextValue | undefined>(undefined);
-
-      export function useLocale(): LocaleContextValue {
-        const context = useContext(LocaleContext);
-
-        if (context === undefined) {
-          throw new Error('useLocale must be used within the LocaleProvider context');
-        }
-
-        return context;
-      }
-
-      export function LocaleProvider({
-        children,
-        defaultLocale,
-        defaultMessages,
-      }: {
-        defaultLocale: AvailableLocale;
-        children: ReactNode;
-        defaultMessages?: Readonly<Record<string, string>>;
-      }) {
-        const [messages, setMessages] = useState(defaultMessages);
-        const [locale, setLocale] = useState(defaultLocale);
-
-        useLayoutEffect(() => {
-          let cancelled = false;
-
-          async function fetchMessages() {
-            const importedMessages = await importMessages(locale);
-            if (!cancelled) {
-              setMessages(importedMessages);
-              document.documentElement.lang = locale;
-            }
-          }
-
-          fetchMessages();
-
-          return () => {
-            cancelled = true;
-          };
-        }, [locale]);
-
-        const value = useMemo(
-          (): LocaleContextValue => ({
-            locale,
-            setLocale,
-            fetchingMessages: !messages,
-          }),
-          [locale, messages],
-        );
-
-        return (
-          <LocaleContext.Provider value={value}>
-            <IntlProvider locale={locale} messages={messages}>
-              {children}
-            </IntlProvider>
-          </LocaleContext.Provider>
-        );
-      }
-
-   `;
+    return hookEntryFileTemplate(localeFiles);
   }
+
   public override renderJsxChildContext(
     context: JsxChildContext,
     { params, defaultMessage }: FormatOptions,
