@@ -72,7 +72,7 @@ You will get some new files including some locale message files and a provider w
     * This file will be changed by automatic program.
     * You can only change variable's property and value.
     */
-    import { LocalKey } from './types.ts';
+    import { LocalKey } from './types';
 
     const locale: Record<LocalKey, string> = {
         key0001: 'English',

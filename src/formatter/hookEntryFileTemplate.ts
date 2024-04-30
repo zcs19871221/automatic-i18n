@@ -10,7 +10,7 @@ import React, {
 } from 'react';
 import { IntlProvider } from 'react-intl';
 
-import type { AvailableLocale, LocalKey } from './types.ts';
+import type { AvailableLocale, LocalKey } from './types';
 
 export interface LocaleContextValue {
   readonly availableLocales: AvailableLocale[];
