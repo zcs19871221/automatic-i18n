@@ -121,6 +121,21 @@ export abstract class I18nFormatter {
     return paramsString;
   }
 
+  protected intlApiExpression(
+    intlId: string,
+    defaultMessage: string,
+    apiName: string,
+    params?: Record<string, string>
+  ) {
+    const paramString = this.paramsString(params);
+
+    return `
+    ${apiName}.formatMessage({
+            id: '${intlId}',
+            defaultMessage: '${defaultMessage}'
+          }${paramString ? ',' + paramString : ''})`;
+  }
+
   private unionType(types: string[]) {
     return types.length > 0
       ? types.map((type) => `'${type}'`).join('|')

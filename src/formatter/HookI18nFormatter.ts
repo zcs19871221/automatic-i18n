@@ -74,7 +74,7 @@ export default class HookI18nFormatter extends I18nFormatter {
     if (existingIntlExpression) {
       intlObj = existingIntlExpression[1];
     }
-    const newText = this.intlExpression(
+    const newText = this.intlApiExpression(
       intlId,
       defaultMessage,
       intlObj,
@@ -114,20 +114,5 @@ export default class HookI18nFormatter extends I18nFormatter {
     intlId: string
   ): FormatReturnType | null {
     return this.render(context, opt, intlId);
-  }
-
-  private intlExpression(
-    intlId: string,
-    defaultMessage: string,
-    intlObj: string,
-    params?: Record<string, string>
-  ) {
-    const paramString = this.paramsString(params);
-
-    return `
-    ${intlObj}.formatMessage({
-            id: '${intlId}',
-            defaultMessage: '${defaultMessage}'
-          }${paramString ? ',' + paramString : ''})`;
   }
 }

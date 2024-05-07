@@ -25,11 +25,19 @@ export default class GlobalI18nFormatter extends I18nFormatter {
   private commonDependencies: { moduleName: string; names: string[] };
   renderJsxChildContext(
     context: JsxChildContext,
-    { params }: FormatOptions,
+    opt: FormatOptions,
     intlId: string
   ): FormatReturnType {
     const newText =
-      '{' + this.createIntlExpressionFromIntlId(intlId, params) + '}';
+      '{' +
+      this.intlApiExpression(
+        intlId,
+        opt.defaultMessage,
+        `${this.exportName}.${this.property}`,
+        opt.params
+      ) +
+      '}';
+
     return {
       newText,
       dependencies: this.commonDependencies,
@@ -41,18 +49,30 @@ export default class GlobalI18nFormatter extends I18nFormatter {
     opt: FormatOptions,
     intlId: string
   ): FormatReturnType {
-    const newText = this.createIntlExpressionFromIntlId(intlId, opt.params);
+    const newText = this.intlApiExpression(
+      intlId,
+      opt.defaultMessage,
+      `${this.exportName}.${this.property}`,
+      opt.params
+    );
     return {
       newText,
       dependencies: this.commonDependencies,
     };
   }
+
   renderStringLiteralContext(
     context: StringLiteralContext,
     opt: FormatOptions,
     intlId: string
   ): FormatReturnType {
-    const newText = this.createIntlExpressionFromIntlId(intlId, opt.params);
+    const newText = this.intlApiExpression(
+      intlId,
+      opt.defaultMessage,
+      `${this.exportName}.${this.property}`,
+      opt.params
+    );
+
     return {
       newText,
       dependencies: this.commonDependencies,
@@ -148,14 +168,5 @@ export default class GlobalI18nFormatter extends I18nFormatter {
       window.${this.exportName} = ${this.exportName};
       export { ${this.exportName}, LocalKey };
       `;
-  }
-
-  private createIntlExpressionFromIntlId(
-    intlId: string,
-    param?: Record<string, string>
-  ) {
-    let paramsString = ',' + this.paramsString(param);
-
-    return `${this.exportName}.${this.property}.formatMessage({id: '${intlId}'}${paramsString})`;
   }
 }

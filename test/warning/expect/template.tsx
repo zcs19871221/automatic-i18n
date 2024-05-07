@@ -14,14 +14,29 @@ if (/* @ignore */ '忽略' === variable) {
 [/* @ignore */ '他'].includes(variable);
 
 const days = [
-  i18.intl.formatMessage({ id: 'key0001' }),
-  i18.intl.formatMessage({ id: 'key0002' }),
-  i18.intl.formatMessage({ id: 'key0003' }),
-  i18.intl.formatMessage({ id: 'key0004' }),
+  i18.intl.formatMessage({
+    id: 'key0001',
+    defaultMessage: '7月1日',
+  }),
+  i18.intl.formatMessage({
+    id: 'key0002',
+    defaultMessage: '7月5日',
+  }),
+  i18.intl.formatMessage({
+    id: 'key0003',
+    defaultMessage: '7月6日',
+  }),
+  i18.intl.formatMessage({
+    id: 'key0004',
+    defaultMessage: '7月8日',
+  }),
 ];
 
 const willBeSkip = /* @ignore */ '忽略';
-const notSkip = i18.intl.formatMessage({ id: 'key0005' });
+const notSkip = i18.intl.formatMessage({
+  id: 'key0005',
+  defaultMessage: '忽略',
+});
 
 const obj = {
   今天 /* @ignore */: [moment(), moment()],
