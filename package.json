@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "tsc": "tsc",
+    "build": "tsc  --project tsconfig.production.json",
     "prepublish": "npm test && npm run tsc",
     "test": "npm run tsc && jest"
   },
