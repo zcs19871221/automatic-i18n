@@ -37,7 +37,10 @@ export const getAbsolutePath = (p: string) => {
 };
 
 export const excludeNodeModule = (fileOrDirName: string) => {
-  if (fileOrDirName.includes('node_modules') || fileOrDirName.startsWith('.')) {
+  if (
+    fileOrDirName.includes('node_modules') ||
+    path.basename(fileOrDirName).startsWith('.')
+  ) {
     return false;
   }
 
@@ -45,7 +48,7 @@ export const excludeNodeModule = (fileOrDirName: string) => {
 };
 
 export const onlyTJsxFiles = (fileOrDirName: string, directory: boolean) => {
-  if (!directory && !fileOrDirName.match(/[tj]sx?$/)) {
+  if (!directory && !fileOrDirName.match(/\.[tj]sx?$/)) {
     return false;
   }
 
@@ -60,7 +63,7 @@ export const initParams = ({
   I18nFormatterClass,
   I18nFormatterClassAlias,
   outputToNewDir,
-  filters = [onlyTJsxFiles, excludeNodeModule],
+  filters = [excludeNodeModule, onlyTJsxFiles],
   excludes,
   debug = false,
 }: ReplacerOpt) => {
@@ -107,7 +110,6 @@ export const initParams = ({
     filters,
     debug,
     outputToNewDir,
-    typescriptTarget: getScriptTarget(distLocaleDir),
   };
 
   return handledOpt;
@@ -154,7 +156,7 @@ export default class I18nReplacer {
       const source = createSourceFile(
         defaultLocaleFile,
         file,
-        this.opt.typescriptTarget,
+        getScriptTarget(defaultLocaleFile),
         true
       );
       intlIdMapMessage =
@@ -163,10 +165,11 @@ export default class I18nReplacer {
     return intlIdMapMessage;
   }
 
-  public replace() {
+  public async replace() {
     this.opt.prettierOptions = {
       singleQuote: true,
       tabWidth: 2,
+      parser: 'typescript',
     };
 
     const intlIdMapDefaultMessage: Record<string, string> =
@@ -336,7 +339,7 @@ export default class I18nReplacer {
         const node = createSourceFile(
           fileLocation,
           file,
-          this.opt.typescriptTarget,
+          getScriptTarget(fileLocation),
           true
         );
 

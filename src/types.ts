@@ -1,6 +1,5 @@
 import { Options as PrettierOptions } from 'prettier';
 import { I18nFormatter } from './formatter';
-import { ScriptTarget } from 'typescript';
 
 export type LocaleTypes = 'en-us' | 'zh-cn';
 
@@ -35,5 +34,4 @@ export type HandledOpt = {
   I18nFormatter: I18nFormatterCtr;
   outputToNewDir?: string;
   prettierOptions?: PrettierOptions;
-  typescriptTarget: ScriptTarget;
 };
