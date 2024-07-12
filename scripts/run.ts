@@ -9,9 +9,9 @@ if (process.argv.slice(2).length > 0) {
   dirsToReplace = process.argv.slice(2);
 }
 I18nReplacer.createI18nReplacer({
-  workingDir: root,
-  I18nFormatter: GlobalI18nFormatter,
-  filesOrDirsToReplace: dirsToReplace
+  distLocaleDir: root,
+  I18nFormatterClass: GlobalI18nFormatter,
+  targets: dirsToReplace
     .map((f) => path.join(root, f))
     .filter((f) => {
       return fs.lstatSync(f).isDirectory();

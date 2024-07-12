@@ -7,7 +7,7 @@ it('hook edge case', async () => {
   runAndExpect({
     dirName: path.basename(__dirname),
     opt: {
-      I18nFormatter: HookI18nFormatter,
+      I18nFormatterClass: HookI18nFormatter,
     },
     afterHook(testDir, distDir) {
       fs.copyFileSync(

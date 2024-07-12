@@ -55,16 +55,12 @@ export const runAndExpect = ({
   fs.ensureDirSync(distDir);
   afterHook(testDir, distDir);
   I18nReplacer.createI18nReplacer({
-    workingDir: distDir,
-    generatedFilesDir: '',
+    distLocaleDir: distDir,
     outputToNewDir: distDir,
-    filesOrDirsToReplace: [template],
+    targets: [template],
     localesToGenerate: ['en-us'],
     localeToReplace: 'zh-cn',
-    I18nFormatter: TestFormatter,
-    prettierConfig: {
-      singleQuote: true,
-    },
+    I18nFormatterClass: TestFormatter,
     ...opt,
   }).replace();
   expectDirEqualDistDirAt(dirName);
