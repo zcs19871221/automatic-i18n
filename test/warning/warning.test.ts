@@ -1,13 +1,13 @@
 import { runAndExpect } from '../helper';
 
-it('should show warnings text correctly', () => {
+it('should show warnings text correctly', async () => {
   let warnText = '';
   const originWarn = console.warn;
   console.warn = (text) => {
     warnText += text;
   };
 
-  runAndExpect({ dirName: 'warning', hideConsole: false });
+  await runAndExpect({ dirName: 'warning', hideConsole: false });
   expect(warnText).toMatch(`['发']`);
   expect(warnText).toMatch(`['好']`);
   expect(warnText).toMatch(`['你']`);

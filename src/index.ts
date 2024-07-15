@@ -8,6 +8,7 @@ import ts, {
   SyntaxKind,
 } from 'typescript';
 import * as prettier from 'prettier';
+import { Options as PrettierOptions } from 'prettier';
 
 import { FileContext } from './replaceContexts';
 import {
@@ -47,6 +48,10 @@ export const excludeNodeModule = (fileOrDirName: string) => {
   return true;
 };
 
+const resolvePrettierConfig = async (p: string) => {
+  return await prettier.resolveConfig(p);
+};
+
 export const onlyTJsxFiles = (fileOrDirName: string, directory: boolean) => {
   if (!directory && !fileOrDirName.match(/\.[tj]sx?$/)) {
     return false;
@@ -74,11 +79,11 @@ export const initParams = ({
   }
 
   distLocaleDir = getAbsolutePath(distLocaleDir);
-  if (!fs.statSync(distLocaleDir).isDirectory()) {
-    throw new Error('distLocaleDir should be directory. ' + distLocaleDir);
-  }
   if (!fs.existsSync(distLocaleDir)) {
     fs.ensureDirSync(distLocaleDir);
+  }
+  if (!fs.statSync(distLocaleDir).isDirectory()) {
+    throw new Error('distLocaleDir should be directory. ' + distLocaleDir);
   }
 
   let I18nFormatter: I18nFormatterCtr = HookI18nFormatter;
@@ -112,6 +117,9 @@ export const initParams = ({
     outputToNewDir,
   };
 
+  if (debug) {
+    console.debug(handledOpt);
+  }
   return handledOpt;
 };
 
@@ -166,12 +174,13 @@ export default class I18nReplacer {
   }
 
   public async replace() {
-    this.opt.prettierOptions = {
-      singleQuote: true,
-      tabWidth: 2,
-      parser: 'typescript',
-    };
-
+    const startTime = Date.now();
+    await this.doReplace();
+    if (this.opt.debug) {
+      console.log('usedTime: ' + (Date.now() - startTime) / 1000 + 's');
+    }
+  }
+  public async doReplace() {
     const intlIdMapDefaultMessage: Record<string, string> =
       this.getIntlIdMapMessage(this.opt.localeToReplace);
 
@@ -195,13 +204,23 @@ export default class I18nReplacer {
       fs.ensureDirSync(this.opt.distLocaleDir);
     }
 
-    const newIntlMapMessages = this.replaceTargetLocaleWithMessageRecursively(
-      this.opt.targets
+    await this.replaceTargetLocaleWithMessageRecursively(
+      await Promise.all(
+        this.opt.targets.map(async (t) => {
+          const config = await resolvePrettierConfig(t);
+          return {
+            prettierOptions: config,
+            name: t,
+          };
+        })
+      )
     );
+
+    const newIntlMapMessages = this.i18nFormatter.getNewIntlMapMessages();
 
     Object.assign(intlIdMapDefaultMessage, newIntlMapMessages);
 
-    this.opt.localesToGenerate.forEach((locale) => {
+    this.opt.localesToGenerate.forEach(async (locale) => {
       let currentIntlIdMapMessage = intlIdMapDefaultMessage;
       if (locale !== this.opt.localeToReplace) {
         currentIntlIdMapMessage = this.getIntlIdMapMessage(locale);
@@ -212,7 +231,7 @@ export default class I18nReplacer {
         });
       }
 
-      this.formatAndWrite(
+      await this.formatAndWrite(
         path.join(this.opt.distLocaleDir, locale + '.ts'),
         this.i18nFormatter.generateMessageFile(currentIntlIdMapMessage)
       );
@@ -224,7 +243,7 @@ export default class I18nReplacer {
     );
 
     if (!fs.existsSync(templateDist)) {
-      this.formatAndWrite(
+      await this.formatAndWrite(
         templateDist,
         this.i18nFormatter.entryFile(
           this.opt.localesToGenerate,
@@ -233,7 +252,7 @@ export default class I18nReplacer {
       );
     }
 
-    this.formatAndWrite(
+    await this.formatAndWrite(
       path.join(this.opt.distLocaleDir, 'types.ts'),
       this.i18nFormatter.generateTypeFile(
         this.opt.localesToGenerate,
@@ -294,9 +313,20 @@ export default class I18nReplacer {
     'zh-cn': /[\u4e00-\u9fa5]+/,
   };
 
-  private formatAndWrite(dist: string, file: string) {
-    if (this.opt.prettierOptions) {
-      file = prettier.format(file, this.opt.prettierOptions);
+  private async formatAndWrite(
+    dist: string,
+    file: string,
+    prettierOptions?: PrettierOptions | null
+  ) {
+    if (prettierOptions === undefined) {
+      prettierOptions = await resolvePrettierConfig(dist);
+    }
+
+    if (prettierOptions) {
+      if (!prettierOptions.parser) {
+        prettierOptions.parser = 'typescript';
+      }
+      file = prettier.format(file, prettierOptions);
     }
 
     return fs.writeFileSync(dist, file);
@@ -317,71 +347,98 @@ export default class I18nReplacer {
     return intlIdMapMessage;
   }
 
-  private replaceTargetLocaleWithMessageRecursively(
-    filesOrDirsToReplace: string[]
-  ): Record<string, string> {
-    filesOrDirsToReplace
-      .sort()
-      .map((f) => [f, fs.lstatSync(f).isDirectory()] as const)
-      .filter((f) => this.opt.filters.every((filter) => filter(f[0], f[1])))
-      .forEach(([fileOrDir, directory]) => {
-        if (directory) {
-          const dir = fileOrDir;
-          this.replaceTargetLocaleWithMessageRecursively(
-            fs.readdirSync(dir).map((d) => path.join(dir, d))
-          );
-          return;
-        }
+  private async replaceTargetLocaleWithMessageRecursively(
+    filesOrDirsToReplace: {
+      name: string;
+      prettierOptions: PrettierOptions | null;
+    }[]
+  ) {
+    const filteredAndSorted = filesOrDirsToReplace
+      .map(
+        (
+          f
+        ): {
+          name: string;
+          prettierOptions: PrettierOptions | null;
+          directory: boolean;
+        } => ({
+          ...f,
+          directory: fs.lstatSync(f.name).isDirectory(),
+        })
+      )
+      .filter((f) =>
+        this.opt.filters.every((filter) => filter(f.name, f.directory))
+      );
 
-        const fileLocation = fileOrDir;
-
-        const file = fs.readFileSync(fileLocation, 'utf-8');
-        const node = createSourceFile(
-          fileLocation,
-          file,
-          getScriptTarget(fileLocation),
-          true
+    for (const {
+      name: fileOrDir,
+      directory,
+      prettierOptions,
+    } of filteredAndSorted) {
+      if (directory) {
+        const dir = fileOrDir;
+        await this.replaceTargetLocaleWithMessageRecursively(
+          fs
+            .readdirSync(dir)
+            .map((d) => path.join(dir, d))
+            .sort()
+            .map((n) => ({
+              name: n,
+              prettierOptions,
+            }))
         );
+        continue;
+      }
 
-        let fileContext: FileContext = new FileContext({
-          node,
-          file,
-          fileLocate: fileLocation,
-          i18nReplacer: this,
-        });
-        let replacedText = '';
+      const fileLocation = fileOrDir;
 
-        try {
-          replacedText = fileContext.generateMessage();
-        } catch (error: any) {
-          if (error.message) {
-            error.message = '@ ' + fileLocation + ' ' + error.message;
-          }
-          console.error(error);
-        } finally {
-          fileContext.clear();
-        }
+      const file = fs.readFileSync(fileLocation, 'utf-8');
+      const node = createSourceFile(
+        fileLocation,
+        file,
+        getScriptTarget(fileLocation),
+        true
+      );
 
-        if (!replacedText) {
-          return this.i18nFormatter.getNewIntlMapMessages();
-        }
-
-        if (this.opt.outputToNewDir) {
-          this.formatAndWrite(
-            path.join(this.opt.outputToNewDir, path.basename(fileLocation)),
-            replacedText
-          );
-          console.log(
-            fileLocation +
-              ' write to ' +
-              this.opt.outputToNewDir +
-              ' successful! 😃'
-          );
-        } else {
-          this.formatAndWrite(fileLocation, replacedText);
-          console.log(fileLocation + ' rewrite successful! 😃');
-        }
+      let fileContext: FileContext = new FileContext({
+        node,
+        file,
+        fileLocate: fileLocation,
+        i18nReplacer: this,
       });
-    return this.i18nFormatter.getNewIntlMapMessages();
+      let replacedText = '';
+
+      try {
+        replacedText = fileContext.generateMessage();
+      } catch (error: any) {
+        if (error.message) {
+          error.message = '@ ' + fileLocation + ' ' + error.message;
+        }
+        console.error(error);
+      } finally {
+        fileContext.clear();
+      }
+
+      if (!replacedText) {
+        continue;
+      }
+
+      if (this.opt.outputToNewDir) {
+        await this.formatAndWrite(
+          path.join(this.opt.outputToNewDir, path.basename(fileLocation)),
+          replacedText,
+          prettierOptions
+        );
+        console.log(
+          fileLocation +
+            ' write to ' +
+            this.opt.outputToNewDir +
+            ' successful! 😃'
+        );
+      } else {
+        await this.formatAndWrite(fileLocation, replacedText, prettierOptions);
+        console.log(fileLocation + ' rewrite successful! 😃');
+      }
+    }
   }
 }

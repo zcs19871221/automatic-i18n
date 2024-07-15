@@ -3,6 +3,15 @@ import * as path from 'path';
 import I18nReplacer from '../src';
 import { GlobalI18nFormatter } from '../src/formatter';
 
+jest.mock('prettier', () => ({
+  ...jest.requireActual('prettier'),
+  resolveConfig: () => ({
+    singleQuote: true,
+    tabWidth: 2,
+    parser: 'typescript',
+  }),
+}));
+
 const testBaseDir = path.join(process.cwd(), 'test');
 const expectName = 'expect';
 const distName = 'dist';
@@ -32,7 +41,7 @@ class TestFormatter extends GlobalI18nFormatter {
     super('./');
   }
 }
-export const runAndExpect = ({
+export const runAndExpect = async ({
   dirName,
   opt = {},
   afterHook = (testDir: string, distDir: string) => {},
@@ -54,7 +63,7 @@ export const runAndExpect = ({
   fs.removeSync(distDir);
   fs.ensureDirSync(distDir);
   afterHook(testDir, distDir);
-  I18nReplacer.createI18nReplacer({
+  await I18nReplacer.createI18nReplacer({
     distLocaleDir: distDir,
     outputToNewDir: distDir,
     targets: [template],

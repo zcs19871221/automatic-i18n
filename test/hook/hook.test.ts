@@ -9,7 +9,7 @@ it('should use HookRender successful', async () => {
     warnText += text;
   };
 
-  runAndExpect({
+  await runAndExpect({
     dirName: path.basename(__dirname),
     opt: {
       I18nFormatterClass: HookI18nFormatter,
