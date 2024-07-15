@@ -26,17 +26,6 @@ import {
 
 export { GlobalI18nFormatter, HookI18nFormatter, I18nFormatter };
 
-export const getAbsolutePath = (p: string) => {
-  let absolutePath = '';
-  if (p.startsWith('/') || p.match(/[a-z]+:/i)) {
-    absolutePath = p;
-  } else {
-    absolutePath = path.join(process.cwd(), p);
-  }
-
-  return absolutePath;
-};
-
 export const excludeNodeModule = (fileOrDirName: string) => {
   if (
     fileOrDirName.includes('node_modules') ||
@@ -79,13 +68,13 @@ export const initParams = ({
   excludes,
   debug = false,
 }: ReplacerOpt) => {
-  targets = targets.map((t) => getAbsolutePath(t));
+  targets = targets.map((t) => path.resolve(t));
   const notExists = targets.filter((t) => !fs.existsSync(t));
   if (notExists.length > 0) {
     throw new Error('can not find target fileOrDirs: ' + notExists.join(','));
   }
 
-  distLocaleDir = getAbsolutePath(distLocaleDir);
+  distLocaleDir = path.resolve(distLocaleDir);
   if (!fs.existsSync(distLocaleDir)) {
     fs.ensureDirSync(distLocaleDir);
   }
@@ -109,7 +98,7 @@ export const initParams = ({
     );
   }
 
-  filters.push((fileOrDirName, directory) =>
+  filters.push((fileOrDirName) =>
     fileOrDirName === distLocaleDir ? false : true
   );
 
