@@ -4,7 +4,7 @@ import { runAndExpect } from '../helper';
 import { HookI18nFormatter } from '../../src/formatter';
 
 it('hook edge case', async () => {
-  runAndExpect({
+  await runAndExpect({
     dirName: path.basename(__dirname),
     opt: {
       I18nFormatterClass: HookI18nFormatter,

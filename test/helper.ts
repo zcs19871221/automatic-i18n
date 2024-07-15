@@ -20,7 +20,7 @@ export const doEqual = (dir: string) => {
   fs.readdirSync(dir).forEach((fileOrDirName) => {
     const fileOrDirLocate = path.join(dir, fileOrDirName);
     if (fs.lstatSync(fileOrDirLocate).isDirectory()) {
-      return expectDirEqualDistDirAt(fileOrDirLocate);
+      return doEqual(fileOrDirLocate);
     }
     expect(fs.readFileSync(fileOrDirLocate, 'utf-8')).toEqual(
       fs.readFileSync(fileOrDirLocate.replace(expectName, distName), 'utf-8')
@@ -29,7 +29,7 @@ export const doEqual = (dir: string) => {
 };
 
 export const expectDirEqualDistDirAt = (dir: string) => {
-  const testDir = path.join(testBaseDir, dir);
+  const testDir = path.isAbsolute(dir) ? dir : path.join(testBaseDir, dir);
 
   const expectDir = path.join(testDir, expectName);
 
@@ -53,6 +53,7 @@ export const runAndExpect = async ({
   hideConsole?: boolean;
 }) => {
   const originWarning = console.warn;
+  console.log = () => {};
   if (hideConsole) {
     console.warn = () => {};
     console.log = () => {};

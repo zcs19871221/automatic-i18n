@@ -93,8 +93,8 @@ export const initParams = ({
   }
 
   if (excludes) {
-    filters.push(
-      (fileOrDirName) => !excludes.some((ex) => ex === fileOrDirName)
+    filters.push((fileOrDirName) =>
+      excludes.every((ex) => ex !== path.basename(fileOrDirName))
     );
   }
 
@@ -200,6 +200,10 @@ export default class I18nReplacer {
       fs.ensureDirSync(this.opt.distLocaleDir);
     }
 
+    const distPrettierOptions = await resolvePrettierConfig(
+      path.join(this.opt.distLocaleDir, 'index.ts')
+    );
+
     await this.replaceTargetLocaleWithMessageRecursively(
       await Promise.all(
         this.opt.targets.map(async (t) => {
@@ -229,7 +233,8 @@ export default class I18nReplacer {
 
       await this.formatAndWrite(
         path.join(this.opt.distLocaleDir, locale + '.ts'),
-        this.i18nFormatter.generateMessageFile(currentIntlIdMapMessage)
+        this.i18nFormatter.generateMessageFile(currentIntlIdMapMessage),
+        distPrettierOptions
       );
     });
 
@@ -244,7 +249,8 @@ export default class I18nReplacer {
         this.i18nFormatter.entryFile(
           this.opt.localesToGenerate,
           this.opt.localeToReplace
-        )
+        ),
+        distPrettierOptions
       );
     }
 
@@ -253,7 +259,8 @@ export default class I18nReplacer {
       this.i18nFormatter.generateTypeFile(
         this.opt.localesToGenerate,
         Object.keys(intlIdMapDefaultMessage).sort()
-      )
+      ),
+      distPrettierOptions
     );
 
     this.warnings.forEach((warn) => {
@@ -312,7 +319,7 @@ export default class I18nReplacer {
   private async formatAndWrite(
     dist: string,
     file: string,
-    prettierOptions?: PrettierOptions | null
+    prettierOptions: PrettierOptions | null
   ) {
     if (prettierOptions === undefined) {
       prettierOptions = await resolvePrettierConfig(dist);
@@ -362,6 +369,7 @@ export default class I18nReplacer {
           directory: fs.lstatSync(f.name).isDirectory(),
         })
       )
+      .sort((a, b) => a.name.localeCompare(b.name))
       .filter((f) =>
         this.opt.filters.every((filter) => filter(f.name, f.directory))
       );
@@ -374,14 +382,10 @@ export default class I18nReplacer {
       if (directory) {
         const dir = fileOrDir;
         await this.replaceTargetLocaleWithMessageRecursively(
-          fs
-            .readdirSync(dir)
-            .map((d) => path.join(dir, d))
-            .sort()
-            .map((n) => ({
-              name: n,
-              prettierOptions,
-            }))
+          fs.readdirSync(dir).map((d) => ({
+            name: path.join(dir, d),
+            prettierOptions,
+          }))
         );
         continue;
       }

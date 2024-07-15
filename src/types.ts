@@ -17,6 +17,7 @@ export interface ReplacerOpt {
   I18nFormatterClass?: I18nFormatterCtr;
   I18nFormatterClassAlias?: 'hook' | 'global';
   filters?: Filter[];
+  // baseNames
   excludes?: string[];
   debug?: boolean;
   outputToNewDir?: string;
