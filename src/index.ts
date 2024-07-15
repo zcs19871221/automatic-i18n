@@ -60,11 +60,18 @@ export const onlyTJsxFiles = (fileOrDirName: string, directory: boolean) => {
   return true;
 };
 
+export const defaultTargets = [process.cwd()];
+
+export const defaultDistLocaleDir = path.join(process.cwd(), 'i18n');
+
+export const defaultLocaleToReplace = 'zh-cn';
+export const defaultLocalesToGenerate: LocaleTypes[] = ['zh-cn', 'en-us'];
+
 export const initParams = ({
-  targets = [process.cwd()],
-  distLocaleDir = path.join(process.cwd(), 'i18n'),
-  localeToReplace = 'zh-cn',
-  localesToGenerate = ['zh-cn', 'en-us'],
+  targets = defaultTargets,
+  distLocaleDir = defaultDistLocaleDir,
+  localeToReplace = defaultLocaleToReplace,
+  localesToGenerate = defaultLocalesToGenerate,
   I18nFormatterClass,
   I18nFormatterClassAlias,
   outputToNewDir,
