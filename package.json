@@ -4,7 +4,7 @@
   "description": "",
   "main": "lib/src/index.js",
   "files": [
-    "./lib"
+    "./dist"
   ],
   "bin": "node ./dist/bin/index.js",
   "scripts": {
