@@ -14,12 +14,19 @@ export const name = i18.intl.formatMessage({
 });
 
 export default function Component() {
+  const hah = '哈哈哈';
+  const x =
+    '哈\
+  哈';
+  const hah2 = "'哈哈哈";
+  const v1 = '再见';
   return (
     <div>
       {i18.intl.formatMessage({
         id: 'key0002',
         defaultMessage: '再见',
       })}
+      <span>你好{v1}</span>
     </div>
   );
 }

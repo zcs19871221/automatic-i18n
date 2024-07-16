@@ -1,6 +1,6 @@
 import path from 'path';
 
-jest.replaceProperty(process, 'cwd', () => path.join(__dirname, './dist'));
+process.cwd = jest.fn(() => path.join(__dirname, './dist'));
 
 jest.mock('prettier', () => ({
   ...jest.requireActual('prettier'),
@@ -16,7 +16,7 @@ import { cli } from '../../src/cli';
 import fs from 'fs-extra';
 import { expectDirEqualDistDirAt } from '../helper';
 
-it('test cli1', async () => {
+it('test meaningKey', async () => {
   const target = path.join(__dirname, './dist');
   fs.removeSync(target);
 
@@ -24,5 +24,5 @@ it('test cli1', async () => {
 
   await cli();
 
-  expectDirEqualDistDirAt('cli');
+  expectDirEqualDistDirAt(__dirname);
 });

@@ -154,6 +154,8 @@ export default class I18nReplacer {
     this.i18nFormatter = new opt.I18nFormatter();
   }
 
+  private oldKeyMapNewKey: Record<string, string> = {};
+
   private getIntlIdMapMessage(locale: LocaleTypes) {
     const defaultLocaleFile = path.join(this.opt.distLocaleDir, locale + '.ts');
     let intlIdMapMessage: Record<string, string> = {};
@@ -169,6 +171,10 @@ export default class I18nReplacer {
         I18nReplacer.intlIdMapMessageFromAstNodeRecursively(source);
     }
     return intlIdMapMessage;
+  }
+
+  public getOldKeyMapNewKey() {
+    return this.oldKeyMapNewKey;
   }
 
   public async replace() {
@@ -187,7 +193,7 @@ export default class I18nReplacer {
     this.opt.localesToGenerate.forEach((locale) => {
       map[locale] = this.getIntlIdMapMessage(locale);
     });
-    const oldKeyMapNewKey: Record<string, string> = {};
+    this.oldKeyMapNewKey = {};
     Object.entries(map['en-us']).forEach(([key, message]) => {
       if (
         I18nFormatter.isAutomaticGeneratedKey(key) &&
@@ -200,17 +206,27 @@ export default class I18nReplacer {
         while (map['en-us'][newKey] !== undefined) {
           newKey = meaningKey + '_' + i++;
         }
-        oldKeyMapNewKey[key] = meaningKey;
+        this.oldKeyMapNewKey[key] = meaningKey;
       }
     });
 
-    Object.entries(oldKeyMapNewKey).forEach(([oldKey, newKey]) => {
+    Object.entries(this.oldKeyMapNewKey).forEach(([oldKey, newKey]) => {
       Object.entries(map).forEach(([locale, keyMapMessage]) => {
         keyMapMessage[newKey] = keyMapMessage[oldKey];
         delete keyMapMessage[oldKey];
         map[locale as LocaleTypes] = keyMapMessage;
       });
     });
+
+    Object.entries(map)
+      .filter((entry) => entry[0] !== this.opt.localeToReplace)
+      .map(([_locale, keyMapMessage]) => {
+        Object.keys(map[this.opt.localeToReplace]).forEach((key) => {
+          if (keyMapMessage[key] == undefined) {
+            keyMapMessage[key] = map[this.opt.localeToReplace][key];
+          }
+        });
+      });
 
     this.i18nFormatter.setMessageMapIntlId(
       Object.entries<string>(map[this.opt.localeToReplace]).reduce(
@@ -245,28 +261,29 @@ export default class I18nReplacer {
             name: t,
           };
         })
-      ),
-      oldKeyMapNewKey
+      )
     );
 
     const newIntlMapMessages = this.i18nFormatter.getNewIntlMapMessages();
 
-    Object.entries(map).forEach(async ([locale, keyMapMessage]) => {
-      Object.assign(keyMapMessage, newIntlMapMessages);
+    await Promise.all(
+      Object.entries(map).map(([locale, keyMapMessage]) => {
+        Object.assign(keyMapMessage, newIntlMapMessages);
 
-      if (locale !== this.opt.localeToReplace) {
-        Object.keys(map[this.opt.localeToReplace]).forEach((key) => {
-          if (keyMapMessage[key] == undefined) {
-            keyMapMessage[key] = map[this.opt.localeToReplace][key];
-          }
-        });
-      }
-      await this.formatAndWrite(
-        path.join(this.opt.distLocaleDir, locale + '.ts'),
-        this.i18nFormatter.generateMessageFile(keyMapMessage),
-        distPrettierOptions
-      );
-    });
+        if (locale !== this.opt.localeToReplace) {
+          Object.keys(map[this.opt.localeToReplace]).forEach((key) => {
+            if (keyMapMessage[key] == undefined) {
+              keyMapMessage[key] = map[this.opt.localeToReplace][key];
+            }
+          });
+        }
+        return this.formatAndWrite(
+          path.join(this.opt.distLocaleDir, locale + '.ts'),
+          this.i18nFormatter.generateMessageFile(keyMapMessage),
+          distPrettierOptions
+        );
+      })
+    );
 
     const templateDist = path.join(
       this.opt.distLocaleDir,
@@ -406,8 +423,7 @@ export default class I18nReplacer {
     filesOrDirsToReplace: {
       name: string;
       prettierOptions: PrettierOptions | null;
-    }[],
-    oldMapNewKey: Record<string, string>
+    }[]
   ) {
     const filteredAndSorted = filesOrDirsToReplace
       .map(
@@ -438,8 +454,7 @@ export default class I18nReplacer {
           fs.readdirSync(dir).map((d) => ({
             name: path.join(dir, d),
             prettierOptions,
-          })),
-          oldMapNewKey
+          }))
         );
         continue;
       }
@@ -447,16 +462,6 @@ export default class I18nReplacer {
       const fileLocation = fileOrDir;
 
       let file = fs.readFileSync(fileLocation, 'utf-8');
-
-      if (Object.keys(oldMapNewKey).length > 0) {
-        file = file.replace(/id:\s*'(key\d+)'/g, (_matched, key) => {
-          if (oldMapNewKey[key]) {
-            return `id: '${oldMapNewKey[key]}'`;
-          }
-
-          return _matched;
-        });
-      }
 
       const node = createSourceFile(
         fileLocation,

@@ -6,3 +6,4 @@ export * from './ReplaceContext';
 export * from './StringLiteralContext';
 export * from './TemplateExpressionContext';
 export * from './TemplateStringContext';
+export * from './OldKeyReplaceContext';

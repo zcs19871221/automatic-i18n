@@ -132,7 +132,7 @@ export abstract class I18nFormatter {
     return `
     ${apiName}.formatMessage({
             id: '${intlId}',
-            defaultMessage: '${defaultMessage}'
+            defaultMessage: ${this.wrapStringWithQuote(defaultMessage)}
           }${paramString ? ',' + paramString : ''})`;
   }
 
@@ -162,6 +162,9 @@ export abstract class I18nFormatter {
     return Object.keys(keyMapValue).sort();
   }
 
+  private wrapStringWithQuote(text: string) {
+    return `'${text.replace(/(?<!\\)'/g, '\\' + "'")}'`;
+  }
   public generateMessageFile(keyMapValue: Record<string, string>) {
     const ids = I18nFormatter.sortKeys(keyMapValue);
     return `
@@ -174,14 +177,10 @@ export abstract class I18nFormatter {
         const locale: Record<LocalKey, string> = {
           ${ids
             .map((key) => {
-              if (key.includes('-')) {
-                key = `'"' + key + '"'`;
+              if (!/^[a-zA-Z_$][a-zA-Z_$0-9]*$/.test(key)) {
+                key = `'${key.replace(/'/g, "'")}'`;
               }
-              let quote = "'";
-              if (keyMapValue[key].includes("'")) {
-                quote = '"';
-              }
-              return `${key}: ${quote}${keyMapValue[key]}${quote}`;
+              return `${key}: ${this.wrapStringWithQuote(keyMapValue[key])}`;
             })
             .join(',\n')}
         };
@@ -194,8 +193,5 @@ export abstract class I18nFormatter {
 
   public setMessageMapIntlId(messageMapIntlId: Record<string, string>) {
     this.messageMapIntlId = messageMapIntlId;
-  }
-  public getMessageMapIntlId() {
-    return this.messageMapIntlId;
   }
 }
