@@ -1,15 +1,16 @@
 {
-  "name": "i18n-automatic-replacer",
+  "name": "i18n-text-replacer",
   "version": "1.0.0",
   "description": "",
   "main": "lib/src/index.js",
   "files": [
     "./lib"
   ],
+  "bin": "node ./dist/bin/index.js",
   "scripts": {
     "tsc": "tsc",
     "build": "tsc  --project tsconfig.production.json",
-    "prepublish": "npm test && npm run tsc",
+    "prepublish": "npm test && npm run build",
     "test": "npm run tsc && jest"
   },
   "author": "Chengsi Zhang",
