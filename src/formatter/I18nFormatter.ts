@@ -94,16 +94,13 @@ export abstract class I18nFormatter {
     intlId: string
   ): FormatReturnType | null;
 
-  protected camel(naming: string) {
+  protected camelLocale(naming: string) {
     const splitIndex = naming.indexOf('-');
-    if (splitIndex > -1) {
-      return (
-        naming.slice(0, splitIndex) +
-        naming[splitIndex + 1].toUpperCase() +
-        naming.slice(splitIndex + 2)
-      );
-    }
-    return naming;
+    return (
+      naming.slice(0, splitIndex) +
+      naming[splitIndex + 1].toUpperCase() +
+      naming.slice(splitIndex + 2)
+    );
   }
 
   protected paramsString(param?: Record<string, string>) {
@@ -177,9 +174,6 @@ export abstract class I18nFormatter {
         const locale: Record<LocalKey, string> = {
           ${ids
             .map((key) => {
-              if (!/^[a-zA-Z_$][a-zA-Z_$0-9]*$/.test(key)) {
-                key = `'${key.replace(/'/g, "'")}'`;
-              }
               return `${key}: ${this.wrapStringWithQuote(keyMapValue[key])}`;
             })
             .join(',\n')}

@@ -1,7 +1,8 @@
 import { Options as PrettierOptions } from 'prettier';
 import { I18nFormatter } from './formatter';
 
-export type LocaleTypes = 'en-us' | 'zh-cn';
+export const availableLocales = ['en-us', 'zh-cn'] as const;
+export type LocaleTypes = (typeof availableLocales)[number];
 
 export interface I18nFormatterCtr<A extends I18nFormatter = I18nFormatter> {
   new (): A;

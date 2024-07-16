@@ -5,6 +5,7 @@ import I18nReplacer, {
   defaultLocaleToReplace,
   defaultLocalesToGenerate,
 } from '..';
+import { availableLocales } from '../types';
 
 export async function cli() {
   program
@@ -16,13 +17,19 @@ export async function cli() {
       `-d --distLocaleDir <fileOrDir>`,
       `folder where message files are generated, default is [${defaultDistLocaleDir}]`
     )
-    .option(
-      `-sl --localeToReplace <fileOrDir>`,
-      `locales to search in source code, default is [${defaultLocaleToReplace}]`
+    .addOption(
+      new Option(
+        `-sl --localeToReplace <fileOrDir>`,
+        `locales to search in source code, default is [${defaultLocaleToReplace}]`
+      ).choices(availableLocales)
     )
-    .option(
-      `-tl --localesToGenerate <locales...>`,
-      `locales to generate, default is [${defaultLocalesToGenerate.join(',')}]`
+    .addOption(
+      new Option(
+        `-tl --localesToGenerate <locales...>`,
+        `locales to generate, default is [${defaultLocalesToGenerate.join(
+          ','
+        )}]`
+      ).choices(availableLocales)
     )
     .addOption(
       new Option(

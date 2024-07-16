@@ -85,7 +85,7 @@ export default class GlobalI18nFormatter extends I18nFormatter {
       import type { LocalKey } from './types';
       ${localeFiles
         .map((localeFile) => {
-          const variableName = this.camel(localeFile);
+          const variableName = this.camelLocale(localeFile);
           return `import ${variableName} from './${localeFile}'`;
         })
         .join('\n')}
@@ -102,7 +102,7 @@ export default class GlobalI18nFormatter extends I18nFormatter {
       const messages = {
         ${localeFiles
           .map((l) => {
-            return `'${l}': ${this.camel(l)}`;
+            return `'${l}': ${this.camelLocale(l)}`;
           })
           .join(',\n')}
       };
