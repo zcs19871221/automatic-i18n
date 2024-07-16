@@ -30,6 +30,7 @@ it('test cli1', async () => {
     '-e',
     'b.tsx',
     'c.tsx',
+    '--debug',
   ]);
 
   await cli();

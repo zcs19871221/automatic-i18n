@@ -66,6 +66,7 @@ export const initParams = ({
   outputToNewDir,
   filters = [excludeNodeModule, onlyTJsxFiles],
   excludes,
+  meaningKey = false,
   debug = false,
 }: ReplacerOpt) => {
   targets = targets.map((t) => path.resolve(t));
@@ -111,6 +112,7 @@ export const initParams = ({
     filters,
     debug,
     outputToNewDir,
+    meaningKey,
   };
 
   if (debug) {
@@ -176,12 +178,42 @@ export default class I18nReplacer {
       console.log('usedTime: ' + (Date.now() - startTime) / 1000 + 's');
     }
   }
+
   public async doReplace() {
-    const intlIdMapDefaultMessage: Record<string, string> =
-      this.getIntlIdMapMessage(this.opt.localeToReplace);
+    const map: Record<LocaleTypes, Record<string, string>> = {
+      'en-us': {},
+      'zh-cn': {},
+    };
+    this.opt.localesToGenerate.forEach((locale) => {
+      map[locale] = this.getIntlIdMapMessage(locale);
+    });
+    const oldKeyMapNewKey: Record<string, string> = {};
+    Object.entries(map['en-us']).forEach(([key, message]) => {
+      if (
+        I18nFormatter.isAutomaticGeneratedKey(key) &&
+        this.localeMapReg['en-us'](message)
+      ) {
+        let meaningKey = this.englishToVariableName(message);
+
+        let i = 1;
+        let newKey = meaningKey;
+        while (map['en-us'][newKey] !== undefined) {
+          newKey = meaningKey + '_' + i++;
+        }
+        oldKeyMapNewKey[key] = meaningKey;
+      }
+    });
+
+    Object.entries(oldKeyMapNewKey).forEach(([oldKey, newKey]) => {
+      Object.entries(map).forEach(([locale, keyMapMessage]) => {
+        keyMapMessage[newKey] = keyMapMessage[oldKey];
+        delete keyMapMessage[oldKey];
+        map[locale as LocaleTypes] = keyMapMessage;
+      });
+    });
 
     this.i18nFormatter.setMessageMapIntlId(
-      Object.entries<string>(intlIdMapDefaultMessage).reduce(
+      Object.entries<string>(map[this.opt.localeToReplace]).reduce(
         (messageMapIntlId: Record<string, string>, [intlId, message]) => {
           if (!messageMapIntlId[message]) {
             messageMapIntlId[message] = intlId;
@@ -213,27 +245,25 @@ export default class I18nReplacer {
             name: t,
           };
         })
-      )
+      ),
+      oldKeyMapNewKey
     );
 
     const newIntlMapMessages = this.i18nFormatter.getNewIntlMapMessages();
 
-    Object.assign(intlIdMapDefaultMessage, newIntlMapMessages);
+    Object.entries(map).forEach(async ([locale, keyMapMessage]) => {
+      Object.assign(keyMapMessage, newIntlMapMessages);
 
-    this.opt.localesToGenerate.forEach(async (locale) => {
-      let currentIntlIdMapMessage = intlIdMapDefaultMessage;
       if (locale !== this.opt.localeToReplace) {
-        currentIntlIdMapMessage = this.getIntlIdMapMessage(locale);
-        Object.keys(intlIdMapDefaultMessage).forEach((intlId) => {
-          if (currentIntlIdMapMessage[intlId] === undefined) {
-            currentIntlIdMapMessage[intlId] = intlIdMapDefaultMessage[intlId];
+        Object.keys(map[this.opt.localeToReplace]).forEach((key) => {
+          if (keyMapMessage[key] == undefined) {
+            keyMapMessage[key] = map[this.opt.localeToReplace][key];
           }
         });
       }
-
       await this.formatAndWrite(
         path.join(this.opt.distLocaleDir, locale + '.ts'),
-        this.i18nFormatter.generateMessageFile(currentIntlIdMapMessage),
+        this.i18nFormatter.generateMessageFile(keyMapMessage),
         distPrettierOptions
       );
     });
@@ -258,7 +288,7 @@ export default class I18nReplacer {
       path.join(this.opt.distLocaleDir, 'types.ts'),
       this.i18nFormatter.generateTypeFile(
         this.opt.localesToGenerate,
-        Object.keys(intlIdMapDefaultMessage).sort()
+        I18nFormatter.sortKeys(map[this.opt.localeToReplace])
       ),
       distPrettierOptions
     );
@@ -308,13 +338,35 @@ export default class I18nReplacer {
   }
 
   public includesTargetLocale(text: string) {
-    return this.localeMapReg[this.opt.localeToReplace].test(text);
+    return this.localeMapReg[this.opt.localeToReplace](text);
   }
 
-  private localeMapReg: Record<LocaleTypes, RegExp> = {
-    'en-us': /[a-z]+/i,
-    'zh-cn': /[\u4e00-\u9fa5]+/,
+  private localeMapReg: Record<LocaleTypes, (str: string) => boolean> = {
+    'en-us': (str) => /[a-z]+/i.test(str),
+    'zh-cn': (str) => /[\u4e00-\u9fa5]+/.test(str),
   };
+
+  private englishToVariableName(text: string) {
+    text = text.trim();
+    text = text
+      .replace(
+        /(?:[^a-z\d]+)([a-z\d])/gi,
+        (_matched: string, firstLetter: string) => {
+          return firstLetter.toUpperCase();
+        }
+      )
+      .replace(/\{[(^}+)]\}/g, (_matched: string, variableName: string) => {
+        return 'V' + variableName;
+      })
+      .replace(/[^a-z\d]/gi, '');
+    if (text.match(/^\d/)) {
+      text = '_' + text;
+    }
+    if (text.length > 30) {
+      text = text.slice(0, 30) + '_';
+    }
+    return text;
+  }
 
   private async formatAndWrite(
     dist: string,
@@ -354,7 +406,8 @@ export default class I18nReplacer {
     filesOrDirsToReplace: {
       name: string;
       prettierOptions: PrettierOptions | null;
-    }[]
+    }[],
+    oldMapNewKey: Record<string, string>
   ) {
     const filteredAndSorted = filesOrDirsToReplace
       .map(
@@ -385,14 +438,26 @@ export default class I18nReplacer {
           fs.readdirSync(dir).map((d) => ({
             name: path.join(dir, d),
             prettierOptions,
-          }))
+          })),
+          oldMapNewKey
         );
         continue;
       }
 
       const fileLocation = fileOrDir;
 
-      const file = fs.readFileSync(fileLocation, 'utf-8');
+      let file = fs.readFileSync(fileLocation, 'utf-8');
+
+      if (Object.keys(oldMapNewKey).length > 0) {
+        file = file.replace(/id:\s*'(key\d+)'/g, (_matched, key) => {
+          if (oldMapNewKey[key]) {
+            return `id: '${oldMapNewKey[key]}'`;
+          }
+
+          return _matched;
+        });
+      }
+
       const node = createSourceFile(
         fileLocation,
         file,

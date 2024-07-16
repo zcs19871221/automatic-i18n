@@ -155,9 +155,15 @@ export abstract class I18nFormatter {
     return this.newIntlMapMessages;
   }
 
+  public static isAutomaticGeneratedKey(key: string) {
+    return /key\d+/.test(key);
+  }
+  public static sortKeys(keyMapValue: Record<string, string>) {
+    return Object.keys(keyMapValue).sort();
+  }
+
   public generateMessageFile(keyMapValue: Record<string, string>) {
-    const ids = Object.keys(keyMapValue);
-    ids.sort();
+    const ids = I18nFormatter.sortKeys(keyMapValue);
     return `
         /*
           * This file will be changed by automatic program.
