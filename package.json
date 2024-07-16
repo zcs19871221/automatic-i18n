@@ -6,7 +6,9 @@
   "files": [
     "./dist"
   ],
-  "bin": "node ./dist/bin/index.js",
+  "bin": {
+    "i18n": "./dist/bin/index.js"
+  },
   "scripts": {
     "tsc": "tsc",
     "build": "tsc  --project tsconfig.production.json",
