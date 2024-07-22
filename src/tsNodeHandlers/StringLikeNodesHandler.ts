@@ -67,6 +67,9 @@ export class StringLikeNodesHandler implements TsNodeHandler {
       return false;
     }
 
+    if (node.parent?.getText()?.match(/^id=/)) {
+      return false;
+    }
     return true;
   }
 

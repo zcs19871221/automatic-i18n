@@ -31,7 +31,8 @@ export class HookInsertFunctionContext extends ReplaceContext {
         break;
       }
       if (
-        node.kind === SyntaxKind.Block &&
+        (node.kind === SyntaxKind.Block ||
+          node.kind === SyntaxKind.ParenthesizedExpression) &&
         node.parent?.kind === SyntaxKind.ArrowFunction &&
         node.parent.parent?.kind === SyntaxKind.VariableDeclaration &&
         (node.parent.parent as VariableDeclaration).name
