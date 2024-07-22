@@ -33,5 +33,5 @@ it('test propertyInHtmlTag', async () => {
 
   await cli();
 
-  expectDirEqualDistDirAt('cli');
+  expectDirEqualDistDirAt('propertyInHtmlTag');
 });

@@ -4,15 +4,14 @@
   "description": "",
   "main": "lib/src/index.js",
   "files": [
-    "./dist"
+    "./lib"
   ],
   "bin": {
-    "i18n": "./dist/bin/index.js"
+    "i18n": "./lib/bin/index.js"
   },
   "scripts": {
     "tsc": "tsc",
-    "build": "tsc  --project tsconfig.production.json",
-    "prepublish": "npm test && npm run build",
+    "build": "tsc  --project tsconfig.production.json && jest",
     "test": "npm run tsc && jest"
   },
   "author": "Chengsi Zhang",
