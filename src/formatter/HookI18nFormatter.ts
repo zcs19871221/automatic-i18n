@@ -1,10 +1,16 @@
 import {
+  SyntaxKind,
+  Node,
+  VariableDeclaration,
+  FunctionDeclaration,
+} from 'typescript';
+import {
   JsxChildContext,
   ReplaceContext,
   StringLiteralContext,
   TemplateStringContext,
 } from '../replaceContexts';
-import { HookInsertFunctionContext } from '../replaceContexts/HookInsertFunctionContext';
+import { TextInsertContext } from '../replaceContexts/TextInsertContext';
 import {
   I18nFormatter,
   FormatOptions,
@@ -52,10 +58,8 @@ export default class HookI18nFormatter extends I18nFormatter {
     { params, defaultMessage, originStr }: FormatOptions,
     intlId: string
   ) {
-    const parentFunctionBlockNode = HookInsertFunctionContext.getComponent(
-      context.getNode()!
-    );
-    if (!parentFunctionBlockNode) {
+    const parentComponent = HookI18nFormatter.getComponent(context.getNode()!);
+    if (!parentComponent) {
       context.i18nReplacer.addWarning({
         text: `unable to replace ${context
           .getNode()!
@@ -67,45 +71,74 @@ export default class HookI18nFormatter extends I18nFormatter {
 
       return null;
     }
-    const existingIntlExpression = parentFunctionBlockNode
+    const hookDeclareExpression = parentComponent
       .getText()
-      .match(/(?:(?:const)|(?:var)|(?:let)) ([\S]+) = useIntl()/);
-    let intlObj = 'intl';
-    if (existingIntlExpression) {
-      intlObj = existingIntlExpression[1];
-    }
-    const newText = this.intlApiExpression(
-      intlId,
-      defaultMessage,
-      intlObj,
-      params
-    );
-
-    const hookInsertContext = new HookInsertFunctionContext(
-      parentFunctionBlockNode,
-      context.fileContext
-    );
-    if (
-      !context.fileContext
-        .getChildren()
-        .some(
-          (c) =>
-            c instanceof HookInsertFunctionContext &&
-            c.start === hookInsertContext.start
-        ) &&
-      existingIntlExpression == null
-    ) {
-      context.fileContext.addChildren(hookInsertContext);
-      hookInsertContext.generateMessage();
-    }
-
-    return {
-      newText,
-      dependencies: {
-        moduleName: 'react-intl',
-        names: ['useIntl'],
-      },
+      .match(/(?:(?:const)|(?:var)|(?:let)) ([\S]+)\s*=\s*(\w+\.)?useIntl()/);
+    const returnValue = (intlObj: string) => {
+      return {
+        newText: this.intlApiExpression(
+          intlId,
+          defaultMessage,
+          intlObj,
+          params
+        ),
+        dependencies: {
+          moduleName: 'react-intl',
+          names: ['useIntl'],
+        },
+      };
     };
+    if (hookDeclareExpression != null) {
+      return returnValue(hookDeclareExpression[1]);
+    }
+
+    const intlObj = 'intl';
+    const contextToAdd: ReplaceContext[] = [];
+    if (parentComponent.kind === SyntaxKind.ParenthesizedExpression) {
+      contextToAdd.push(
+        new TextInsertContext(
+          parentComponent.getStart(),
+          parentComponent.getChildren()[1].getStart(),
+          context.fileContext,
+          `{\nconst ${intlObj} = useIntl(); \n return `
+        )
+      );
+      contextToAdd.push(
+        new TextInsertContext(
+          parentComponent.getChildren()[2].getStart(),
+          parentComponent.getChildren()[2].getEnd(),
+          context.fileContext,
+          `}`
+        )
+      );
+    } else {
+      const start = parentComponent.getStart() + 1;
+      contextToAdd.push(
+        new TextInsertContext(
+          start,
+          start,
+          context.fileContext,
+          `\nconst ${intlObj} = useIntl(); \n`
+        )
+      );
+    }
+
+    if (
+      contextToAdd.some((c) => {
+        return context.fileContext
+          .getChildren()
+          .some((cc) => cc.start == c.start && cc.end === c.end);
+      })
+    ) {
+      return returnValue(intlObj);
+    }
+
+    contextToAdd.forEach((c) => {
+      c.generateMessage();
+      context.fileContext.addChildren(c);
+    });
+
+    return returnValue('intl');
   }
 
   public override renderStringLiteralContext(
@@ -114,5 +147,36 @@ export default class HookI18nFormatter extends I18nFormatter {
     intlId: string
   ): FormatReturnType | null {
     return this.render(context, opt, intlId);
+  }
+
+  static getComponent(node: Node) {
+    let blockNode: Node | null = null;
+    const componentNameReg = /^[A-Z]/;
+    while (node) {
+      if (
+        node.kind === SyntaxKind.Block &&
+        node.parent?.kind === SyntaxKind.FunctionDeclaration &&
+        (node.parent as FunctionDeclaration).name?.escapedText?.match(
+          componentNameReg
+        )
+      ) {
+        blockNode = node;
+        break;
+      }
+      if (
+        (node.kind === SyntaxKind.Block ||
+          node.kind === SyntaxKind.ParenthesizedExpression) &&
+        node.parent?.kind === SyntaxKind.ArrowFunction &&
+        node.parent.parent?.kind === SyntaxKind.VariableDeclaration &&
+        (node.parent.parent as VariableDeclaration).name
+          .getText()
+          .match(componentNameReg)
+      ) {
+        blockNode = node;
+        break;
+      }
+      node = node.parent;
+    }
+    return blockNode;
   }
 }
