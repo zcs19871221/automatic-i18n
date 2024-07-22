@@ -41,7 +41,11 @@ export async function cli() {
       '-e, --excludes <filesOrDirs...>',
       'files or dirs to excludes, default is [node_modules, file or dir start with .]'
     )
-    .option('-db, --debug', 'if show extra message, default is [false]');
+    .option('-db, --debug', 'if show extra message, default is [false]')
+    .option(
+      '-m, --meaningKey',
+      'change key to meaning if en-use has corresponding translate, default is [false]'
+    );
 
   program.parse();
 

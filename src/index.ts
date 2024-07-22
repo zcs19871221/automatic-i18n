@@ -197,7 +197,8 @@ export default class I18nReplacer {
     Object.entries(map['en-us']).forEach(([key, message]) => {
       if (
         I18nFormatter.isAutomaticGeneratedKey(key) &&
-        this.localeMapReg['en-us'](message)
+        this.localeMapReg['en-us'](message) &&
+        this.opt.meaningKey
       ) {
         let meaningKey = this.englishToVariableName(message);
 

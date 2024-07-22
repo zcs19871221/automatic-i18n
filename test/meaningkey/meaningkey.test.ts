@@ -21,7 +21,7 @@ it('test meaningKey', async () => {
   fs.removeSync(target);
 
   fs.copySync(path.join(__dirname, 'src'), target);
-
+  jest.replaceProperty(process, 'argv', [...process.argv.slice(0, 2), '-m']);
   await cli();
 
   expectDirEqualDistDirAt(__dirname);
