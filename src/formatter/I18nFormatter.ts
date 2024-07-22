@@ -48,8 +48,11 @@ export abstract class I18nFormatter {
       if (result === null) {
         return opt.originStr;
       }
-      this.messageMapIntlId[message] = intlId;
-      this.newIntlMapMessages[intlId] = message;
+      if (!this.messageMapIntlId[message]) {
+        this.messageMapIntlId[message] = intlId;
+        this.newIntlMapMessages[intlId] = message;
+      }
+
       const { newText, dependencies } = result;
       if (dependencies) {
         context.fileContext.addRequiredImports(

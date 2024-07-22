@@ -31,7 +31,7 @@ export class I18n {
       this.currentLocale = locale;
       this.currentIntl = this.createLocaleIntl(locale);
     } else {
-      throw new Error(`不是有效的语言: ${locale}`);
+      throw new Error(`Not valid locale: ${locale}`);
     }
   }
 

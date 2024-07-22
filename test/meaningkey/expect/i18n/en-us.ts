@@ -5,7 +5,7 @@
 import { LocalKey } from './types';
 
 const locale: Record<LocalKey, string> = {
-  goodbye: '再见',
+  goodbye: 'goodbye',
   helloSdffdsfds: 'hello!_sdffdsfds',
   key0001: '哈哈哈',
   key0002: '哈\\n  哈',

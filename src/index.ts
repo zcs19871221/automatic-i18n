@@ -206,7 +206,7 @@ export default class I18nReplacer {
         while (map['en-us'][newKey] !== undefined) {
           newKey = meaningKey + '_' + i++;
         }
-        this.oldKeyMapNewKey[key] = meaningKey;
+        this.oldKeyMapNewKey[key] = newKey;
       }
     });
 
