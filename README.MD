@@ -85,55 +85,52 @@ You will get some new files including some locale message files and a provider w
 
 # Quick start
 
-`npm install i18n-replacer`
+1. cli
 
-write your own node script like this and run it, the below codes show all the option, the values is the options's default value if you pass nothing.
+   `npx i18n`
+   you can get specific info with `npx i18n -h`
+
+2. api
+
+write your own node script like this and run it
 
     import I18nReplacer, { GlobalI18nFormatter } from 'i18-replacer';
     import { ScriptTarget } from 'typescript';
 
-    I18nReplacer.createI18nReplacer({
-        // dir to work
-        workingDir: process.cwd(),
+    I18nReplacer.createI18nReplacer().replace();
 
-        // The automatically generated folder name will be used to store the generated language files. will create a folder in workingDir/generatedFilesDir
-        generatedFilesDir: 'i18n',
-
-        // tell the project which file or dirs could be replaced
-        filesOrDirsToReplace: [process.cwd],
-
-        // filter to decide which files could be replaced
-        fileFilter: () => true,
-
-        // The locale message files in the following array will be generated
-        localesToGenerate: ['en-us', 'zh-cn'],
-
-        // The following language will be searched in source file and extract and replace
-        localeToReplace: 'zh-cn',
-
-        // class to implement generate file and code, there are two default class: HookI18nFormatter and GlobalI18nFormatter
-        I18nFormatter: GlobalI18nFormatter,
-
-        // pass to typescript compiler to generate ast tree for searching and replacing
-        tsTarget: ScriptTarget.ES2015
-
-        // will use this config to format generated code
-        prettierConfig: {
-            singleQuote: true,
-            tabWidth: 2,
-        },
-    }).replace();
-
-or use pure node to run it:
+or with commonJs to run it:
 
     const { HookI18nFormatter } = require("i18-replacer")
 
     const I18nReplacer = require("i18-replacer").default;
 
-    I18nReplacer.createI18nReplacer({
-        I18nFormatter: HookI18nFormatter,
-        workingDir: 'c:/work/home/web/src'
-    }).replace()
+    I18nReplacer.createI18nReplacer().replace()
+
+the options is like this:
+
+    export interface ReplacerOpt {
+        // file or dirs to extract messages default is [process.cwd()]
+        targets?: string[];
+        // The location where the locale message files are generated default is [process.cwd()/i18n]
+        distLocaleDir?: string;
+        // the locale which is searched in targets default is zh-cn
+        localeToReplace?: LocaleTypes;
+        // the locale file default is [en-us, zh-cn]
+        localesToGenerate?: LocaleTypes[];
+        // formatter class, use could provide class implement the `I18nFormatter` class,
+        // default provide two class:GlobalI18nFormatter and HookI18nFormatter
+        I18nFormatterClass?: I18nFormatterCtr;
+        // default is hook
+        I18nFormatterClassAlias?: 'hook' | 'global';
+        // if rename the key to meaningful variable if has related english translate
+        meaningKey?: boolean;
+        // decide which file or dir could be handled
+        filters?: Filter[];
+        // file name or dir to ignore
+        excludes?: string[];
+        debug?: boolean;
+    }
 
 ## License
 
