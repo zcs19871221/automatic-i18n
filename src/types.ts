@@ -1,5 +1,6 @@
 import { Options as PrettierOptions } from 'prettier';
 import { I18nFormatter } from './formatter';
+import { ScriptTarget } from 'typescript';
 
 export const availableLocales = ['en-us', 'zh-cn'] as const;
 export type LocaleTypes = (typeof availableLocales)[number];
@@ -38,3 +39,9 @@ export type HandledOpt = {
   outputToNewDir?: string;
   prettierOptions?: PrettierOptions;
 };
+
+export interface TargetOpt {
+  name: string;
+  prettierOptions: PrettierOptions | null;
+  scriptTarget: ScriptTarget;
+}

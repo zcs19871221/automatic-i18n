@@ -5,12 +5,12 @@ import { useIntl, FormattedMessage } from 'react-intl';
 import { i18 } from 'I18';
 import React from 'react';
 export const name = i18.intl.formatMessage({
-  id: 'helloSdffdsfds',
+  id: 'hellosdffdsfds',
   defaultMessage: '你好',
 });
 
 export const name = i18.intl.formatMessage({
-  id: 'helloSdffdsfds',
+  id: 'hellosdffdsfds',
   defaultMessage: '你好',
 });
 
@@ -30,13 +30,13 @@ export default function Component() {
     defaultMessage: "'哈哈哈",
   });
   const v1 = intl.formatMessage({
-    id: 'goodbye',
+    id: 'goodbye_1',
     defaultMessage: '再见',
   });
   return (
     <div>
       {i18.intl.formatMessage({
-        id: 'goodbye',
+        id: 'goodbye_1',
         defaultMessage: '再见',
       })}
       <span>

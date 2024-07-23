@@ -50,18 +50,14 @@ export class FileContext extends ReplaceContext {
     this.content = this.joinChildren(0, 0);
   }
 
-  public addRequiredImports(moduleName: string, names: string | string[]) {
+  public addRequiredImports(moduleName: string, names: string[]) {
     this.requiredImports[moduleName] ??= {
       moduleName,
       names: new Set(),
     };
-    if (typeof names === 'string') {
-      this.requiredImports[moduleName].names.add(names);
-    } else {
-      names.forEach((name) => {
-        this.requiredImports[moduleName].names.add(name);
-      });
-    }
+    names.forEach((name) => {
+      this.requiredImports[moduleName].names.add(name);
+    });
   }
 
   public addImportNode(importNode: ImportDeclaration) {

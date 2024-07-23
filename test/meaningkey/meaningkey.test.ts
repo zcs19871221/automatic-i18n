@@ -1,7 +1,5 @@
 import path from 'path';
 
-process.cwd = jest.fn(() => path.join(__dirname, './dist'));
-
 jest.mock('prettier', () => ({
   ...jest.requireActual('prettier'),
   resolveConfig: () => ({
@@ -17,6 +15,8 @@ import fs from 'fs-extra';
 import { expectDirEqualDistDirAt } from '../helper';
 
 it('test meaningKey', async () => {
+  process.cwd = jest.fn(() => path.join(__dirname, './dist'));
+
   const target = path.join(__dirname, './dist');
   fs.removeSync(target);
 

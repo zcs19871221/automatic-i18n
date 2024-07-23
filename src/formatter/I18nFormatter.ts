@@ -1,6 +1,5 @@
 import {
   JsxChildContext,
-  ReplaceContext,
   StringLiteralContext,
   TemplateStringContext,
 } from '../replaceContexts';
@@ -41,7 +40,10 @@ export abstract class I18nFormatter {
     return [intlId, message];
   }
 
-  public format(context: ReplaceContext, opt: FormatOptions) {
+  public format(
+    context: JsxChildContext | StringLiteralContext | TemplateStringContext,
+    opt: FormatOptions
+  ) {
     const [intlId, message] = this.getOrCreateIntlId(opt.defaultMessage);
     opt.defaultMessage = message;
     const handleResult = (result: null | FormatReturnType) => {
@@ -71,14 +73,8 @@ export abstract class I18nFormatter {
       return handleResult(result);
     }
 
-    if (context instanceof StringLiteralContext) {
-      const result = this.renderStringLiteralContext(context, opt, intlId);
-      return handleResult(result);
-    }
-
-    throw new Error(
-      'can not handle context type ' + (context as any)?.constructor?.name
-    );
+    const result = this.renderStringLiteralContext(context, opt, intlId);
+    return handleResult(result);
   }
 
   abstract renderJsxChildContext(

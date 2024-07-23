@@ -16,6 +16,7 @@ import {
   ReplacerOpt,
   LocaleTypes,
   I18nFormatterCtr,
+  TargetOpt,
 } from './types';
 import { ScriptTarget } from 'typescript';
 import {
@@ -49,16 +50,16 @@ export const onlyTJsxFiles = (fileOrDirName: string, directory: boolean) => {
   return true;
 };
 
-export const defaultTargets = [process.cwd()];
+export const defaultTargets = () => [process.cwd()];
 
-export const defaultDistLocaleDir = path.join(process.cwd(), 'i18n');
+export const defaultDistLocaleDir = () => path.join(process.cwd(), 'i18n');
 
 export const defaultLocaleToReplace = 'zh-cn';
 export const defaultLocalesToGenerate: LocaleTypes[] = ['zh-cn', 'en-us'];
 
 export const initParams = ({
-  targets = defaultTargets,
-  distLocaleDir = defaultDistLocaleDir,
+  targets = defaultTargets(),
+  distLocaleDir = defaultDistLocaleDir(),
   localeToReplace = defaultLocaleToReplace,
   localesToGenerate = defaultLocalesToGenerate,
   I18nFormatterClass,
@@ -245,9 +246,7 @@ export default class I18nReplacer {
       fs.ensureDirSync(this.opt.outputToNewDir);
     }
 
-    if (!fs.existsSync(this.opt.distLocaleDir)) {
-      fs.ensureDirSync(this.opt.distLocaleDir);
-    }
+    fs.ensureDirSync(this.opt.distLocaleDir);
 
     const distPrettierOptions = await resolvePrettierConfig(
       path.join(this.opt.distLocaleDir, 'index.ts')
@@ -255,11 +254,13 @@ export default class I18nReplacer {
 
     await this.replaceTargetLocaleWithMessageRecursively(
       await Promise.all(
-        this.opt.targets.map(async (t) => {
-          const config = await resolvePrettierConfig(t);
+        this.opt.targets.map(async (target) => {
+          const config = await resolvePrettierConfig(target);
+          const scriptTarget = getScriptTarget(target);
           return {
             prettierOptions: config,
-            name: t,
+            name: target,
+            scriptTarget,
           };
         })
       )
@@ -271,13 +272,6 @@ export default class I18nReplacer {
       Object.entries(map).map(([locale, keyMapMessage]) => {
         Object.assign(keyMapMessage, newIntlMapMessages);
 
-        if (locale !== this.opt.localeToReplace) {
-          Object.keys(map[this.opt.localeToReplace]).forEach((key) => {
-            if (keyMapMessage[key] == undefined) {
-              keyMapMessage[key] = map[this.opt.localeToReplace][key];
-            }
-          });
-        }
         return this.formatAndWrite(
           path.join(this.opt.distLocaleDir, locale + '.ts'),
           this.i18nFormatter.generateMessageFile(keyMapMessage),
@@ -367,19 +361,12 @@ export default class I18nReplacer {
   private englishToVariableName(text: string) {
     text = text.trim();
     text = text
-      .replace(
-        /(?:[^a-z\d]+)([a-z\d])/gi,
-        (_matched: string, firstLetter: string) => {
-          return firstLetter.toUpperCase();
-        }
-      )
-      .replace(/\{[(^}+)]\}/g, (_matched: string, variableName: string) => {
-        return 'V' + variableName;
+      .replace(/[^a-z\s]/gi, '')
+      .replace(/^\s+/gi, '')
+      .replace(/\s+([a-z])/gi, (_matched: string, firstLetter: string) => {
+        return firstLetter.toUpperCase();
       })
-      .replace(/[^a-z\d]/gi, '');
-    if (text.match(/^\d/)) {
-      text = '_' + text;
-    }
+      .replace(/\s/g, '');
     if (text.length > 30) {
       text = text.slice(0, 30) + '_';
     }
@@ -391,10 +378,6 @@ export default class I18nReplacer {
     file: string,
     prettierOptions: PrettierOptions | null
   ) {
-    if (prettierOptions === undefined) {
-      prettierOptions = await resolvePrettierConfig(dist);
-    }
-
     if (prettierOptions) {
       if (!prettierOptions.parser) {
         prettierOptions.parser = 'typescript';
@@ -421,18 +404,13 @@ export default class I18nReplacer {
   }
 
   private async replaceTargetLocaleWithMessageRecursively(
-    filesOrDirsToReplace: {
-      name: string;
-      prettierOptions: PrettierOptions | null;
-    }[]
+    filesOrDirsToReplace: TargetOpt[]
   ) {
     const filteredAndSorted = filesOrDirsToReplace
       .map(
         (
           f
-        ): {
-          name: string;
-          prettierOptions: PrettierOptions | null;
+        ): TargetOpt & {
           directory: boolean;
         } => ({
           ...f,
@@ -448,6 +426,7 @@ export default class I18nReplacer {
       name: fileOrDir,
       directory,
       prettierOptions,
+      scriptTarget,
     } of filteredAndSorted) {
       if (directory) {
         const dir = fileOrDir;
@@ -455,6 +434,7 @@ export default class I18nReplacer {
           fs.readdirSync(dir).map((d) => ({
             name: path.join(dir, d),
             prettierOptions,
+            scriptTarget,
           }))
         );
         continue;
@@ -464,12 +444,7 @@ export default class I18nReplacer {
 
       let file = fs.readFileSync(fileLocation, 'utf-8');
 
-      const node = createSourceFile(
-        fileLocation,
-        file,
-        getScriptTarget(fileLocation),
-        true
-      );
+      const node = createSourceFile(fileLocation, file, scriptTarget, true);
 
       let fileContext: FileContext = new FileContext({
         node,

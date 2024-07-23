@@ -11,11 +11,11 @@ export async function cli() {
   program
     .option(
       `-t --targets <fileOrDir...>`,
-      `directories or files to extract locales, default is [${defaultTargets}]`
+      `directories or files to extract locales, default is [${defaultTargets()}]`
     )
     .option(
       `-d --distLocaleDir <fileOrDir>`,
-      `folder where message files are generated, default is [${defaultDistLocaleDir}]`
+      `folder where message files are generated, default is [${defaultDistLocaleDir()}]`
     )
     .addOption(
       new Option(
