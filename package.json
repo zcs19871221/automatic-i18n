@@ -1,7 +1,7 @@
 {
   "name": "i18n-text-replacer",
   "version": "1.0.0",
-  "description": "",
+  "description": "Replace the language in the front-end source code with one click and turn it into an i18n system",
   "main": "lib/src/index.js",
   "files": [
     "./lib"
