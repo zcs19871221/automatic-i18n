@@ -288,6 +288,7 @@ export default class I18nReplacer {
     if (!fs.existsSync(templateDist)) {
       await this.formatAndWrite(
         templateDist,
+
         this.i18nFormatter.entryFile(
           this.opt.localesToGenerate,
           this.opt.localeToReplace

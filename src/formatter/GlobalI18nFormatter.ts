@@ -44,7 +44,7 @@ export default class GlobalI18nFormatter extends I18nFormatter {
     };
   }
 
-  renderTemplateStringContext(
+  protected override renderTemplateStringContext(
     context: TemplateStringContext,
     opt: FormatOptions,
     intlId: string
@@ -61,7 +61,7 @@ export default class GlobalI18nFormatter extends I18nFormatter {
     };
   }
 
-  renderStringLiteralContext(
+  protected override renderStringLiteralContext(
     context: StringLiteralContext,
     opt: FormatOptions,
     intlId: string
@@ -79,7 +79,7 @@ export default class GlobalI18nFormatter extends I18nFormatter {
     };
   }
 
-  entryFile(localeFiles: string[], defaultLocale: string) {
+  protected override doEntryFile(localeFiles: string[], defaultLocale: string) {
     return `
       import { createIntl, createIntlCache, IntlCache, IntlShape } from 'react-intl';
       import type { LocalKey } from './types';

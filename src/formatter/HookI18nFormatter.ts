@@ -19,11 +19,14 @@ import {
 import hookEntryFileTemplate from './hookEntryFileTemplate';
 
 export default class HookI18nFormatter extends I18nFormatter {
-  entryFile(localeFiles: string[], defaultLocale: string): string {
+  protected override doEntryFile(
+    localeFiles: string[],
+    defaultLocale: string
+  ): string {
     return hookEntryFileTemplate(localeFiles);
   }
 
-  public override renderJsxChildContext(
+  protected override renderJsxChildContext(
     context: JsxChildContext,
     { params, defaultMessage }: FormatOptions,
     intlId: string
@@ -45,7 +48,7 @@ export default class HookI18nFormatter extends I18nFormatter {
     };
   }
 
-  public override renderTemplateStringContext(
+  protected override renderTemplateStringContext(
     context: TemplateStringContext,
     opt: FormatOptions,
     intlId: string
@@ -141,7 +144,7 @@ export default class HookI18nFormatter extends I18nFormatter {
     return returnValue('intl');
   }
 
-  public override renderStringLiteralContext(
+  protected override renderStringLiteralContext(
     context: StringLiteralContext,
     opt: FormatOptions,
     intlId: string
@@ -149,7 +152,7 @@ export default class HookI18nFormatter extends I18nFormatter {
     return this.render(context, opt, intlId);
   }
 
-  static getComponent(node: Node) {
+  private static getComponent(node: Node) {
     let blockNode: Node | null = null;
     const componentNameReg = /^[A-Z]/;
     while (node) {
