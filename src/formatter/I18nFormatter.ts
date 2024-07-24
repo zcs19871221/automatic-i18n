@@ -155,7 +155,7 @@ export abstract class I18nFormatter {
   }
 
   public generateTypeFile(locales: LocaleTypes[], keys: string[]) {
-    return `export type AvailableLocale = ${this.unionType(locales)};
+    return `export type AvailableLocales = ${this.unionType(locales)};
 
             export type LocalKey = ${this.unionType(keys)};
           `;

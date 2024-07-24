@@ -1,4 +1,4 @@
-export type AvailableLocale = 'zh-cn' | 'en-us';
+export type AvailableLocales = 'zh-cn' | 'en-us';
 
 export type LocalKey =
   | 'goodbye'

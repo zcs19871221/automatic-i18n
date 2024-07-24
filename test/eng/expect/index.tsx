@@ -14,19 +14,19 @@ import React, {
 } from 'react';
 import { IntlProvider } from 'react-intl';
 
-import type { AvailableLocale, LocalKey } from './types';
+import type { AvailableLocales, LocalKey } from './types';
 
 export interface LocaleContextValue {
-  readonly availableLocales: AvailableLocale[];
-  readonly locale: AvailableLocale;
-  readonly setLocale: React.Dispatch<React.SetStateAction<AvailableLocale>>;
+  readonly availableLocales: AvailableLocales[];
+  readonly locale: AvailableLocales;
+  readonly setLocale: React.Dispatch<React.SetStateAction<AvailableLocales>>;
 }
 
 interface LocaleFile {
   default: Record<LocalKey, string>;
 }
 
-export function importMessages(locale: AvailableLocale): Promise<LocaleFile> {
+export function importMessages(locale: AvailableLocales): Promise<LocaleFile> {
   switch (locale) {
     case 'en-us':
       return import('./en-us.ts') as unknown as Promise<LocaleFile>;
@@ -56,7 +56,7 @@ export function LocaleProvider({
   fallback,
   defaultLocale,
 }: {
-  defaultLocale: AvailableLocale;
+  defaultLocale: AvailableLocales;
   children: ReactNode;
   fallback?: React.ReactNode;
 }) {

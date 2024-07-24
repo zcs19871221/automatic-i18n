@@ -1,8 +1,8 @@
-export type AvailableLocale = 'zh-cn' | 'en-us';
+export type AvailableLocales = 'zh-cn' | 'en-us';
 
 export interface LocaleContextValue {
-  readonly locale: AvailableLocale;
-  readonly setLocale: React.Dispatch<React.SetStateAction<AvailableLocale>>;
+  readonly locale: AvailableLocales;
+  readonly setLocale: React.Dispatch<React.SetStateAction<AvailableLocales>>;
   readonly fetchingMessages: boolean;
 }
 
