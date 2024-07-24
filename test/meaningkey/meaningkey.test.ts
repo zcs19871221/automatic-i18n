@@ -1,14 +1,5 @@
 import path from 'path';
 
-jest.mock('prettier', () => ({
-  ...jest.requireActual('prettier'),
-  resolveConfig: () => ({
-    singleQuote: true,
-    tabWidth: 2,
-    parser: 'typescript',
-  }),
-}));
-
 import { cli } from '../../src/cli';
 
 import fs from 'fs-extra';

@@ -3,15 +3,6 @@ import * as path from 'path';
 import I18nReplacer from '../src';
 import { GlobalI18nFormatter } from '../src/formatter';
 
-jest.mock('prettier', () => ({
-  ...jest.requireActual('prettier'),
-  resolveConfig: () => ({
-    singleQuote: true,
-    tabWidth: 2,
-    parser: 'typescript',
-  }),
-}));
-
 const testBaseDir = path.join(process.cwd(), 'test');
 const expectName = 'expect';
 const distName = 'dist';
