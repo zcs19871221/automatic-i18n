@@ -21,11 +21,15 @@ import {
 import { ScriptTarget } from 'typescript';
 import {
   GlobalI18nFormatter,
-  HookI18nFormatter,
+  DefaultI18nFormatter,
   I18nFormatter,
 } from './formatter';
 
-export { GlobalI18nFormatter, HookI18nFormatter, I18nFormatter };
+export {
+  GlobalI18nFormatter,
+  DefaultI18nFormatter as HookI18nFormatter,
+  I18nFormatter,
+};
 
 export const excludeNodeModule = (fileOrDirName: string) => {
   if (
@@ -84,14 +88,14 @@ export const initParams = ({
     throw new Error('distLocaleDir should be directory. ' + distLocaleDir);
   }
 
-  let I18nFormatter: I18nFormatterCtr = HookI18nFormatter;
+  let I18nFormatter: I18nFormatterCtr = DefaultI18nFormatter;
 
   if (I18nFormatterClass) {
     I18nFormatter = I18nFormatterClass;
   } else if (I18nFormatterClassAlias == 'global') {
     I18nFormatter = GlobalI18nFormatter;
-  } else if (I18nFormatterClassAlias == 'hook') {
-    I18nFormatter = HookI18nFormatter;
+  } else if (I18nFormatterClassAlias == 'default') {
+    I18nFormatter = DefaultI18nFormatter;
   }
 
   if (excludes) {
@@ -282,7 +286,8 @@ export default class I18nReplacer {
 
     const templateDist = path.join(
       this.opt.distLocaleDir,
-      'index.ts' + (this.i18nFormatter instanceof HookI18nFormatter ? 'x' : '')
+      'index.ts' +
+        (this.i18nFormatter instanceof DefaultI18nFormatter ? 'x' : '')
     );
 
     if (!fs.existsSync(templateDist)) {

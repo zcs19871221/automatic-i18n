@@ -19,7 +19,7 @@ it('test propertyInHtmlTag', async () => {
     '-t',
     target,
     '-f',
-    'hook',
+    'default',
   ]);
 
   await cli();

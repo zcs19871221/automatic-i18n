@@ -17,7 +17,7 @@ export interface ReplacerOpt {
   localeToReplace?: LocaleTypes;
   localesToGenerate?: LocaleTypes[];
   I18nFormatterClass?: I18nFormatterCtr;
-  I18nFormatterClassAlias?: 'hook' | 'global';
+  I18nFormatterClassAlias?: 'default' | 'global';
   meaningKey?: boolean;
   filters?: Filter[];
   // baseNames

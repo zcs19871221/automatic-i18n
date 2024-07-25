@@ -121,7 +121,7 @@ the options is like this:
         // default provide two class:GlobalI18nFormatter and HookI18nFormatter
         I18nFormatterClass?: I18nFormatterCtr;
         // default is hook
-        I18nFormatterClassAlias?: 'hook' | 'global';
+        I18nFormatterClassAlias?: 'default' | 'global';
         // if rename the key to meaningful variable if has related english translate
         meaningKey?: boolean;
         // decide which file or dir could be handled

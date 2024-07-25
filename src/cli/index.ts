@@ -34,8 +34,8 @@ export async function cli() {
     .addOption(
       new Option(
         '-f, --I18nFormatterClassAlias <alias>',
-        'formatter alias default is [hook]'
-      ).choices(['hook', 'global'])
+        'formatter alias default is [default]'
+      ).choices(['default', 'global'])
     )
     .option(
       '-e, --excludes <filesOrDirs...>',
