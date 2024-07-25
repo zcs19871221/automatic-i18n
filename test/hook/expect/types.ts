@@ -1,10 +1,10 @@
 export type AvailableLocales = 'zh-cn' | 'en-us';
 
 export type LocalKey =
+  | 'key0001'
   | 'key0003'
   | 'key0004'
   | 'key0005'
-  | 'key0006'
   | 'key0007'
   | 'key0008'
   | 'key0009'
@@ -27,4 +27,7 @@ export type LocalKey =
   | 'key0026'
   | 'key0027'
   | 'key0028'
-  | 'key0029';
+  | 'key0029'
+  | 'key0030'
+  | 'key0031'
+  | 'key0032';

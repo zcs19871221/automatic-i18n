@@ -3,6 +3,8 @@ import {
   Node,
   VariableDeclaration,
   FunctionDeclaration,
+  Block,
+  ParenthesizedExpression,
 } from 'typescript';
 import {
   JsxChildContext,
@@ -17,6 +19,7 @@ import {
   FormatReturnType,
 } from './I18nFormatter';
 import hookEntryFileTemplate from './defaultEntryTemplate';
+import path from 'path';
 
 export default class DefaultI18nFormatter extends I18nFormatter {
   protected override doEntryFile(localeFiles: string[]): string {
@@ -53,29 +56,51 @@ export default class DefaultI18nFormatter extends I18nFormatter {
     return this.render(context, opt, intlId);
   }
 
-  // private renderGlobal(
-  //   context: ReplaceContext,
-  //   { params, defaultMessage, originStr }: FormatOptions,
-  //   intlId: string
-  // ) {
-  //   const newText = this.intlApiExpression(
-  //     intlId,
-  //     defaultMessage,
-  //     `i18n.intl`,
-  //     params
-  //   );
-  //   return newText;
-  // }
+  private renderGlobal(
+    context: ReplaceContext,
+    { params, defaultMessage, originStr }: FormatOptions,
+    intlId: string
+  ): FormatReturnType | null {
+    const newText = this.intlApiExpression(
+      intlId,
+      defaultMessage,
+      `i18n.intl`,
+      params
+    );
+    const localeDist = path.resolve(
+      context.i18nReplacer.opt.distLocaleDir,
+      'index.tsx'
+    );
+    const src = context.i18nReplacer.opt.outputToNewDir
+      ? path.join(
+          context.i18nReplacer.opt.outputToNewDir,
+          path.basename(context.fileContext.fileLocate)
+        )
+      : context.fileContext.fileLocate;
+
+    let relativePath = path.relative(src, localeDist).replace(/\\/g, '/');
+    if (!relativePath.replace(/^\.\.\//, '').includes('/')) {
+      relativePath = relativePath.replace(/^\.\.\//, './');
+    }
+    return {
+      newText: newText,
+      dependencies: {
+        moduleName: relativePath,
+        names: ['i18n'],
+      },
+    };
+  }
 
   private render(
     context: ReplaceContext,
     { params, defaultMessage, originStr }: FormatOptions,
     intlId: string
   ) {
-    const parentComponent = DefaultI18nFormatter.getComponent(
+    const parentFunctionInfo = DefaultI18nFormatter.getIfInFunctionBody(
       context.getNode()!
     );
-    if (!parentComponent) {
+    // not in function scope, so skip
+    if (parentFunctionInfo == null) {
       context.i18nReplacer.addWarning({
         text: `unable to replace ${context
           .getNode()!
@@ -87,7 +112,24 @@ export default class DefaultI18nFormatter extends I18nFormatter {
 
       return null;
     }
-    const hookDeclareExpression = parentComponent
+
+    const { functionName, functionBody } = parentFunctionInfo;
+    // in function body, but not a react component(we guess through component name)
+    // so we use global api replace
+    if (!DefaultI18nFormatter.reactComponentNameReg.test(functionName)) {
+      return this.renderGlobal(
+        context,
+        {
+          params,
+          defaultMessage,
+          originStr,
+        },
+        intlId
+      );
+    }
+    // we assume it was in react component, first check if already has
+    // hook declare
+    const hookDeclareExpression = functionBody
       .getText()
       .match(/(?:(?:const)|(?:var)|(?:let)) ([\S]+)\s*=\s*(\w+\.)?useIntl()/);
     const returnValue = (intlObj: string) => {
@@ -104,31 +146,34 @@ export default class DefaultI18nFormatter extends I18nFormatter {
         },
       };
     };
+    // we have hook, so just replace text
     if (hookDeclareExpression != null) {
       return returnValue(hookDeclareExpression[1]);
     }
 
     const intlObj = 'intl';
     const contextToAdd: ReplaceContext[] = [];
-    if (parentComponent.kind === SyntaxKind.ParenthesizedExpression) {
+    // do not have hook, so insert to ParenthesizedExpression,
+    // replace start `(` and end `)` with `{` and `}` with some expression
+    if (functionBody.kind === SyntaxKind.ParenthesizedExpression) {
       contextToAdd.push(
         new TextInsertContext(
-          parentComponent.getStart(),
-          parentComponent.getChildren()[1].getStart(),
+          functionBody.getStart(),
+          functionBody.getChildren()[1].getStart(),
           context.fileContext,
           `{\nconst ${intlObj} = useIntl(); \n return `
         )
       );
       contextToAdd.push(
         new TextInsertContext(
-          parentComponent.getChildren()[2].getStart(),
-          parentComponent.getChildren()[2].getEnd(),
+          functionBody.getChildren()[2].getStart(),
+          functionBody.getChildren()[2].getEnd(),
           context.fileContext,
           `}`
         )
       );
     } else {
-      const start = parentComponent.getStart() + 1;
+      const start = functionBody.getStart() + 1;
       contextToAdd.push(
         new TextInsertContext(
           start,
@@ -139,6 +184,7 @@ export default class DefaultI18nFormatter extends I18nFormatter {
       );
     }
 
+    // check if same scope local has already add
     if (
       contextToAdd.some((c) => {
         return context.fileContext
@@ -165,34 +211,56 @@ export default class DefaultI18nFormatter extends I18nFormatter {
     return this.render(context, opt, intlId);
   }
 
-  private static getComponent(node: Node) {
-    let blockNode: Node | null = null;
-    const componentNameReg = /^[A-Z]/;
+  private static reactComponentNameReg = /^[A-Z]/;
+  private static getIfInFunctionBody(node: Node): {
+    functionName: string;
+    functionBody: Block | ParenthesizedExpression;
+  } | null {
+    const functionExpression = (n: Node) => {
+      return (
+        n.kind === SyntaxKind.FunctionExpression &&
+        n.parent?.kind === SyntaxKind.VariableDeclaration
+      );
+    };
+
+    const functionDeclaration = (n: Node) => {
+      return n.kind === SyntaxKind.FunctionDeclaration;
+    };
+
+    const arrowFunction = (n: Node) => {
+      return (
+        n.kind === SyntaxKind.ArrowFunction &&
+        n.parent?.kind === SyntaxKind.VariableDeclaration
+      );
+    };
+
     while (node) {
-      if (
-        node.kind === SyntaxKind.Block &&
-        node.parent?.kind === SyntaxKind.FunctionDeclaration &&
-        (node.parent as FunctionDeclaration).name?.escapedText?.match(
-          componentNameReg
-        )
-      ) {
-        blockNode = node;
-        break;
+      if (node.kind === SyntaxKind.Parameter) {
+        return null;
       }
       if (
-        (node.kind === SyntaxKind.Block ||
-          node.kind === SyntaxKind.ParenthesizedExpression) &&
-        node.parent?.kind === SyntaxKind.ArrowFunction &&
-        node.parent.parent?.kind === SyntaxKind.VariableDeclaration &&
-        (node.parent.parent as VariableDeclaration).name
-          .getText()
-          .match(componentNameReg)
+        node.parent &&
+        (functionExpression(node.parent) || arrowFunction(node.parent))
       ) {
-        blockNode = node;
-        break;
+        return {
+          functionName:
+            (node.parent.parent as VariableDeclaration).name.getText() ?? '',
+          functionBody: node as Block | ParenthesizedExpression,
+        };
+      }
+      if (
+        node.kind === SyntaxKind.Block &&
+        node.parent &&
+        functionDeclaration(node.parent)
+      ) {
+        return {
+          functionName:
+            (node.parent as FunctionDeclaration).name?.getText() ?? '',
+          functionBody: node as Block,
+        };
       }
       node = node.parent;
     }
-    return blockNode;
+    return null;
   }
 }

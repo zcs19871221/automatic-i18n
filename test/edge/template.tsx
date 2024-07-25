@@ -1,14 +1,14 @@
 import React from 'react';
 import { FormattedMessage } from 'react-intl';
 
-const string = '非组件字符串不提取';
+const string = '非函数内部字符串不提取';
 const templateString = `非组件模板字符串不提取`;
 
 const normalArrowFunction = () => {
-  const name = '普通箭头函数字符串不提取';
+  const name = '普通箭头函数字符串替换成全局';
 };
 function normalFunction() {
-  const name = '普通函数字符串不提取';
+  const name = '普通函数字符串替换成全局';
 }
 
 const ArrowComponent = () => {

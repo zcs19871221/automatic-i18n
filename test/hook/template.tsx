@@ -6,8 +6,29 @@ import React from 'react';
 // import file from './报告.doc'
 // //@ts-ignore
 // import file2 from "./报告.doc"
+
+export default function commonFunc1() {
+  const name2 = '王五';
+}
+
 interface Custom<CustomT> {}
 const name = '张成思';
+const commonFunc = () => {
+  const gender = '男';
+};
+
+const commonFunc2 = function () {
+  const name3 = '孙六';
+};
+export function Comp1() {
+  const name4 = '孙孙';
+}
+export const Comp4 = function Comp1() {
+  const name4 = '孙孙';
+};
+const Comp5 = function () {
+  const name4 = '孙孙';
+};
 export const App = ({
   name = '默认名称',
   flag,

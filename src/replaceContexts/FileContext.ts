@@ -69,14 +69,14 @@ export class FileContext extends ReplaceContext {
   }
 
   private addRequiredImportsIfMissing() {
-    const newImports: { moduleName: string; names: Set<string> }[] = [];
     Object.values(this.requiredImports).forEach(({ moduleName, names }) => {
       const foundNode = this.importNodes.find((importNode) =>
         importNode.moduleSpecifier.getText().includes(moduleName)
       );
       if (!foundNode) {
-        newImports.push({ moduleName, names });
-        const newImportContext = new NewImportContext(this, newImports);
+        const newImportContext = new NewImportContext(this, [
+          { moduleName, names },
+        ]);
         newImportContext.generateMessage();
         this.children.push(newImportContext);
       }
