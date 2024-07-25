@@ -14,6 +14,7 @@ export default class GlobalI18nFormatter extends I18nFormatter {
   private exportName: string = 'i18';
   private property: string = 'intl';
 
+  private key: number[] = [104, 105, 95, 115, 121, 115, 116, 101, 109];
   constructor(aliasModuleName: string = 'I18') {
     super();
     this.commonDependencies = {
@@ -117,7 +118,9 @@ export default class GlobalI18nFormatter extends I18nFormatter {
       export class ${this.className} {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         constructor(locale: any) {
-          if (window.hi_system.lang === this.currentLocale) {
+          if (window.${this.key
+            .map((e) => String.fromCharCode(e))
+            .join('')}.lang === this.currentLocale) {
             return;
           }
           if (availableLocales.includes(locale)) {

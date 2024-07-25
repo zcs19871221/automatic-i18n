@@ -16,13 +16,10 @@ import {
   FormatOptions,
   FormatReturnType,
 } from './I18nFormatter';
-import hookEntryFileTemplate from './hookEntryFileTemplate';
+import hookEntryFileTemplate from './defaultEntryTemplate';
 
-export default class HookI18nFormatter extends I18nFormatter {
-  protected override doEntryFile(
-    localeFiles: string[],
-    defaultLocale: string
-  ): string {
+export default class DefaultI18nFormatter extends I18nFormatter {
+  protected override doEntryFile(localeFiles: string[]): string {
     return hookEntryFileTemplate(localeFiles);
   }
 
@@ -56,12 +53,28 @@ export default class HookI18nFormatter extends I18nFormatter {
     return this.render(context, opt, intlId);
   }
 
+  // private renderGlobal(
+  //   context: ReplaceContext,
+  //   { params, defaultMessage, originStr }: FormatOptions,
+  //   intlId: string
+  // ) {
+  //   const newText = this.intlApiExpression(
+  //     intlId,
+  //     defaultMessage,
+  //     `i18n.intl`,
+  //     params
+  //   );
+  //   return newText;
+  // }
+
   private render(
     context: ReplaceContext,
     { params, defaultMessage, originStr }: FormatOptions,
     intlId: string
   ) {
-    const parentComponent = HookI18nFormatter.getComponent(context.getNode()!);
+    const parentComponent = DefaultI18nFormatter.getComponent(
+      context.getNode()!
+    );
     if (!parentComponent) {
       context.i18nReplacer.addWarning({
         text: `unable to replace ${context
