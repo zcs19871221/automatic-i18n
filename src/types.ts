@@ -17,7 +17,7 @@ export interface ReplacerOpt {
   localeToReplace?: LocaleTypes;
   localesToGenerate?: LocaleTypes[];
   I18nFormatterClass?: I18nFormatterCtr;
-  I18nFormatterClassAlias?: 'default' | 'global';
+  global?: boolean;
   meaningKey?: boolean;
   filters?: Filter[];
   // baseNames
@@ -29,10 +29,7 @@ export interface ReplacerOpt {
 export type HandledOpt = {
   [key in keyof Omit<
     ReplacerOpt,
-    | 'I18nFormatterClass'
-    | 'I18nFormatterClassAlias'
-    | 'excludes'
-    | 'outputToNewDir'
+    'I18nFormatterClass' | 'excludes' | 'outputToNewDir'
   >]-?: ReplacerOpt[key];
 } & {
   I18nFormatter: I18nFormatterCtr;

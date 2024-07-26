@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { i18 } from './';
+import { i18n } from './index.tsx';
 
 const common = (
   <>
-    {i18.intl.formatMessage(
+    {i18n.intl.formatMessage(
       {
         id: 'key0001',
         defaultMessage: '哈哈{v1}你好',
@@ -14,13 +14,13 @@ const common = (
 );
 const nest1 = (
   <div
-    name={i18.intl.formatMessage({
+    name={i18n.intl.formatMessage({
       id: 'key0002',
       defaultMessage: '你好',
     })}
     age={
       <div>
-        {i18.intl.formatMessage({
+        {i18n.intl.formatMessage({
           id: 'key0003',
           defaultMessage: 'sd你好fs',
         })}
@@ -28,12 +28,12 @@ const nest1 = (
     }
   >
     <div>
-      {i18.intl.formatMessage({
+      {i18n.intl.formatMessage({
         id: 'key0004',
         defaultMessage: '哈哈',
       })}
     </div>
-    {i18.intl.formatMessage(
+    {i18n.intl.formatMessage(
       {
         id: 'key0001',
         defaultMessage: '哈哈{v1}你好',
@@ -41,18 +41,18 @@ const nest1 = (
       { v1: name }
     )}
     <div>
-      {i18.intl.formatMessage({
+      {i18n.intl.formatMessage({
         id: 'key0002',
         defaultMessage: '你好',
       })}
     </div>
     <span>
-      {i18.intl.formatMessage({
+      {i18n.intl.formatMessage({
         id: 'key0002',
         defaultMessage: '你好',
       })}
       {flag ? (
-        i18.intl.formatMessage(
+        i18n.intl.formatMessage(
           {
             id: 'key0005',
             defaultMessage: '哈哈{v1}',
@@ -61,7 +61,7 @@ const nest1 = (
         )
       ) : (
         <h1>
-          {i18.intl.formatMessage({
+          {i18n.intl.formatMessage({
             id: 'key0004',
             defaultMessage: '哈哈',
           })}
@@ -69,21 +69,21 @@ const nest1 = (
       )}
     </span>
     <span>
-      {i18.intl.formatMessage(
+      {i18n.intl.formatMessage(
         {
           id: 'key0006',
           defaultMessage: '你好{v1}',
         },
         {
           v1: flag
-            ? i18.intl.formatMessage(
+            ? i18n.intl.formatMessage(
                 {
                   id: 'key0005',
                   defaultMessage: '哈哈{v1}',
                 },
                 { v1: name }
               )
-            : i18.intl.formatMessage({
+            : i18n.intl.formatMessage({
                 id: 'key0004',
                 defaultMessage: '哈哈',
               }),
@@ -91,7 +91,7 @@ const nest1 = (
       )}
     </span>
     <span>
-      {i18.intl.formatMessage(
+      {i18n.intl.formatMessage(
         {
           id: 'key0007',
           defaultMessage: '准备{v1}再见{v1}',
@@ -101,11 +101,11 @@ const nest1 = (
     </span>
     <span>
       {flag
-        ? i18.intl.formatMessage({
+        ? i18n.intl.formatMessage({
             id: 'key0008',
             defaultMessage: '再见',
           })
-        : i18.intl.formatMessage(
+        : i18n.intl.formatMessage(
             {
               id: 'key0005',
               defaultMessage: '哈哈{v1}',
@@ -117,11 +117,11 @@ const nest1 = (
     <span>flag</span>
     <span>
       {flag
-        ? i18.intl.formatMessage({
+        ? i18n.intl.formatMessage({
             id: 'key0008',
             defaultMessage: '再见',
           })
-        : i18.intl.formatMessage(
+        : i18n.intl.formatMessage(
             {
               id: 'key0005',
               defaultMessage: '哈哈{v1}',
@@ -137,7 +137,7 @@ const nest1 = (
       style={{
         width: '20px',
       }}
-      name={i18.intl.formatMessage({
+      name={i18n.intl.formatMessage({
         id: 'key0009',
         defaultMessage: '张成思',
       })}

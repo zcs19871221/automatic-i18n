@@ -18,8 +18,6 @@ it('test propertyInHtmlTag', async () => {
     path.join(target, 'i18n'),
     '-t',
     target,
-    '-f',
-    'default',
   ]);
 
   await cli();

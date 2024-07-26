@@ -16,7 +16,7 @@ it("test cli", async () => {
     target,
     "-d",
     path.join(target, "myI18n"),
-    "-f",
+    "-g",
     "global",
     "-e",
     "b.tsx",

@@ -2,14 +2,14 @@
 /* eslint-disable no-console */
 // @ts-nocheck
 import { useIntl, FormattedMessage } from 'react-intl';
-import { i18 } from 'I18';
+import { i18n } from './i18n/index.tsx';
 import React from 'react';
-export const name = i18.intl.formatMessage({
+export const name = i18n.intl.formatMessage({
   id: 'hellosdffdsfds',
   defaultMessage: '你好',
 });
 
-export const name = i18.intl.formatMessage({
+export const name = i18n.intl.formatMessage({
   id: 'hellosdffdsfds',
   defaultMessage: '你好',
 });
@@ -35,7 +35,7 @@ export default function Component() {
   });
   return (
     <div>
-      {i18.intl.formatMessage({
+      {i18n.intl.formatMessage({
         id: 'goodbye_1',
         defaultMessage: '再见',
       })}

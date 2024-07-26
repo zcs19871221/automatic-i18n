@@ -19,17 +19,9 @@ import {
   TargetOpt,
 } from './types';
 import { ScriptTarget } from 'typescript';
-import {
-  GlobalI18nFormatter,
-  DefaultI18nFormatter,
-  I18nFormatter,
-} from './formatter';
+import { DefaultI18nFormatter, I18nFormatter } from './formatter';
 
-export {
-  GlobalI18nFormatter,
-  DefaultI18nFormatter as HookI18nFormatter,
-  I18nFormatter,
-};
+export { I18nFormatter };
 
 export const excludeNodeModule = (fileOrDirName: string) => {
   if (
@@ -67,11 +59,11 @@ export const initParams = ({
   localeToReplace = defaultLocaleToReplace,
   localesToGenerate = defaultLocalesToGenerate,
   I18nFormatterClass,
-  I18nFormatterClassAlias,
   outputToNewDir,
   filters = [excludeNodeModule, onlyTJsxFiles],
   excludes,
   meaningKey = false,
+  global: hook = false,
   debug = false,
 }: ReplacerOpt) => {
   targets = targets.map((t) => path.resolve(t));
@@ -92,10 +84,6 @@ export const initParams = ({
 
   if (I18nFormatterClass) {
     I18nFormatter = I18nFormatterClass;
-  } else if (I18nFormatterClassAlias == 'global') {
-    I18nFormatter = GlobalI18nFormatter;
-  } else if (I18nFormatterClassAlias == 'default') {
-    I18nFormatter = DefaultI18nFormatter;
   }
 
   if (excludes) {
@@ -109,6 +97,7 @@ export const initParams = ({
   );
 
   const handledOpt: HandledOpt = {
+    global: hook,
     targets,
     distLocaleDir,
     localeToReplace,

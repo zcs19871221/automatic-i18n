@@ -118,10 +118,8 @@ the options is like this:
         // the locale file default is [en-us, zh-cn]
         localesToGenerate?: LocaleTypes[];
         // formatter class, use could provide class implement the `I18nFormatter` class,
-        // default provide two class:GlobalI18nFormatter and HookI18nFormatter
-        I18nFormatterClass?: I18nFormatterCtr;
+        I18nFormatterClass?: DefaultI18nFormatterCtr;
         // default is hook
-        I18nFormatterClassAlias?: 'default' | 'global';
         // if rename the key to meaningful variable if has related english translate
         meaningKey?: boolean;
         // decide which file or dir could be handled

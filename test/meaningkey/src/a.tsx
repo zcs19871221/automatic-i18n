@@ -1,14 +1,14 @@
 /* eslint-disable react/jsx-curly-brace-presence */
 /* eslint-disable no-console */
 // @ts-nocheck
-import { i18 } from 'I18';
+import { i18n } from './i18n/index.tsx';
 import React from 'react';
-export const name = i18.intl.formatMessage({
+export const name = i18n.intl.formatMessage({
   id: 'key0001',
   defaultMessage: '你好',
 });
 
-export const name = i18.intl.formatMessage({
+export const name = i18n.intl.formatMessage({
   id: 'key0001',
   defaultMessage: '你好',
 });
@@ -22,7 +22,7 @@ export default function Component() {
   const v1 = '再见';
   return (
     <div>
-      {i18.intl.formatMessage({
+      {i18n.intl.formatMessage({
         id: 'key0002',
         defaultMessage: '再见',
       })}

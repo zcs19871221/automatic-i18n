@@ -22,15 +22,27 @@ import hookEntryFileTemplate from './defaultEntryTemplate';
 import path from 'path';
 
 export default class DefaultI18nFormatter extends I18nFormatter {
-  protected override doEntryFile(localeFiles: string[]): string {
-    return hookEntryFileTemplate(localeFiles);
+  protected override doEntryFile(
+    localeFiles: string[],
+    defaultLocale: string
+  ): string {
+    return hookEntryFileTemplate(localeFiles, defaultLocale);
   }
 
   protected override renderJsxChildContext(
     context: JsxChildContext,
-    { params, defaultMessage }: FormatOptions,
+    options: FormatOptions,
     intlId: string
   ): FormatReturnType | null {
+    const { params, defaultMessage } = options;
+    if (context.i18nReplacer.opt.global) {
+      const globalRendered = this.renderGlobal(context, options, intlId);
+      if (!globalRendered) {
+        return null;
+      }
+      globalRendered.newText = '{' + globalRendered?.newText + '}';
+      return globalRendered;
+    }
     const paramString = this.paramsString(params);
     const newText = `
       <FormattedMessage
@@ -58,7 +70,7 @@ export default class DefaultI18nFormatter extends I18nFormatter {
 
   private renderGlobal(
     context: ReplaceContext,
-    { params, defaultMessage, originStr }: FormatOptions,
+    { params, defaultMessage }: FormatOptions,
     intlId: string
   ): FormatReturnType | null {
     const newText = this.intlApiExpression(
@@ -78,10 +90,15 @@ export default class DefaultI18nFormatter extends I18nFormatter {
         )
       : context.fileContext.fileLocate;
 
-    let relativePath = path.relative(src, localeDist).replace(/\\/g, '/');
-    if (!relativePath.replace(/^\.\.\//, '').includes('/')) {
-      relativePath = relativePath.replace(/^\.\.\//, './');
+    let relativePath = path
+      .relative(src, localeDist)
+      .replace(/\\/g, '/')
+      .replace(/^\.\.\//, '');
+
+    if (!relativePath.startsWith('.')) {
+      relativePath = './' + relativePath;
     }
+
     return {
       newText: newText,
       dependencies: {
@@ -96,6 +113,17 @@ export default class DefaultI18nFormatter extends I18nFormatter {
     { params, defaultMessage, originStr }: FormatOptions,
     intlId: string
   ) {
+    if (context.i18nReplacer.opt.global) {
+      return this.renderGlobal(
+        context,
+        {
+          params,
+          defaultMessage,
+          originStr,
+        },
+        intlId
+      );
+    }
     const parentFunctionInfo = DefaultI18nFormatter.getIfInFunctionBody(
       context.getNode()!
     );

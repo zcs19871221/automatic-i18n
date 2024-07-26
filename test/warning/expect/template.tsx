@@ -1,4 +1,4 @@
-import { i18 } from './';
+import { i18n } from './index.tsx';
 const variable: any = [];
 
 if (variable === '发') {
@@ -14,26 +14,26 @@ if (/* @ignore */ '忽略' === variable) {
 [/* @ignore */ '他'].includes(variable);
 
 const days = [
-  i18.intl.formatMessage({
+  i18n.intl.formatMessage({
     id: 'key0001',
     defaultMessage: '7月1日',
   }),
-  i18.intl.formatMessage({
+  i18n.intl.formatMessage({
     id: 'key0002',
     defaultMessage: '7月5日',
   }),
-  i18.intl.formatMessage({
+  i18n.intl.formatMessage({
     id: 'key0003',
     defaultMessage: '7月6日',
   }),
-  i18.intl.formatMessage({
+  i18n.intl.formatMessage({
     id: 'key0004',
     defaultMessage: '7月8日',
   }),
 ];
 
 const willBeSkip = /* @ignore */ '忽略';
-const notSkip = i18.intl.formatMessage({
+const notSkip = i18n.intl.formatMessage({
   id: 'key0005',
   defaultMessage: '忽略',
 });

@@ -1,7 +1,6 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import I18nReplacer from '../src';
-import { GlobalI18nFormatter } from '../src/formatter';
 
 const testBaseDir = path.join(process.cwd(), 'test');
 const expectName = 'expect';
@@ -27,11 +26,6 @@ export const expectDirEqualDistDirAt = (dir: string) => {
   doEqual(expectDir);
 };
 
-class TestFormatter extends GlobalI18nFormatter {
-  constructor() {
-    super('./');
-  }
-}
 export const runAndExpect = async ({
   dirName,
   opt = {},
@@ -61,7 +55,7 @@ export const runAndExpect = async ({
     targets: [template],
     localesToGenerate: ['en-us'],
     localeToReplace: 'zh-cn',
-    I18nFormatterClass: TestFormatter,
+    global: true,
     ...opt,
   }).replace();
   expectDirEqualDistDirAt(dirName);

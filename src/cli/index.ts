@@ -31,11 +31,9 @@ export async function cli() {
         )}]`
       ).choices(availableLocales)
     )
-    .addOption(
-      new Option(
-        '-f, --I18nFormatterClassAlias <alias>',
-        'formatter alias default is [default]'
-      ).choices(['default', 'global'])
+    .option(
+      '-g, --global',
+      'if prefer global intl obj instead hook, default is [false]'
     )
     .option(
       '-e, --excludes <filesOrDirs...>',

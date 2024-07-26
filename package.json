@@ -15,8 +15,8 @@
   },
   "scripts": {
     "tsc": "tsc",
-    "build": "tsc  --project tsconfig.production.json && jest",
-    "test": "npm run tsc && jest"
+    "build": "tsc  --project tsconfig.production.json && jest --silent",
+    "test": "npm run tsc && jest --silent"
   },
   "author": "Chengsi Zhang",
   "license": "MIT",
