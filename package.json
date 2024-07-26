@@ -1,5 +1,5 @@
 {
-  "name": "fast-i18n",
+  "name": "@cszhang/i18n",
   "version": "1.0.0",
   "description": "Replace the language in the front-end source code with one command",
   "main": "lib/src/index.js",
@@ -15,7 +15,7 @@
   },
   "scripts": {
     "tsc": "tsc",
-    "build": "tsc  --project tsconfig.production.json && jest --silent",
+    "build": "tsc --project tsconfig.production.json && jest --silent",
     "test": "npm run tsc && jest --silent"
   },
   "author": "Chengsi Zhang",
