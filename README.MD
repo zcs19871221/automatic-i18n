@@ -87,24 +87,12 @@ You will get some new files including some locale message files and a provider w
 
 ## cli
 
-`npx fast-i18n`
-you can get specific info with `npx i18n -h`
+`npx @cszhang/i18n`
+you can get specific info with `npx @cszhang/i18n -h`
 
 ## api
 
-write your own node script like this and run it
-
-    import I18nReplacer from 'i18-replacer';
-
-    I18nReplacer.createI18nReplacer({
-        // options below
-    }).replace();
-
-or with commonJs to run it:
-
-    const I18nReplacer = require("i18-replacer").default;
-
-    I18nReplacer.createI18nReplacer().replace()
+not tested yet..
 
 the options is like this:
 
