@@ -6,6 +6,7 @@ import I18nReplacer, {
   defaultLocalesToGenerate,
 } from '..';
 import { availableLocales } from '../types';
+import pkg from '../../package.json';
 
 export async function cli() {
   program
@@ -43,9 +44,14 @@ export async function cli() {
     .option(
       '-m, --meaningKey',
       'change the key to the English abbreviation if en-us has a translation.Default is [false]'
-    );
+    )
+    .option('-v, --version', 'show npm version');
 
   program.parse();
+  if (program.opts().version) {
+    console.log('v' + pkg.version);
+    return;
+  }
 
   await I18nReplacer.createI18nReplacer(program.opts()).replace();
 }
