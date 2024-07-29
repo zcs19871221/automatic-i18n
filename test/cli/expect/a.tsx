@@ -1,8 +1,9 @@
 /* eslint-disable react/jsx-curly-brace-presence */
 /* eslint-disable no-console */
 // @ts-nocheck
-import { i18n } from "./myI18n/index.tsx";
 import React from "react";
+import { i18n } from "./myI18n/index.tsx";
+
 export const name = i18n.intl.formatMessage({
   id: "key0001",
   defaultMessage: "你好",

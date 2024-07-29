@@ -1,6 +1,6 @@
-import { i18n } from './index.tsx';
 import React from 'react';
 import { useIntl, FormattedMessage } from 'react-intl';
+import { i18n } from './index.tsx';
 
 const string = '非函数内部字符串不提取';
 const templateString = `非组件模板字符串不提取`;

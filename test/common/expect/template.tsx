@@ -1,8 +1,9 @@
 /* eslint-disable react/jsx-curly-brace-presence */
 /* eslint-disable no-console */
 // @ts-nocheck
-import { i18n } from './index.tsx';
 import React from 'react';
+import { i18n } from './index.tsx';
+
 //@ts-ignore
 // import file from './报告.doc'
 // //@ts-ignore

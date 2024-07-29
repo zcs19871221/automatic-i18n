@@ -88,7 +88,7 @@ class I18n {
   private currentIntl: IntlShape = createIntl(
     {
       locale: 'zh-cn',
-      messages: {},
+      messages: {} as unknown as Record<LocalKey, string>,
     },
     this.cache
   );

@@ -20,7 +20,7 @@ export async function cli() {
     .addOption(
       new Option(
         `-sl --localeToReplace <fileOrDir>`,
-        `locales to search in source code, default is [${defaultLocaleToReplace}]`
+        `locale to search in source code, default is [${defaultLocaleToReplace}]`
       ).choices(availableLocales)
     )
     .addOption(
@@ -28,7 +28,7 @@ export async function cli() {
         `-tl --localesToGenerate <locales...>`,
         `locales to generate, default is [${defaultLocalesToGenerate.join(
           ','
-        )}]`
+        )}] you can input multiple locales with space ex: [-tl en-us zh-cn]`
       ).choices(availableLocales)
     )
     .option(
@@ -42,7 +42,7 @@ export async function cli() {
     .option('-db, --debug', 'if show extra message, default is [false]')
     .option(
       '-m, --meaningKey',
-      'change key to meaning if en-use has corresponding translate, default is [false]'
+      'change the key to the English abbreviation if en-us has a translation.Default is [false]'
     );
 
   program.parse();

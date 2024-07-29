@@ -64,6 +64,10 @@ export class FileContext extends ReplaceContext {
     this.importNodes.push(importNode);
   }
 
+  public getImportNode() {
+    return this.importNodes;
+  }
+
   protected override afterChildrenMessageGenerated() {
     this.addRequiredImportsIfMissing();
   }
@@ -74,9 +78,10 @@ export class FileContext extends ReplaceContext {
         importNode.moduleSpecifier.getText().includes(moduleName)
       );
       if (!foundNode) {
-        const newImportContext = new NewImportContext(this, [
-          { moduleName, names },
-        ]);
+        const newImportContext = new NewImportContext(this, {
+          moduleName,
+          names,
+        });
         newImportContext.generateMessage();
         this.children.push(newImportContext);
       }

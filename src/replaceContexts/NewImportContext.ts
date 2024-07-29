@@ -11,16 +11,25 @@ export interface Opt {
 export class NewImportContext extends ReplaceContext {
   constructor(
     fileContext: FileContext,
-    private readonly imports: { moduleName: string; names: Set<string> }[]
+    private readonly importInfo: { moduleName: string; names: Set<string> }
   ) {
     const tsUncheckCommentMatched = fileContext.file.match(
       /(\n|^)\/\/\s*@ts-nocheck[^\n]*\n/
     );
-    const insertIndex =
-      tsUncheckCommentMatched === null
-        ? 0
-        : (tsUncheckCommentMatched.index ?? 0) +
-          tsUncheckCommentMatched[0].length;
+    let firstNonRelativeImport = 0;
+    if (importInfo.moduleName.startsWith('.')) {
+      firstNonRelativeImport =
+        [...fileContext.getImportNode()]
+          .reverse()
+          .find((i) => !i.importClause?.getText()?.startsWith('.'))?.end ?? 0;
+    }
+
+    const tsNocheckIndex = tsUncheckCommentMatched
+      ? (tsUncheckCommentMatched.index ?? 0) + tsUncheckCommentMatched[0].length
+      : 0;
+
+    const insertIndex = Math.max(tsNocheckIndex, 0, firstNonRelativeImport);
+
     super({
       start: insertIndex,
       end: insertIndex,
@@ -29,10 +38,10 @@ export class NewImportContext extends ReplaceContext {
   }
 
   protected joinChildrenMessage(): void {
-    let newText = '';
-    this.imports.forEach(({ moduleName, names }) => {
-      newText += `import { ${[...names].join(', ')} } from '${moduleName}'\n`;
-    });
+    let newText = `import { ${[...this.importInfo.names].join(', ')} } from '${
+      this.importInfo.moduleName
+    }'\n`;
+
     this.needReplace = true;
     this.content = newText;
   }

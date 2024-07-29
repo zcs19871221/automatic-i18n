@@ -2,8 +2,8 @@
 /* eslint-disable no-console */
 // @ts-nocheck
 import { useIntl, FormattedMessage } from 'react-intl';
-import { i18n } from './i18n/index.tsx';
 import React from 'react';
+import { i18n } from './i18n/index.tsx';
 export const name = i18n.intl.formatMessage({
   id: 'hellosdffdsfds',
   defaultMessage: '你好',
