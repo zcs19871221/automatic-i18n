@@ -1,171 +1,29 @@
-{
-  "total": {
-    "lines": { "total": 639, "covered": 622, "skipped": 0, "pct": 97.33 },
-    "statements": { "total": 656, "covered": 639, "skipped": 0, "pct": 97.4 },
-    "functions": { "total": 155, "covered": 154, "skipped": 0, "pct": 99.35 },
-    "branches": { "total": 392, "covered": 326, "skipped": 0, "pct": 83.16 },
-    "branchesTrue": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\index.ts": {
-    "lines": { "total": 169, "covered": 164, "skipped": 0, "pct": 97.04 },
-    "functions": { "total": 47, "covered": 47, "skipped": 0, "pct": 100 },
-    "statements": { "total": 181, "covered": 176, "skipped": 0, "pct": 97.23 },
-    "branches": { "total": 47, "covered": 44, "skipped": 0, "pct": 93.61 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\types.ts": {
-    "lines": { "total": 1, "covered": 1, "skipped": 0, "pct": 100 },
-    "functions": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 },
-    "statements": { "total": 1, "covered": 1, "skipped": 0, "pct": 100 },
-    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\cli\\index.ts": {
-    "lines": { "total": 11, "covered": 9, "skipped": 0, "pct": 81.81 },
-    "functions": { "total": 1, "covered": 1, "skipped": 0, "pct": 100 },
-    "statements": { "total": 11, "covered": 9, "skipped": 0, "pct": 81.81 },
-    "branches": { "total": 1, "covered": 0, "skipped": 0, "pct": 0 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\formatter\\DefaultI18nFormatter.ts": {
-    "lines": { "total": 71, "covered": 70, "skipped": 0, "pct": 98.59 },
-    "functions": { "total": 14, "covered": 14, "skipped": 0, "pct": 100 },
-    "statements": { "total": 71, "covered": 70, "skipped": 0, "pct": 98.59 },
-    "branches": { "total": 69, "covered": 58, "skipped": 0, "pct": 84.05 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\formatter\\I18nFormatter.ts": {
-    "lines": { "total": 55, "covered": 53, "skipped": 0, "pct": 96.36 },
-    "functions": { "total": 19, "covered": 18, "skipped": 0, "pct": 94.73 },
-    "statements": { "total": 55, "covered": 53, "skipped": 0, "pct": 96.36 },
-    "branches": { "total": 18, "covered": 18, "skipped": 0, "pct": 100 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\formatter\\defaultEntryTemplate.ts": {
-    "lines": { "total": 3, "covered": 3, "skipped": 0, "pct": 100 },
-    "functions": { "total": 2, "covered": 2, "skipped": 0, "pct": 100 },
-    "statements": { "total": 3, "covered": 3, "skipped": 0, "pct": 100 },
-    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\formatter\\index.ts": {
-    "lines": { "total": 2, "covered": 2, "skipped": 0, "pct": 100 },
-    "functions": { "total": 1, "covered": 1, "skipped": 0, "pct": 100 },
-    "statements": { "total": 3, "covered": 3, "skipped": 0, "pct": 100 },
-    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\replaceContexts\\FileContext.ts": {
-    "lines": { "total": 41, "covered": 40, "skipped": 0, "pct": 97.56 },
-    "functions": { "total": 11, "covered": 11, "skipped": 0, "pct": 100 },
-    "statements": { "total": 42, "covered": 41, "skipped": 0, "pct": 97.61 },
-    "branches": { "total": 35, "covered": 23, "skipped": 0, "pct": 65.71 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\replaceContexts\\JsxChildContext.ts": {
-    "lines": { "total": 18, "covered": 17, "skipped": 0, "pct": 94.44 },
-    "functions": { "total": 4, "covered": 4, "skipped": 0, "pct": 100 },
-    "statements": { "total": 18, "covered": 17, "skipped": 0, "pct": 94.44 },
-    "branches": { "total": 6, "covered": 6, "skipped": 0, "pct": 100 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\replaceContexts\\JsxExpressionContext.ts": {
-    "lines": { "total": 4, "covered": 4, "skipped": 0, "pct": 100 },
-    "functions": { "total": 2, "covered": 2, "skipped": 0, "pct": 100 },
-    "statements": { "total": 4, "covered": 4, "skipped": 0, "pct": 100 },
-    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\replaceContexts\\JsxTagContext.ts": {
-    "lines": { "total": 35, "covered": 35, "skipped": 0, "pct": 100 },
-    "functions": { "total": 4, "covered": 4, "skipped": 0, "pct": 100 },
-    "statements": { "total": 36, "covered": 36, "skipped": 0, "pct": 100 },
-    "branches": { "total": 12, "covered": 12, "skipped": 0, "pct": 100 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\replaceContexts\\NewImportContext.ts": {
-    "lines": { "total": 14, "covered": 14, "skipped": 0, "pct": 100 },
-    "functions": { "total": 3, "covered": 3, "skipped": 0, "pct": 100 },
-    "statements": { "total": 14, "covered": 14, "skipped": 0, "pct": 100 },
-    "branches": { "total": 23, "covered": 20, "skipped": 0, "pct": 86.95 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\replaceContexts\\OldKeyReplaceContext.ts": {
-    "lines": { "total": 15, "covered": 14, "skipped": 0, "pct": 93.33 },
-    "functions": { "total": 3, "covered": 3, "skipped": 0, "pct": 100 },
-    "statements": { "total": 15, "covered": 14, "skipped": 0, "pct": 93.33 },
-    "branches": { "total": 46, "covered": 35, "skipped": 0, "pct": 76.08 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\replaceContexts\\ReplaceContext.ts": {
-    "lines": { "total": 71, "covered": 68, "skipped": 0, "pct": 95.77 },
-    "functions": { "total": 20, "covered": 20, "skipped": 0, "pct": 100 },
-    "statements": { "total": 73, "covered": 70, "skipped": 0, "pct": 95.89 },
-    "branches": { "total": 25, "covered": 20, "skipped": 0, "pct": 80 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\replaceContexts\\StringLiteralContext.ts": {
-    "lines": { "total": 9, "covered": 9, "skipped": 0, "pct": 100 },
-    "functions": { "total": 2, "covered": 2, "skipped": 0, "pct": 100 },
-    "statements": { "total": 9, "covered": 9, "skipped": 0, "pct": 100 },
-    "branches": { "total": 1, "covered": 1, "skipped": 0, "pct": 100 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\replaceContexts\\TemplateExpressionContext.ts": {
-    "lines": { "total": 5, "covered": 5, "skipped": 0, "pct": 100 },
-    "functions": { "total": 1, "covered": 1, "skipped": 0, "pct": 100 },
-    "statements": { "total": 5, "covered": 5, "skipped": 0, "pct": 100 },
-    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\replaceContexts\\TemplateStringContext.ts": {
-    "lines": { "total": 10, "covered": 10, "skipped": 0, "pct": 100 },
-    "functions": { "total": 2, "covered": 2, "skipped": 0, "pct": 100 },
-    "statements": { "total": 10, "covered": 10, "skipped": 0, "pct": 100 },
-    "branches": { "total": 1, "covered": 1, "skipped": 0, "pct": 100 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\replaceContexts\\TextInsertContext.ts": {
-    "lines": { "total": 9, "covered": 9, "skipped": 0, "pct": 100 },
-    "functions": { "total": 3, "covered": 3, "skipped": 0, "pct": 100 },
-    "statements": { "total": 9, "covered": 9, "skipped": 0, "pct": 100 },
-    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\replaceContexts\\index.ts": {
-    "lines": { "total": 9, "covered": 9, "skipped": 0, "pct": 100 },
-    "functions": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 },
-    "statements": { "total": 9, "covered": 9, "skipped": 0, "pct": 100 },
-    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\tsNodeHandlers\\IdentifierHandler.ts": {
-    "lines": { "total": 7, "covered": 7, "skipped": 0, "pct": 100 },
-    "functions": { "total": 2, "covered": 2, "skipped": 0, "pct": 100 },
-    "statements": { "total": 7, "covered": 7, "skipped": 0, "pct": 100 },
-    "branches": { "total": 4, "covered": 4, "skipped": 0, "pct": 100 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\tsNodeHandlers\\ImportHandler.ts": {
-    "lines": { "total": 5, "covered": 5, "skipped": 0, "pct": 100 },
-    "functions": { "total": 2, "covered": 2, "skipped": 0, "pct": 100 },
-    "statements": { "total": 5, "covered": 5, "skipped": 0, "pct": 100 },
-    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\tsNodeHandlers\\JsxExpressionHandler.ts": {
-    "lines": { "total": 6, "covered": 6, "skipped": 0, "pct": 100 },
-    "functions": { "total": 2, "covered": 2, "skipped": 0, "pct": 100 },
-    "statements": { "total": 6, "covered": 6, "skipped": 0, "pct": 100 },
-    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\tsNodeHandlers\\JsxTagHandler.ts": {
-    "lines": { "total": 10, "covered": 10, "skipped": 0, "pct": 100 },
-    "functions": { "total": 2, "covered": 2, "skipped": 0, "pct": 100 },
-    "statements": { "total": 10, "covered": 10, "skipped": 0, "pct": 100 },
-    "branches": { "total": 2, "covered": 2, "skipped": 0, "pct": 100 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\tsNodeHandlers\\StringLikeNodesHandler.ts": {
-    "lines": { "total": 35, "covered": 34, "skipped": 0, "pct": 97.14 },
-    "functions": { "total": 4, "covered": 4, "skipped": 0, "pct": 100 },
-    "statements": { "total": 35, "covered": 34, "skipped": 0, "pct": 97.14 },
-    "branches": { "total": 102, "covered": 82, "skipped": 0, "pct": 80.39 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\tsNodeHandlers\\TemplateHandler.ts": {
-    "lines": { "total": 6, "covered": 6, "skipped": 0, "pct": 100 },
-    "functions": { "total": 2, "covered": 2, "skipped": 0, "pct": 100 },
-    "statements": { "total": 6, "covered": 6, "skipped": 0, "pct": 100 },
-    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\tsNodeHandlers\\TemplateSpanHandler.ts": {
-    "lines": { "total": 9, "covered": 9, "skipped": 0, "pct": 100 },
-    "functions": { "total": 2, "covered": 2, "skipped": 0, "pct": 100 },
-    "statements": { "total": 9, "covered": 9, "skipped": 0, "pct": 100 },
-    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
-  },
-  "C:\\work\\i18n-text-replacer\\src\\tsNodeHandlers\\index.ts": {
-    "lines": { "total": 9, "covered": 9, "skipped": 0, "pct": 100 },
-    "functions": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 },
-    "statements": { "total": 9, "covered": 9, "skipped": 0, "pct": 100 },
-    "branches": { "total": 0, "covered": 0, "skipped": 0, "pct": 100 }
-  }
+{"total": {"lines":{"total":639,"covered":622,"skipped":0,"pct":97.33},"statements":{"total":656,"covered":639,"skipped":0,"pct":97.4},"functions":{"total":155,"covered":154,"skipped":0,"pct":99.35},"branches":{"total":392,"covered":326,"skipped":0,"pct":83.16},"branchesTrue":{"total":0,"covered":0,"skipped":0,"pct":100}}
+,"C:\\work\\i18n-text-replacer\\src\\index.ts": {"lines":{"total":169,"covered":164,"skipped":0,"pct":97.04},"functions":{"total":47,"covered":47,"skipped":0,"pct":100},"statements":{"total":181,"covered":176,"skipped":0,"pct":97.23},"branches":{"total":47,"covered":44,"skipped":0,"pct":93.61}}
+,"C:\\work\\i18n-text-replacer\\src\\types.ts": {"lines":{"total":1,"covered":1,"skipped":0,"pct":100},"functions":{"total":0,"covered":0,"skipped":0,"pct":100},"statements":{"total":1,"covered":1,"skipped":0,"pct":100},"branches":{"total":0,"covered":0,"skipped":0,"pct":100}}
+,"C:\\work\\i18n-text-replacer\\src\\cli\\index.ts": {"lines":{"total":11,"covered":9,"skipped":0,"pct":81.81},"functions":{"total":1,"covered":1,"skipped":0,"pct":100},"statements":{"total":11,"covered":9,"skipped":0,"pct":81.81},"branches":{"total":1,"covered":0,"skipped":0,"pct":0}}
+,"C:\\work\\i18n-text-replacer\\src\\formatter\\DefaultI18nFormatter.ts": {"lines":{"total":71,"covered":70,"skipped":0,"pct":98.59},"functions":{"total":14,"covered":14,"skipped":0,"pct":100},"statements":{"total":71,"covered":70,"skipped":0,"pct":98.59},"branches":{"total":69,"covered":58,"skipped":0,"pct":84.05}}
+,"C:\\work\\i18n-text-replacer\\src\\formatter\\I18nFormatter.ts": {"lines":{"total":55,"covered":53,"skipped":0,"pct":96.36},"functions":{"total":19,"covered":18,"skipped":0,"pct":94.73},"statements":{"total":55,"covered":53,"skipped":0,"pct":96.36},"branches":{"total":18,"covered":18,"skipped":0,"pct":100}}
+,"C:\\work\\i18n-text-replacer\\src\\formatter\\defaultEntryTemplate.ts": {"lines":{"total":3,"covered":3,"skipped":0,"pct":100},"functions":{"total":2,"covered":2,"skipped":0,"pct":100},"statements":{"total":3,"covered":3,"skipped":0,"pct":100},"branches":{"total":0,"covered":0,"skipped":0,"pct":100}}
+,"C:\\work\\i18n-text-replacer\\src\\formatter\\index.ts": {"lines":{"total":2,"covered":2,"skipped":0,"pct":100},"functions":{"total":1,"covered":1,"skipped":0,"pct":100},"statements":{"total":3,"covered":3,"skipped":0,"pct":100},"branches":{"total":0,"covered":0,"skipped":0,"pct":100}}
+,"C:\\work\\i18n-text-replacer\\src\\replaceContexts\\FileContext.ts": {"lines":{"total":41,"covered":40,"skipped":0,"pct":97.56},"functions":{"total":11,"covered":11,"skipped":0,"pct":100},"statements":{"total":42,"covered":41,"skipped":0,"pct":97.61},"branches":{"total":35,"covered":23,"skipped":0,"pct":65.71}}
+,"C:\\work\\i18n-text-replacer\\src\\replaceContexts\\JsxChildContext.ts": {"lines":{"total":18,"covered":17,"skipped":0,"pct":94.44},"functions":{"total":4,"covered":4,"skipped":0,"pct":100},"statements":{"total":18,"covered":17,"skipped":0,"pct":94.44},"branches":{"total":6,"covered":6,"skipped":0,"pct":100}}
+,"C:\\work\\i18n-text-replacer\\src\\replaceContexts\\JsxExpressionContext.ts": {"lines":{"total":4,"covered":4,"skipped":0,"pct":100},"functions":{"total":2,"covered":2,"skipped":0,"pct":100},"statements":{"total":4,"covered":4,"skipped":0,"pct":100},"branches":{"total":0,"covered":0,"skipped":0,"pct":100}}
+,"C:\\work\\i18n-text-replacer\\src\\replaceContexts\\JsxTagContext.ts": {"lines":{"total":35,"covered":35,"skipped":0,"pct":100},"functions":{"total":4,"covered":4,"skipped":0,"pct":100},"statements":{"total":36,"covered":36,"skipped":0,"pct":100},"branches":{"total":12,"covered":12,"skipped":0,"pct":100}}
+,"C:\\work\\i18n-text-replacer\\src\\replaceContexts\\NewImportContext.ts": {"lines":{"total":14,"covered":14,"skipped":0,"pct":100},"functions":{"total":3,"covered":3,"skipped":0,"pct":100},"statements":{"total":14,"covered":14,"skipped":0,"pct":100},"branches":{"total":23,"covered":20,"skipped":0,"pct":86.95}}
+,"C:\\work\\i18n-text-replacer\\src\\replaceContexts\\OldKeyReplaceContext.ts": {"lines":{"total":15,"covered":14,"skipped":0,"pct":93.33},"functions":{"total":3,"covered":3,"skipped":0,"pct":100},"statements":{"total":15,"covered":14,"skipped":0,"pct":93.33},"branches":{"total":46,"covered":35,"skipped":0,"pct":76.08}}
+,"C:\\work\\i18n-text-replacer\\src\\replaceContexts\\ReplaceContext.ts": {"lines":{"total":71,"covered":68,"skipped":0,"pct":95.77},"functions":{"total":20,"covered":20,"skipped":0,"pct":100},"statements":{"total":73,"covered":70,"skipped":0,"pct":95.89},"branches":{"total":25,"covered":20,"skipped":0,"pct":80}}
+,"C:\\work\\i18n-text-replacer\\src\\replaceContexts\\StringLiteralContext.ts": {"lines":{"total":9,"covered":9,"skipped":0,"pct":100},"functions":{"total":2,"covered":2,"skipped":0,"pct":100},"statements":{"total":9,"covered":9,"skipped":0,"pct":100},"branches":{"total":1,"covered":1,"skipped":0,"pct":100}}
+,"C:\\work\\i18n-text-replacer\\src\\replaceContexts\\TemplateExpressionContext.ts": {"lines":{"total":5,"covered":5,"skipped":0,"pct":100},"functions":{"total":1,"covered":1,"skipped":0,"pct":100},"statements":{"total":5,"covered":5,"skipped":0,"pct":100},"branches":{"total":0,"covered":0,"skipped":0,"pct":100}}
+,"C:\\work\\i18n-text-replacer\\src\\replaceContexts\\TemplateStringContext.ts": {"lines":{"total":10,"covered":10,"skipped":0,"pct":100},"functions":{"total":2,"covered":2,"skipped":0,"pct":100},"statements":{"total":10,"covered":10,"skipped":0,"pct":100},"branches":{"total":1,"covered":1,"skipped":0,"pct":100}}
+,"C:\\work\\i18n-text-replacer\\src\\replaceContexts\\TextInsertContext.ts": {"lines":{"total":9,"covered":9,"skipped":0,"pct":100},"functions":{"total":3,"covered":3,"skipped":0,"pct":100},"statements":{"total":9,"covered":9,"skipped":0,"pct":100},"branches":{"total":0,"covered":0,"skipped":0,"pct":100}}
+,"C:\\work\\i18n-text-replacer\\src\\replaceContexts\\index.ts": {"lines":{"total":9,"covered":9,"skipped":0,"pct":100},"functions":{"total":0,"covered":0,"skipped":0,"pct":100},"statements":{"total":9,"covered":9,"skipped":0,"pct":100},"branches":{"total":0,"covered":0,"skipped":0,"pct":100}}
+,"C:\\work\\i18n-text-replacer\\src\\tsNodeHandlers\\IdentifierHandler.ts": {"lines":{"total":7,"covered":7,"skipped":0,"pct":100},"functions":{"total":2,"covered":2,"skipped":0,"pct":100},"statements":{"total":7,"covered":7,"skipped":0,"pct":100},"branches":{"total":4,"covered":4,"skipped":0,"pct":100}}
+,"C:\\work\\i18n-text-replacer\\src\\tsNodeHandlers\\ImportHandler.ts": {"lines":{"total":5,"covered":5,"skipped":0,"pct":100},"functions":{"total":2,"covered":2,"skipped":0,"pct":100},"statements":{"total":5,"covered":5,"skipped":0,"pct":100},"branches":{"total":0,"covered":0,"skipped":0,"pct":100}}
+,"C:\\work\\i18n-text-replacer\\src\\tsNodeHandlers\\JsxExpressionHandler.ts": {"lines":{"total":6,"covered":6,"skipped":0,"pct":100},"functions":{"total":2,"covered":2,"skipped":0,"pct":100},"statements":{"total":6,"covered":6,"skipped":0,"pct":100},"branches":{"total":0,"covered":0,"skipped":0,"pct":100}}
+,"C:\\work\\i18n-text-replacer\\src\\tsNodeHandlers\\JsxTagHandler.ts": {"lines":{"total":10,"covered":10,"skipped":0,"pct":100},"functions":{"total":2,"covered":2,"skipped":0,"pct":100},"statements":{"total":10,"covered":10,"skipped":0,"pct":100},"branches":{"total":2,"covered":2,"skipped":0,"pct":100}}
+,"C:\\work\\i18n-text-replacer\\src\\tsNodeHandlers\\StringLikeNodesHandler.ts": {"lines":{"total":35,"covered":34,"skipped":0,"pct":97.14},"functions":{"total":4,"covered":4,"skipped":0,"pct":100},"statements":{"total":35,"covered":34,"skipped":0,"pct":97.14},"branches":{"total":102,"covered":82,"skipped":0,"pct":80.39}}
+,"C:\\work\\i18n-text-replacer\\src\\tsNodeHandlers\\TemplateHandler.ts": {"lines":{"total":6,"covered":6,"skipped":0,"pct":100},"functions":{"total":2,"covered":2,"skipped":0,"pct":100},"statements":{"total":6,"covered":6,"skipped":0,"pct":100},"branches":{"total":0,"covered":0,"skipped":0,"pct":100}}
+,"C:\\work\\i18n-text-replacer\\src\\tsNodeHandlers\\TemplateSpanHandler.ts": {"lines":{"total":9,"covered":9,"skipped":0,"pct":100},"functions":{"total":2,"covered":2,"skipped":0,"pct":100},"statements":{"total":9,"covered":9,"skipped":0,"pct":100},"branches":{"total":0,"covered":0,"skipped":0,"pct":100}}
+,"C:\\work\\i18n-text-replacer\\src\\tsNodeHandlers\\index.ts": {"lines":{"total":9,"covered":9,"skipped":0,"pct":100},"functions":{"total":0,"covered":0,"skipped":0,"pct":100},"statements":{"total":9,"covered":9,"skipped":0,"pct":100},"branches":{"total":0,"covered":0,"skipped":0,"pct":100}}
 }

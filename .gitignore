@@ -2,5 +2,3 @@ node_modules
 
 dist
 lib
-coverage/*
-!coverage/coverage-summary.json
