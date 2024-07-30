@@ -1,5 +1,5 @@
 {
-  "name": "@cszhang/i18n",
+  "name": "automatic-i18n",
   "version": "1.0.8",
   "description": "Replace the language in the front-end source code with one command",
   "main": "lib/src/index.js",
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/zcs19871221/fast-i18n"
+    "url": "https://github.com/zcs19871221/automatic-i18n"
   },
   "scripts": {
     "tsc": "tsc",
