@@ -1,9 +1,7 @@
 # automatic-i18n
 
 [![CI](./assets/badge.svg)](https://github.com/zcs19871221/automatic-i18n/actions/workflows/npm-publish.yml)
-
 [![Test coverage](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fzcs19871221%2Fautomatic-i18n%2Fmaster%2Fcoverage%2Fcoverage-summary.json&query=%24.total.lines.pct&style=flat&label=Coverage&color=%2343be15)](https://htmlpreview.github.io/?https://github.com/zcs19871221/automatic-i18n/blob/master/coverage/lcov-report/index.html)
-
 [![npm version](https://img.shields.io/npm/v/automatic-i18n?style=flat-square)](https://www.npmjs.com/package/automatic-i18n)
 
 ## Introduction
