@@ -1,11 +1,15 @@
 import { Node, SyntaxKind } from 'typescript';
 import { FileContext } from '../replaceContexts';
 import { TsNodeHandler } from './TsNodeHandler';
-import { ReplaceContext, JsxTagContext } from '../replaceContexts';
+import { ReplaceContext } from '../replaceContexts';
+import { JsxTextContext } from '../replaceContexts/JsxTextContext';
 
-export class JsxTagHandler implements TsNodeHandler {
-  match(node: Node): boolean {
-    return [SyntaxKind.JsxElement, SyntaxKind.JsxFragment].includes(node.kind);
+export class JsxTextHandler implements TsNodeHandler {
+  match(node: Node, context: FileContext): boolean {
+    return (
+      node.kind === SyntaxKind.JsxText &&
+      context.i18nReplacer.includesTargetLocale(node.getText())
+    );
   }
 
   handle(
@@ -13,7 +17,7 @@ export class JsxTagHandler implements TsNodeHandler {
     fileContext: FileContext,
     parent?: ReplaceContext | undefined
   ): void {
-    const jsx = new JsxTagContext({
+    const jsx = new JsxTextContext({
       node,
       fileContext,
       parent,

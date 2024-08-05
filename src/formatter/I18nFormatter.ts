@@ -3,6 +3,7 @@ import {
   StringLiteralContext,
   TemplateStringContext,
 } from '../replaceContexts';
+import { JsxTextContext } from '../replaceContexts/JsxTextContext';
 import { LocaleTypes } from '../types';
 
 export interface FormatOptions {
@@ -55,7 +56,11 @@ export abstract class I18nFormatter {
   }
 
   public format(
-    context: JsxChildContext | StringLiteralContext | TemplateStringContext,
+    context:
+      | JsxChildContext
+      | StringLiteralContext
+      | TemplateStringContext
+      | JsxTextContext,
     opt: FormatOptions
   ) {
     const [intlId, message] = this.getOrCreateIntlId(opt.defaultMessage);
@@ -78,7 +83,10 @@ export abstract class I18nFormatter {
       }
       return newText;
     };
-    if (context instanceof JsxChildContext) {
+    if (
+      context instanceof JsxChildContext ||
+      context instanceof JsxTextContext
+    ) {
       const result = this.renderJsxChildContext(context, opt, intlId);
       return handleResult(result);
     }
@@ -92,7 +100,7 @@ export abstract class I18nFormatter {
   }
 
   protected abstract renderJsxChildContext(
-    context: JsxChildContext,
+    context: JsxChildContext | JsxTextContext,
     opt: FormatOptions,
     intlId: string
   ): FormatReturnType | null;

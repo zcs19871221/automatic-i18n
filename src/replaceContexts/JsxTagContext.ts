@@ -1,6 +1,7 @@
 import { JsxChildContext } from './JsxChildContext';
 import { ReplaceContext } from './ReplaceContext';
 import { JsxExpressionContext } from './JsxExpressionContext';
+import { JsxTextContext } from './JsxTextContext';
 
 export class JsxTagContext extends ReplaceContext {
   public jsxWrap = false;
@@ -20,48 +21,59 @@ export class JsxTagContext extends ReplaceContext {
   }
 
   protected override joinChildrenMessage(): void {
-    if (this.jsxWrap) {
-      const newChildren: ReplaceContext[] = [];
-      let block: ReplaceContext[] = [];
-      const createJsxList = (end: number, nextStart: number) => {
-        if (start >= end) {
-          return;
-        }
-        const jsxContextList = new JsxChildContext(
-          this.fileContext,
-          start,
-          end,
-          block
-        );
-
-        jsxContextList.generateMessage();
-        if (jsxContextList.content) {
-          newChildren.push(jsxContextList);
-        }
-        start = nextStart;
-        block = [];
-      };
-      let start = this.children[0].end;
-      newChildren.push(this.children[0]);
-      for (let i = 1; i < this.children.length - 1; i++) {
-        const c = this.children[i];
-        if (
-          c instanceof JsxTagContext ||
-          (c instanceof JsxExpressionContext && c.includeJsx)
-        ) {
-          createJsxList(c.start, c.end);
-          newChildren.push(c);
-          continue;
-        }
-
-        block.push(c);
+    const newChildren: ReplaceContext[] = [...this.children];
+    for (let i = 0; i < this.children.length; ) {
+      const c = this.children[i];
+      if (!(c instanceof JsxTextContext)) {
+        i++;
+        continue;
       }
 
-      createJsxList(this.children[this.children.length - 1].start, -1);
-      newChildren.push(this.children[this.children.length - 1]);
-      this.children = newChildren;
+      const siblingNodes = c.getNode()?.parent.getChildren();
+      const indexInNodes = siblingNodes?.indexOf(c.getNode()!) ?? -1;
+      if (!siblingNodes || indexInNodes == -1) {
+        continue;
+      }
+      let prevCount = 1;
+      const blocks: ReplaceContext[] = [];
+      while (
+        i - prevCount >= 0 &&
+        siblingNodes[indexInNodes - prevCount] ===
+          this.children[i - prevCount].getNode() &&
+        this.children[i - prevCount] instanceof JsxExpressionContext
+      ) {
+        blocks.unshift(this.children[i - prevCount]);
+        prevCount++;
+      }
+      let afterCount = 1;
+      while (
+        i + afterCount < this.children.length &&
+        siblingNodes[indexInNodes + afterCount] ===
+          this.children[i + afterCount].getNode() &&
+        this.children[i + afterCount] instanceof JsxExpressionContext
+      ) {
+        blocks.push(this.children[i + afterCount]);
+        afterCount++;
+      }
+      i += afterCount;
+      if (blocks.length === 0) {
+        continue;
+      }
+      const mergedContext = new JsxChildContext(
+        this.fileContext,
+        blocks[0].start,
+        blocks[blocks.length - 1].end,
+        blocks
+      );
+      mergedContext.generateMessage();
+
+      blocks.forEach((block) => {
+        newChildren.splice(newChildren.indexOf(block), 1);
+      });
+      newChildren.splice(newChildren.indexOf(c), 1, mergedContext);
     }
 
+    this.children = newChildren;
     this.content = this.joinChildren(0, 0);
   }
 }
