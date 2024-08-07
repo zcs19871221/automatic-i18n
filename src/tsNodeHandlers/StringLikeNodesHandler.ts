@@ -6,10 +6,10 @@ import {
   isTypeNode,
 } from 'typescript';
 import { ReplaceContext } from '../ReplaceContext';
-import { Opt, TsNodeHandler, HandledOpt } from './TsNodeHandler';
+import { TsNodeHandler, HandlerOption } from './TsNodeHandler';
 
 export class StringLikeNodesHandler implements TsNodeHandler {
-  match({ node, info, info: { i18nReplacer } }: Opt): boolean {
+  match({ node, info, info: { i18nReplacer } }: HandlerOption): boolean {
     if (
       ![SyntaxKind.StringLiteral, SyntaxKind.FirstTemplateToken].includes(
         node.kind
@@ -75,9 +75,8 @@ export class StringLikeNodesHandler implements TsNodeHandler {
   handle({
     node,
     info: { i18nReplacer },
-    parentContext,
     info,
-  }: HandledOpt): ReplaceContext {
+  }: HandlerOption): ReplaceContext {
     const stringLiteral = new ReplaceContext({
       start: node.getStart(),
       end: node.getEnd(),

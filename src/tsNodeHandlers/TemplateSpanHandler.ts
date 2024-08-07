@@ -1,18 +1,17 @@
 import { SyntaxKind } from 'typescript';
 import {
-  HandledOpt,
-  Opt,
+  HandlerOption,
   TsNodeHandler,
-  handleChildren,
+  traverseChildren,
 } from './TsNodeHandler';
 import { ReplaceContext } from '../ReplaceContext';
 
 export class TemplateSpanHandler implements TsNodeHandler {
-  match({ node, info: { i18nReplacer } }: Opt): boolean {
+  match({ node, info: { i18nReplacer } }: HandlerOption): boolean {
     return node.kind === SyntaxKind.TemplateSpan;
   }
 
-  handle({ node, info, tsNodeHandlers }: HandledOpt): ReplaceContext {
+  handle({ node, info, tsNodeHandlers }: HandlerOption): ReplaceContext {
     const start = node.getStart() - 2;
     const end = node.getEnd();
 
@@ -21,7 +20,7 @@ export class TemplateSpanHandler implements TsNodeHandler {
       end,
       info,
     });
-    handleChildren({
+    traverseChildren({
       node,
       parentContext: templateExpression,
       info,

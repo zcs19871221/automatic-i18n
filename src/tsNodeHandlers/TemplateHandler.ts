@@ -1,15 +1,13 @@
 import { ReplaceContext } from '../ReplaceContext';
 import {
-  HandledOpt,
-  Opt,
+  HandlerOption,
   TsNodeHandler,
-  handleChildren,
   traverseChildren,
 } from './TsNodeHandler';
 import { SyntaxKind } from 'typescript';
 
 export class TemplateExpressionHandler implements TsNodeHandler {
-  match({ node }: Opt): boolean {
+  match({ node }: HandlerOption): boolean {
     return (
       node.kind === SyntaxKind.TemplateExpression ||
       node.kind === SyntaxKind.TemplateSpan
@@ -22,8 +20,7 @@ export class TemplateExpressionHandler implements TsNodeHandler {
     info,
     info: { i18nReplacer, file },
     tsNodeHandlers,
-  }: HandledOpt): ReplaceContext {
-    console.log(node);
+  }: HandlerOption): ReplaceContext | void {
     const template = new ReplaceContext({
       start: node.getStart(),
       end: node.getEnd(),
@@ -31,6 +28,7 @@ export class TemplateExpressionHandler implements TsNodeHandler {
     });
     traverseChildren({ node, parentContext: template, info, tsNodeHandlers });
 
+    template.sortAndCheckChildren();
     const skip: Record<number, number> = {};
     template.children.forEach((c) => {
       skip[c.start] = c.end;
@@ -48,10 +46,21 @@ export class TemplateExpressionHandler implements TsNodeHandler {
     }
     if (!hasTargetLocale) {
       parentContext.children.push(...template.children);
-      return parentContext;
+      return;
     }
 
-    template.useChildrenCreateIntlVariableMessage((str) => str.replace());
-    return;
+    const { str, keyMapValue } = template.useChildrenCreateIntlVariableMessage(
+      (str) => str.slice(2, str.length).slice(0, -1)
+    );
+
+    template.newText = i18nReplacer.i18nFormatter.renderTemplateString({
+      params: keyMapValue,
+      defaultMessage: str.slice(1).slice(0, -1),
+      originStr: node.getText(),
+      info,
+      node: node,
+      context: template,
+    });
+    return template;
   }
 }

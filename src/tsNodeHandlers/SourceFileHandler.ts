@@ -1,14 +1,14 @@
 import { SyntaxKind } from 'typescript';
 import { TsNodeHandler } from '.';
-import { HandledOpt, Opt, traverseChildren } from './TsNodeHandler';
+import { HandlerOption, traverseChildren } from './TsNodeHandler';
 import { ReplaceContext } from '../ReplaceContext';
 
 export class SourceFileHandler implements TsNodeHandler {
-  match({ node }: Opt): boolean {
+  match({ node }: HandlerOption): boolean {
     return node.kind === SyntaxKind.SourceFile;
   }
 
-  handle(opt: HandledOpt): ReplaceContext {
+  handle(opt: HandlerOption): ReplaceContext | void {
     const {
       node,
       info,
@@ -86,6 +86,5 @@ export class SourceFileHandler implements TsNodeHandler {
 
     parentContext.sortAndCheckChildren();
     parentContext.newText = parentContext.joinChildren();
-    return parentContext;
   }
 }

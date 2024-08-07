@@ -26,7 +26,7 @@ export interface ReplacerOpt {
   outputToNewDir?: string;
 }
 
-export type HandledOpt = {
+export type HandlerOption = {
   [key in keyof Omit<
     ReplacerOpt,
     'I18nFormatterClass' | 'excludes' | 'outputToNewDir'

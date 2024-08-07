@@ -1,16 +1,14 @@
 import { Node, SyntaxKind } from 'typescript';
 import { ReplaceContext } from '../ReplaceContext';
 import {
-  HandledOpt,
-  Opt,
+  HandlerOption,
   TsNodeHandler,
-  handleChildren,
   handleNode,
   traverseChildren,
 } from './TsNodeHandler';
 
 export class JsxTagHandler implements TsNodeHandler {
-  match({ node }: Opt): boolean {
+  match({ node }: HandlerOption): boolean {
     return (
       node.kind === SyntaxKind.JsxElement ||
       node.kind === SyntaxKind.JsxFragment
@@ -23,10 +21,15 @@ export class JsxTagHandler implements TsNodeHandler {
     info: { i18nReplacer },
     parentContext,
     tsNodeHandlers,
-  }: HandledOpt): ReplaceContext {
+  }: HandlerOption): ReplaceContext | void {
+    // handle start html tag
     const startTag = node.getChildren()[0];
-    handleChildren({ node: startTag, info, parentContext, tsNodeHandlers });
-
+    traverseChildren({
+      node: startTag,
+      parentContext,
+      info,
+      tsNodeHandlers,
+    });
     // jsxInnerHtml nodes
     const innerHtmlNodes = node.getChildren()[1].getChildren();
 
@@ -135,7 +138,5 @@ export class JsxTagHandler implements TsNodeHandler {
         tsNodeHandlers,
       });
     });
-
-    return parentContext;
   }
 }

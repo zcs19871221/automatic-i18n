@@ -1,9 +1,9 @@
 import { SyntaxKind } from 'typescript';
-import { Opt, TsNodeHandler } from './TsNodeHandler';
+import { HandlerOption, TsNodeHandler } from './TsNodeHandler';
 import { ReplaceContext } from '../ReplaceContext';
 
 export class IdentifierHandler implements TsNodeHandler {
-  match(opt: Opt): boolean {
+  match(opt: HandlerOption): boolean {
     return opt.node.kind === SyntaxKind.Identifier;
   }
 
@@ -11,8 +11,7 @@ export class IdentifierHandler implements TsNodeHandler {
     node,
     info,
     info: { i18nReplacer },
-    parentContext,
-  }: Opt): ReplaceContext {
+  }: HandlerOption): ReplaceContext | void {
     // add warning if use non english text as object property name
     if (
       i18nReplacer.opt.localeToReplace !== 'en-us' &&
@@ -36,11 +35,11 @@ export class IdentifierHandler implements TsNodeHandler {
       const keyNode = node.parent.getChildren()[2];
       const matched = keyNode?.getText().match(/(['"])(key\d+)['"]/);
       if (!matched) {
-        return parentContext;
+        return;
       }
       const newKey = i18nReplacer.getOldKeyMapNewKey()[matched[2]];
       if (!newKey) {
-        return parentContext;
+        return;
       }
       const replaceKeyToMeaningKey = new ReplaceContext({
         start: keyNode.getStart(),
@@ -51,6 +50,5 @@ export class IdentifierHandler implements TsNodeHandler {
         matched[1] + i18nReplacer.getOldKeyMapNewKey()[matched[2]] + matched[1];
       return replaceKeyToMeaningKey;
     }
-    return parentContext;
   }
 }

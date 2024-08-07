@@ -12,7 +12,7 @@ import { Options as PrettierOptions } from 'prettier';
 
 import { ReplaceContext, Info } from './ReplaceContext';
 import {
-  HandledOpt,
+  HandlerOption,
   ReplacerOpt,
   LocaleTypes,
   I18nFormatterCtr,
@@ -98,7 +98,7 @@ export const initParams = ({
     fileOrDirName === distLocaleDir ? false : true
   );
 
-  const handledOpt: HandledOpt = {
+  const HandlerOption: HandlerOption = {
     global: hook,
     targets,
     distLocaleDir,
@@ -112,9 +112,9 @@ export const initParams = ({
   };
 
   if (debug) {
-    console.debug(handledOpt);
+    console.debug(HandlerOption);
   }
-  return handledOpt;
+  return HandlerOption;
 };
 
 export const getScriptTarget = (file: string): ScriptTarget => {
@@ -146,7 +146,7 @@ export default class I18nReplacer {
   private ignoreComment = '@ignore';
 
   public readonly i18nFormatter: I18nFormatter;
-  private constructor(public readonly opt: HandledOpt) {
+  private constructor(public readonly opt: HandlerOption) {
     this.i18nFormatter = new opt.I18nFormatter();
   }
 
