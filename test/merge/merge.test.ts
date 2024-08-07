@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import { runAndExpect } from '../helper';
 
-it('hook edge case', async () => {
+it('test merge', async () => {
   await runAndExpect({
     dirName: path.basename(__dirname),
     opt: {

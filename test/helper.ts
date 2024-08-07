@@ -12,9 +12,9 @@ export const doEqual = (dir: string) => {
     if (fs.lstatSync(fileOrDirLocate).isDirectory()) {
       return doEqual(fileOrDirLocate);
     }
-    expect(fs.readFileSync(fileOrDirLocate, 'utf-8')).toEqual(
+    expect(
       fs.readFileSync(fileOrDirLocate.replace(expectName, distName), 'utf-8')
-    );
+    ).toEqual(fs.readFileSync(fileOrDirLocate, 'utf-8'));
   });
 };
 

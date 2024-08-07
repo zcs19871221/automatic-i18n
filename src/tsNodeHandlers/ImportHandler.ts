@@ -1,15 +1,15 @@
-import { Node } from 'typescript';
 import { ImportDeclaration, SyntaxKind } from 'typescript';
-import { TsNodeHandler } from './TsNodeHandler';
-import { FileContext } from '../replaceContexts';
+import { Opt, TsNodeHandler } from './TsNodeHandler';
+import { ReplaceContext } from '../ReplaceContext';
 
 export class ImportHandler implements TsNodeHandler {
-  match(node: Node): boolean {
+  match({ node }: Opt): boolean {
     return node.kind === SyntaxKind.ImportDeclaration;
   }
 
-  handle(node: Node, fileContext: FileContext): void {
+  handle({ node, info, parentContext }: Opt): ReplaceContext {
     const importNode = node as ImportDeclaration;
-    fileContext.addImportNode(importNode);
+    info.imports.add(importNode);
+    return parentContext;
   }
 }

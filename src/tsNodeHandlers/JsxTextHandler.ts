@@ -1,29 +1,33 @@
-import { Node, SyntaxKind } from 'typescript';
-import { FileContext } from '../replaceContexts';
-import { TsNodeHandler } from './TsNodeHandler';
-import { ReplaceContext } from '../replaceContexts';
-import { JsxTextContext } from '../replaceContexts/JsxTextContext';
+import { SyntaxKind } from 'typescript';
+import { Opt, TsNodeHandler, HandledOpt } from './TsNodeHandler';
+import { ReplaceContext } from '../ReplaceContext';
 
 export class JsxTextHandler implements TsNodeHandler {
-  match(node: Node, context: FileContext): boolean {
+  match({ node, info: { i18nReplacer } }: Opt): boolean {
     return (
       node.kind === SyntaxKind.JsxText &&
-      context.i18nReplacer.includesTargetLocale(node.getText())
+      i18nReplacer.includesTargetLocale(node.getText())
     );
   }
 
-  handle(
-    node: Node,
-    fileContext: FileContext,
-    parent?: ReplaceContext | undefined
-  ): void {
-    const jsx = new JsxTextContext({
-      node,
-      fileContext,
-      parent,
+  handle({
+    node,
+    parentContext,
+    info,
+    info: { i18nReplacer },
+  }: HandledOpt): ReplaceContext {
+    const jsxText = new ReplaceContext({
       start: node.getStart(),
       end: node.getEnd(),
+      info,
     });
-    jsx.generateMessage();
+    jsxText.newText = i18nReplacer.i18nFormatter.renderJsxText({
+      node,
+      defaultMessage: node.getText(),
+      originStr: node.getText(),
+      info,
+      context: jsxText,
+    });
+    return jsxText;
   }
 }

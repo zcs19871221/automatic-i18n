@@ -5,12 +5,11 @@ import {
   SyntaxKind,
   isTypeNode,
 } from 'typescript';
-import { ReplaceContext, StringLiteralContext } from '../replaceContexts';
-import { FileContext } from '../replaceContexts';
-import { TsNodeHandler } from './TsNodeHandler';
+import { ReplaceContext } from '../ReplaceContext';
+import { Opt, TsNodeHandler, HandledOpt } from './TsNodeHandler';
 
 export class StringLikeNodesHandler implements TsNodeHandler {
-  match(node: Node, fileContext: FileContext): boolean {
+  match({ node, info, info: { i18nReplacer } }: Opt): boolean {
     if (
       ![SyntaxKind.StringLiteral, SyntaxKind.FirstTemplateToken].includes(
         node.kind
@@ -19,7 +18,7 @@ export class StringLikeNodesHandler implements TsNodeHandler {
       return false;
     }
 
-    if (!fileContext.i18nReplacer.includesTargetLocale(node.getText())) {
+    if (!i18nReplacer.includesTargetLocale(node.getText())) {
       return false;
     }
     if (node.parent?.kind === SyntaxKind.ImportDeclaration) {
@@ -31,7 +30,7 @@ export class StringLikeNodesHandler implements TsNodeHandler {
     }
 
     if (node.kind === SyntaxKind.StringLiteral) {
-      if (fileContext.i18nReplacer.ignore(node)) {
+      if (i18nReplacer.ignore(node)) {
         return false;
       }
 
@@ -39,14 +38,14 @@ export class StringLikeNodesHandler implements TsNodeHandler {
         this.stringLiteralIsInEqualBlock(node) ||
         this.stringLiteralIsChildOfIncludeBlock(node)
       ) {
-        fileContext.i18nReplacer.addWarning({
+        i18nReplacer.addWarning({
           text:
             'do not use locale literal to do [===] or [includes], maybe an error! use /* ' +
-            fileContext.i18nReplacer.getIgnoreComment() +
+            i18nReplacer.getIgnoreComment() +
             ' */ before text to ignore warning or refactor code!',
           start: node.getStart(),
           end: node.getEnd(),
-          fileContext,
+          info,
         });
         return false;
       }
@@ -73,16 +72,38 @@ export class StringLikeNodesHandler implements TsNodeHandler {
     return true;
   }
 
-  handle(node: Node, fileContext: FileContext, parent: ReplaceContext) {
-    const stringLiteral = new StringLiteralContext({
-      node,
+  handle({
+    node,
+    info: { i18nReplacer },
+    parentContext,
+    info,
+  }: HandledOpt): ReplaceContext {
+    const stringLiteral = new ReplaceContext({
       start: node.getStart(),
       end: node.getEnd(),
-      fileContext,
-      parent,
+      info,
     });
-    stringLiteral.needReplace = true;
-    stringLiteral.generateMessage();
+
+    const originStr = this.removeTextVariableSymbol(node.getText());
+
+    let newText = i18nReplacer.i18nFormatter.renderStringLike({
+      defaultMessage: originStr,
+      originStr: node!.getText(),
+      context: stringLiteral,
+      info,
+      node,
+    });
+
+    if (node.parent.kind === SyntaxKind.JsxAttribute) {
+      newText = '{' + newText + '}';
+    }
+
+    stringLiteral.newText = newText;
+    return stringLiteral;
+  }
+
+  private removeTextVariableSymbol(text: string) {
+    return text.replace(/^['"`]/, '').replace(/['"`]$/, '');
   }
 
   private stringLiteralIsChildOfIncludeBlock(node: Node) {

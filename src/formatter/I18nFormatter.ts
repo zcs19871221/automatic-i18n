@@ -1,15 +1,14 @@
-import {
-  JsxChildContext,
-  StringLiteralContext,
-  TemplateStringContext,
-} from '../replaceContexts';
-import { JsxTextContext } from '../replaceContexts/JsxTextContext';
+import { Node } from 'typescript';
+import { Info, ReplaceContext } from '../ReplaceContext';
 import { LocaleTypes } from '../types';
 
 export interface FormatOptions {
   params?: Record<string, string>;
   defaultMessage: string;
   originStr: string;
+  info: Info;
+  node: Node;
+  context: ReplaceContext;
 }
 
 export interface FormatReturnType {
@@ -55,67 +54,59 @@ export abstract class I18nFormatter {
     return [intlId, message];
   }
 
-  public format(
-    context:
-      | JsxChildContext
-      | StringLiteralContext
-      | TemplateStringContext
-      | JsxTextContext,
-    opt: FormatOptions
-  ) {
-    const [intlId, message] = this.getOrCreateIntlId(opt.defaultMessage);
-    opt.defaultMessage = message;
-    const handleResult = (result: null | FormatReturnType) => {
-      if (result === null) {
-        return opt.originStr;
-      }
-      if (!this.messageMapIntlId[message]) {
-        this.messageMapIntlId[message] = intlId;
-        this.newIntlMapMessages[intlId] = message;
-      }
-
-      const { newText, dependencies } = result;
-      if (dependencies) {
-        context.fileContext.addRequiredImports(
-          dependencies.moduleName,
-          dependencies.names
-        );
-      }
-      return newText;
-    };
-    if (
-      context instanceof JsxChildContext ||
-      context instanceof JsxTextContext
-    ) {
-      const result = this.renderJsxChildContext(context, opt, intlId);
-      return handleResult(result);
-    }
-    if (context instanceof TemplateStringContext) {
-      const result = this.renderTemplateStringContext(context, opt, intlId);
-      return handleResult(result);
-    }
-
-    const result = this.renderStringLiteralContext(context, opt, intlId);
-    return handleResult(result);
+  public renderJsxText(opt: FormatOptions): string {
+    return this.render(opt, 'doRenderStringLike');
   }
 
-  protected abstract renderJsxChildContext(
-    context: JsxChildContext | JsxTextContext,
+  public renderTemplateString(opt: FormatOptions) {
+    return this.render(opt, 'doRenderTemplateString');
+  }
+
+  public renderStringLike(opt: FormatOptions) {
+    return this.render(opt, 'doRenderStringLike');
+  }
+
+  protected abstract doRenderJsxText(
+    opt: FormatOptions,
+    intlId: string
+  ): FormatReturnType | null;
+  protected abstract doRenderTemplateString(
+    opt: FormatOptions,
+    intlId: string
+  ): FormatReturnType | null;
+  protected abstract doRenderStringLike(
     opt: FormatOptions,
     intlId: string
   ): FormatReturnType | null;
 
-  protected abstract renderTemplateStringContext(
-    context: TemplateStringContext,
+  private render(
     opt: FormatOptions,
-    intlId: string
-  ): FormatReturnType | null;
+    method: 'doRenderJsxText' | 'doRenderTemplateString' | 'doRenderStringLike'
+  ): string {
+    const [intlId, message] = this.getOrCreateIntlId(opt.defaultMessage);
+    const result: FormatReturnType | null = this[method](opt, intlId);
 
-  protected abstract renderStringLiteralContext(
-    context: StringLiteralContext,
-    opt: FormatOptions,
-    intlId: string
-  ): FormatReturnType | null;
+    if (result === null) {
+      return opt.originStr;
+    }
+    if (!this.messageMapIntlId[message]) {
+      this.messageMapIntlId[message] = intlId;
+      this.newIntlMapMessages[intlId] = message;
+    }
+
+    const { newText, dependencies } = result;
+    if (dependencies) {
+      const { moduleName, names } = dependencies;
+      opt.info.requiredImports[moduleName] ??= {
+        moduleName,
+        names: new Set(),
+      };
+      names.forEach((name) => {
+        opt.info.requiredImports[moduleName].names.add(name);
+      });
+    }
+    return newText;
+  }
 
   protected camelLocale(naming: string) {
     const splitIndex = naming.indexOf('-');

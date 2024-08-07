@@ -10,7 +10,7 @@ import ts, {
 import * as prettier from 'prettier';
 import { Options as PrettierOptions } from 'prettier';
 
-import { FileContext } from './replaceContexts';
+import { ReplaceContext, Info } from './ReplaceContext';
 import {
   HandledOpt,
   ReplacerOpt,
@@ -20,6 +20,8 @@ import {
 } from './types';
 import { ScriptTarget } from 'typescript';
 import { DefaultI18nFormatter, I18nFormatter } from './formatter';
+import tsNodeHandlers from './tsNodeHandlers';
+import { handleNode } from './tsNodeHandlers/TsNodeHandler';
 
 export { I18nFormatter };
 
@@ -318,28 +320,28 @@ export default class I18nReplacer {
     start,
     end,
     text,
-    fileContext,
+    info,
   }: {
     start: number;
     end: number;
     text: string;
-    fileContext: FileContext;
+    info: Info;
   }) {
     this.warnings.add(
       'warning: ' +
         text +
         '\nfile: ' +
-        fileContext.fileLocate +
+        info.fileName +
         ' start:' +
         start +
         ' end: ' +
         end +
         '\ntext: |' +
-        fileContext.file.slice(Math.max(0, start - 3), start) +
+        info.file.slice(Math.max(0, start - 3), start) +
         '[' +
-        fileContext.file.slice(start, end).replace(/(\n)+/g, '\\n') +
+        info.file.slice(start, end).replace(/(\n)+/g, '\\n') +
         ']' +
-        fileContext.file.slice(end + 1, end + 4).replace(/(\n)+/g, '\\n') +
+        info.file.slice(end + 1, end + 4).replace(/(\n)+/g, '\\n') +
         '|\n'
     );
   }
@@ -441,16 +443,25 @@ export default class I18nReplacer {
 
       const node = createSourceFile(fileLocation, file, scriptTarget, true);
 
-      let fileContext: FileContext = new FileContext({
-        node,
+      const info: Info = {
         file,
-        fileLocate: fileLocation,
-        i18nReplacer: this,
+        fileName: fileLocation,
+        i18nReplacer: this as I18nReplacer,
+        imports: new Set(),
+        requiredImports: {},
+      };
+      const fileContext = new ReplaceContext({
+        start: 0,
+        end: file.length,
+        info,
       });
-      let replacedText = '';
-
       try {
-        replacedText = fileContext.generateMessage();
+        handleNode({
+          node,
+          info: info,
+          parentContext: fileContext,
+          tsNodeHandlers,
+        });
       } catch (error: any) {
         if (error.message) {
           error.message = '@ ' + fileLocation + ' ' + error.message;
@@ -460,14 +471,14 @@ export default class I18nReplacer {
         fileContext.clear();
       }
 
-      if (!replacedText) {
+      if (fileContext.newText === null) {
         continue;
       }
 
       if (this.opt.outputToNewDir) {
         await this.formatAndWrite(
           path.join(this.opt.outputToNewDir, path.basename(fileLocation)),
-          replacedText,
+          fileContext.newText,
           prettierOptions
         );
         console.log(
@@ -477,7 +488,11 @@ export default class I18nReplacer {
             ' successful! 😃'
         );
       } else {
-        await this.formatAndWrite(fileLocation, replacedText, prettierOptions);
+        await this.formatAndWrite(
+          fileLocation,
+          fileContext.newText,
+          prettierOptions
+        );
         console.log(fileLocation + ' rewrite successful! 😃');
       }
     }

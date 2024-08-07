@@ -6,13 +6,7 @@ import {
   Block,
   ParenthesizedExpression,
 } from 'typescript';
-import {
-  JsxChildContext,
-  ReplaceContext,
-  StringLiteralContext,
-  TemplateStringContext,
-} from '../replaceContexts';
-import { TextInsertContext } from '../replaceContexts/TextInsertContext';
+import { ReplaceContext } from '../ReplaceContext';
 import {
   I18nFormatter,
   FormatOptions,
@@ -29,14 +23,17 @@ export default class DefaultI18nFormatter extends I18nFormatter {
     return hookEntryFileTemplate(localeFiles, defaultLocale);
   }
 
-  protected override renderJsxChildContext(
-    context: JsxChildContext,
+  protected override doRenderJsxText(
     options: FormatOptions,
     intlId: string
   ): FormatReturnType | null {
-    const { params, defaultMessage } = options;
-    if (context.i18nReplacer.opt.global) {
-      const globalRendered = this.renderGlobal(context, options, intlId);
+    const {
+      params,
+      defaultMessage,
+      info: { i18nReplacer },
+    } = options;
+    if (i18nReplacer.opt.global) {
+      const globalRendered = this.renderGlobal(options, intlId);
       if (!globalRendered) {
         return null;
       }
@@ -60,17 +57,15 @@ export default class DefaultI18nFormatter extends I18nFormatter {
     };
   }
 
-  protected override renderTemplateStringContext(
-    context: TemplateStringContext,
+  protected override doRenderTemplateString(
     opt: FormatOptions,
     intlId: string
   ): FormatReturnType | null {
-    return this.render(context, opt, intlId);
+    return this.doRender(opt, intlId);
   }
 
   private renderGlobal(
-    context: ReplaceContext,
-    { params, defaultMessage }: FormatOptions,
+    { params, defaultMessage, info: { i18nReplacer, fileName } }: FormatOptions,
     intlId: string
   ): FormatReturnType | null {
     const newText = this.intlApiExpression(
@@ -80,15 +75,12 @@ export default class DefaultI18nFormatter extends I18nFormatter {
       params
     );
     const localeDist = path.resolve(
-      context.i18nReplacer.opt.distLocaleDir,
+      i18nReplacer.opt.distLocaleDir,
       'index.tsx'
     );
-    const src = context.i18nReplacer.opt.outputToNewDir
-      ? path.join(
-          context.i18nReplacer.opt.outputToNewDir,
-          path.basename(context.fileContext.fileLocate)
-        )
-      : context.fileContext.fileLocate;
+    const src = i18nReplacer.opt.outputToNewDir
+      ? path.join(i18nReplacer.opt.outputToNewDir, path.basename(fileName))
+      : fileName;
 
     let relativePath = path
       .relative(src, localeDist)
@@ -108,34 +100,27 @@ export default class DefaultI18nFormatter extends I18nFormatter {
     };
   }
 
-  private render(
-    context: ReplaceContext,
-    { params, defaultMessage, originStr }: FormatOptions,
-    intlId: string
-  ) {
-    if (context.i18nReplacer.opt.global) {
-      return this.renderGlobal(
-        context,
-        {
-          params,
-          defaultMessage,
-          originStr,
-        },
-        intlId
-      );
+  private doRender(opt: FormatOptions, intlId: string) {
+    const {
+      params,
+      defaultMessage,
+      originStr,
+      node,
+      context,
+      info,
+      info: { i18nReplacer },
+    } = opt;
+    if (i18nReplacer.opt.global) {
+      return this.renderGlobal(opt, intlId);
     }
-    const parentFunctionInfo = DefaultI18nFormatter.getIfInFunctionBody(
-      context.getNode()!
-    );
+    const parentFunctionInfo = DefaultI18nFormatter.getIfInFunctionBody(node);
     // not in function scope, so skip
     if (parentFunctionInfo == null) {
-      context.i18nReplacer.addWarning({
-        text: `unable to replace ${context
-          .getNode()!
-          .getText()} in non component context, put it in React component or use GlobalFormatter `,
-        start: context.getNode()?.getStart() ?? 0,
-        end: context.getNode()?.getEnd() ?? 0,
-        fileContext: context.fileContext,
+      i18nReplacer.addWarning({
+        text: `unable to replace ${originStr} in non component context, put it in React component or use GlobalFormatter `,
+        start: context.start,
+        end: context.end,
+        info,
       });
 
       return null;
@@ -145,15 +130,7 @@ export default class DefaultI18nFormatter extends I18nFormatter {
     // in function body, but not a react component(we guess through component name)
     // so we use global api replace
     if (!DefaultI18nFormatter.reactComponentNameReg.test(functionName)) {
-      return this.renderGlobal(
-        context,
-        {
-          params,
-          defaultMessage,
-          originStr,
-        },
-        intlId
-      );
+      return this.renderGlobal(opt, intlId);
     }
     // we assume it was in react component, first check if already has
     // hook declare
@@ -185,58 +162,52 @@ export default class DefaultI18nFormatter extends I18nFormatter {
     // replace start `(` and end `)` with `{` and `}` with some expression
     if (functionBody.kind === SyntaxKind.ParenthesizedExpression) {
       contextToAdd.push(
-        new TextInsertContext(
-          functionBody.getStart(),
-          functionBody.getChildren()[1].getStart(),
-          context.fileContext,
-          `{\nconst ${intlObj} = useIntl(); \n return `
-        )
+        new ReplaceContext({
+          start: functionBody.getStart(),
+          end: functionBody.getChildren()[1].getStart(),
+          info,
+          newText: `{\nconst ${intlObj} = useIntl(); \n return `,
+        })
       );
       contextToAdd.push(
-        new TextInsertContext(
-          functionBody.getChildren()[2].getStart(),
-          functionBody.getChildren()[2].getEnd(),
-          context.fileContext,
-          `}`
-        )
+        new ReplaceContext({
+          start: functionBody.getChildren()[2].getStart(),
+          end: functionBody.getChildren()[2].getEnd(),
+          info,
+          newText: `}`,
+        })
       );
     } else {
       const start = functionBody.getStart() + 1;
       contextToAdd.push(
-        new TextInsertContext(
+        new ReplaceContext({
           start,
-          start,
-          context.fileContext,
-          `\nconst ${intlObj} = useIntl(); \n`
-        )
+          end: start,
+          info,
+          newText: `\nconst ${intlObj} = useIntl(); \n`,
+        })
       );
     }
 
     // check if same scope local has already add
-    if (
-      contextToAdd.some((c) => {
-        return context.fileContext
-          .getChildren()
-          .some((cc) => cc.start == c.start && cc.end === c.end);
-      })
-    ) {
-      return returnValue(intlObj);
-    }
-
-    contextToAdd.forEach((c) => {
-      c.generateMessage();
-      context.fileContext.addChildren(c);
+    contextToAdd.forEach((add) => {
+      if (
+        !context.children.some((c) => {
+          c.start === add.start && c.end === c.end;
+        })
+      ) {
+        context.children.push(add);
+      }
     });
 
-    return returnValue('intl');
+    return returnValue(intlObj);
   }
 
-  protected override renderStringLiteralContext(
-    context: StringLiteralContext,
+  protected override doRenderStringLike(
     opt: FormatOptions,
     intlId: string
   ): FormatReturnType | null {
-    return this.render(context, opt, intlId);
+    return this.doRender(opt, intlId);
   }
 
   private static reactComponentNameReg = /^[A-Z]/;
