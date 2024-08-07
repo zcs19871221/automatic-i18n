@@ -55,7 +55,9 @@ export class ReplaceContext {
     }
   }
 
-  public joinChildrenAsParameter(handler: (str: string) => string): {
+  public useChildrenCreateIntlVariableMessage(
+    handler: (str: string) => string
+  ): {
     str: string;
     keyMapValue: Record<string, string>;
   } {

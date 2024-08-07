@@ -89,14 +89,13 @@ export class JsxTagHandler implements TsNodeHandler {
               tsNodeHandlers,
             });
           });
-          const { str, keyMapValue } = nodeList.joinChildrenAsParameter(
-            (str) => {
+          const { str, keyMapValue } =
+            nodeList.useChildrenCreateIntlVariableMessage((str) => {
               if (str.startsWith('{') && str.endsWith('}')) {
                 return str.slice(1, str.length - 1);
               }
               return str;
-            }
-          );
+            });
 
           const newStr = str.replace(
             /(^[\s\n]+)|([\s\n]+$)/g,
