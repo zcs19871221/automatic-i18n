@@ -41,7 +41,6 @@ export abstract class I18nFormatter {
   private intlSeq: number = 1;
 
   private getOrCreateIntlId(message: string) {
-    message = message.replace(/(\r)?\n/g, '\\n');
     let intlId = '';
     if (this.messageMapIntlId[message] !== undefined) {
       intlId = this.messageMapIntlId[message];
@@ -83,6 +82,15 @@ export abstract class I18nFormatter {
     opt: FormatOptions,
     method: 'doRenderJsxText' | 'doRenderTemplateString' | 'doRenderStringLike'
   ): string {
+    opt.defaultMessage = opt.defaultMessage.replace(
+      /(?:\r)?\n/g,
+      (m, index) => {
+        if (opt.defaultMessage[index - 1] === '\\') {
+          return m;
+        }
+        return '\\' + m;
+      }
+    );
     const [intlId, message] = this.getOrCreateIntlId(opt.defaultMessage);
     const result: FormatReturnType | null = this[method](opt, intlId);
 

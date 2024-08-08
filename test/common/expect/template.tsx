@@ -182,45 +182,45 @@ export const App = ({
     >
       {i18n.intl.formatMessage(
         {
-          id: 'key0027',
-          defaultMessage: '`${v1}html中纯文本`',
+          id: 'key0025',
+          defaultMessage:
+            '`${v1}html中纯文本`\
+      {v2}\
+      然后分割\
+      {v3}然后分割',
         },
-        { v1: '' }
-      )}
-      {flag2 ? (
-        <div>{'fdsfdf'}</div>
-      ) : (
-        <div>
-          {flag2
-            ? i18n.intl.formatMessage({
-                id: 'key0020',
-                defaultMessage: '你好',
-              })
-            : i18n.intl.formatMessage(
-                {
-                  id: 'key0024',
-                  defaultMessage: '哈哈{v1}你好',
-                },
-                { v1: name }
-              )}
-        </div>
-      )}
-      {i18n.intl.formatMessage(
         {
-          id: 'key0028',
-          defaultMessage: '然后分割\n      {v1}然后分割',
-        },
-        { v1: name }
+          v1: '',
+          v2: flag2 ? (
+            <div>{'fdsfdf'}</div>
+          ) : (
+            <div>
+              {flag2
+                ? i18n.intl.formatMessage({
+                    id: 'key0020',
+                    defaultMessage: '你好',
+                  })
+                : i18n.intl.formatMessage(
+                    {
+                      id: 'key0024',
+                      defaultMessage: '哈哈{v1}你好',
+                    },
+                    { v1: name }
+                  )}
+            </div>
+          ),
+          v3: name,
+        }
       )}
       <div>
         {i18n.intl.formatMessage({
-          id: 'key0025',
+          id: 'key0026',
           defaultMessage: 'fff空节点zzx空节点',
         })}
       </div>
       <div>
         {i18n.intl.formatMessage({
-          id: 'key0026',
+          id: 'key0027',
           defaultMessage: '空节点',
         })}
       </div>

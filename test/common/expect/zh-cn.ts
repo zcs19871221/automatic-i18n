@@ -30,10 +30,13 @@ const locale: Record<LocalKey, string> = {
   key0022: '请输入',
   key0023: '你好{v1}哈哈{v2}为什么',
   key0024: '哈哈{v1}你好',
-  key0025: 'fff空节点zzx空节点',
-  key0026: '空节点',
-  key0027: '`${v1}html中纯文本`',
-  key0028: '然后分割\n      {v1}然后分割',
+  key0025:
+    '`${v1}html中纯文本`\
+      {v2}\
+      然后分割\
+      {v3}然后分割',
+  key0026: 'fff空节点zzx空节点',
+  key0027: '空节点',
 };
 
 export default locale;
