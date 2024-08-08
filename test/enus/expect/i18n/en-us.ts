@@ -6,8 +6,7 @@
 import { LocalKey } from './types';
 
 const locale: Record<LocalKey, string> = {
-  key0001: 'root',
-  key0002: 'switched to :{v1}',
+  key0001: 'switched to :{v1}',
 };
 
 export default locale;

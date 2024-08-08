@@ -1,11 +1,4 @@
-import {
-  SyntaxKind,
-  Node,
-  VariableDeclaration,
-  FunctionDeclaration,
-  Block,
-  ParenthesizedExpression,
-} from 'typescript';
+import { SyntaxKind } from 'typescript';
 import { ReplaceContext } from '../ReplaceContext';
 import {
   I18nFormatter,
@@ -104,27 +97,14 @@ export default class DefaultI18nFormatter extends I18nFormatter {
     const {
       params,
       defaultMessage,
-      originStr,
-      node,
-      context,
       info,
       info: { i18nReplacer },
     } = opt;
     if (i18nReplacer.opt.global) {
       return this.renderGlobal(opt, intlId);
     }
-    const parentFunctionInfo = DefaultI18nFormatter.getIfInFunctionBody(node);
-    // not in function scope, so skip
-    if (parentFunctionInfo == null) {
-      i18nReplacer.addWarning({
-        text: `unable to replace ${originStr} in non component context, put it in React component or use GlobalFormatter `,
-        start: context.start,
-        end: context.end,
-        info,
-      });
 
-      return null;
-    }
+    const parentFunctionInfo = I18nFormatter.getIfInFunctionBody(opt.node)!;
 
     const { functionName, functionBody } = parentFunctionInfo;
     // in function body, but not a react component(we guess through component name)
@@ -212,55 +192,4 @@ export default class DefaultI18nFormatter extends I18nFormatter {
   }
 
   private static reactComponentNameReg = /^[A-Z]/;
-  private static getIfInFunctionBody(node: Node): {
-    functionName: string;
-    functionBody: Block | ParenthesizedExpression;
-  } | null {
-    const functionExpression = (n: Node) => {
-      return (
-        n.kind === SyntaxKind.FunctionExpression &&
-        n.parent?.kind === SyntaxKind.VariableDeclaration
-      );
-    };
-
-    const functionDeclaration = (n: Node) => {
-      return n.kind === SyntaxKind.FunctionDeclaration;
-    };
-
-    const arrowFunction = (n: Node) => {
-      return (
-        n.kind === SyntaxKind.ArrowFunction &&
-        n.parent?.kind === SyntaxKind.VariableDeclaration
-      );
-    };
-
-    while (node) {
-      if (node.kind === SyntaxKind.Parameter) {
-        return null;
-      }
-      if (
-        node.parent &&
-        (functionExpression(node.parent) || arrowFunction(node.parent))
-      ) {
-        return {
-          functionName:
-            (node.parent.parent as VariableDeclaration).name.getText() ?? '',
-          functionBody: node as Block | ParenthesizedExpression,
-        };
-      }
-      if (
-        node.kind === SyntaxKind.Block &&
-        node.parent &&
-        functionDeclaration(node.parent)
-      ) {
-        return {
-          functionName:
-            (node.parent as FunctionDeclaration).name?.getText() ?? '',
-          functionBody: node as Block,
-        };
-      }
-      node = node.parent;
-    }
-    return null;
-  }
 }

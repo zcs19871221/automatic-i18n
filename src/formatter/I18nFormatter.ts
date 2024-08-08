@@ -1,4 +1,11 @@
-import { Node } from 'typescript';
+import {
+  Block,
+  FunctionDeclaration,
+  Node,
+  ParenthesizedExpression,
+  SyntaxKind,
+  VariableDeclaration,
+} from 'typescript';
 import { Info, ReplaceContext } from '../ReplaceContext';
 import { LocaleTypes } from '../types';
 
@@ -78,6 +85,58 @@ export abstract class I18nFormatter {
     intlId: string
   ): FormatReturnType | null;
 
+  public static getIfInFunctionBody(node: Node): {
+    functionName: string;
+    functionBody: Block | ParenthesizedExpression;
+  } | null {
+    const functionExpression = (n: Node) => {
+      return (
+        n.kind === SyntaxKind.FunctionExpression &&
+        n.parent?.kind === SyntaxKind.VariableDeclaration
+      );
+    };
+
+    const functionDeclaration = (n: Node) => {
+      return n.kind === SyntaxKind.FunctionDeclaration;
+    };
+
+    const arrowFunction = (n: Node) => {
+      return (
+        n.kind === SyntaxKind.ArrowFunction &&
+        n.parent?.kind === SyntaxKind.VariableDeclaration
+      );
+    };
+
+    while (node) {
+      if (node.kind === SyntaxKind.Parameter) {
+        return null;
+      }
+      if (
+        node.parent &&
+        (functionExpression(node.parent) || arrowFunction(node.parent))
+      ) {
+        return {
+          functionName:
+            (node.parent.parent as VariableDeclaration).name.getText() ?? '',
+          functionBody: node as Block | ParenthesizedExpression,
+        };
+      }
+      if (
+        node.kind === SyntaxKind.Block &&
+        node.parent &&
+        functionDeclaration(node.parent)
+      ) {
+        return {
+          functionName:
+            (node.parent as FunctionDeclaration).name?.getText() ?? '',
+          functionBody: node as Block,
+        };
+      }
+      node = node.parent;
+    }
+    return null;
+  }
+
   private render(
     opt: FormatOptions,
     method: 'doRenderJsxText' | 'doRenderTemplateString' | 'doRenderStringLike'
@@ -92,6 +151,22 @@ export abstract class I18nFormatter {
       }
     );
     const [intlId, message] = this.getOrCreateIntlId(opt.defaultMessage);
+
+    if (!opt.info.i18nReplacer.opt.global) {
+      const parentFunctionInfo = I18nFormatter.getIfInFunctionBody(opt.node);
+      // can not use react-intl hook in non-React component so skip
+      if (parentFunctionInfo == null) {
+        opt.info.i18nReplacer.addWarning({
+          text: `unable to replace ${opt.originStr} in non component context, put it in React component or use GlobalFormatter `,
+          start: opt.context.start,
+          end: opt.context.end,
+          info: opt.info,
+        });
+
+        return opt.originStr;
+      }
+    }
+
     const result: FormatReturnType | null = this[method](opt, intlId);
 
     if (result === null) {
