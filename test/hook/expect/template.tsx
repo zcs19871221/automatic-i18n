@@ -227,41 +227,40 @@ export const App = ({
       })}
     >
       <FormattedMessage
-        id="key0031"
-        defaultMessage="`${v1}html中纯文本`"
-        values={{ v1: '' }}
-      />
-
-      {flag2 ? (
-        <div>{'fdsfdf'}</div>
-      ) : (
-        <div>
-          {flag2
-            ? intl.formatMessage({
-                id: 'key0024',
-                defaultMessage: '你好',
-              })
-            : intl.formatMessage(
-                {
-                  id: 'key0028',
-                  defaultMessage: '哈哈{v1}你好',
-                },
-                { v1: name }
-              )}
-        </div>
-      )}
-
-      <FormattedMessage
-        id="key0032"
-        defaultMessage="然后分割\n      {v1}然后分割"
-        values={{ v1: name }}
+        id="key0029"
+        defaultMessage="`${v1}html中纯文本`\
+      {v2}\
+      然后分割\
+      {v3}然后分割"
+        values={{
+          v1: '',
+          v2: flag2 ? (
+            <div>{'fdsfdf'}</div>
+          ) : (
+            <div>
+              {flag2
+                ? intl.formatMessage({
+                    id: 'key0024',
+                    defaultMessage: '你好',
+                  })
+                : intl.formatMessage(
+                    {
+                      id: 'key0028',
+                      defaultMessage: '哈哈{v1}你好',
+                    },
+                    { v1: name }
+                  )}
+            </div>
+          ),
+          v3: name,
+        }}
       />
 
       <div>
-        <FormattedMessage id="key0029" defaultMessage="fff空节点zzx空节点" />
+        <FormattedMessage id="key0030" defaultMessage="fff空节点zzx空节点" />
       </div>
       <div>
-        <FormattedMessage id="key0030" defaultMessage="空节点" />
+        <FormattedMessage id="key0031" defaultMessage="空节点" />
       </div>
     </div>
   );

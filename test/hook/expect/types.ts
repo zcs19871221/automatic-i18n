@@ -29,5 +29,4 @@ export type LocalKey =
   | 'key0028'
   | 'key0029'
   | 'key0030'
-  | 'key0031'
-  | 'key0032';
+  | 'key0031';
