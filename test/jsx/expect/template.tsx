@@ -47,25 +47,29 @@ const nest1 = (
       })}
     </div>
     <span>
-      {i18n.intl.formatMessage({
-        id: 'key0002',
-        defaultMessage: '你好',
-      })}
-      {flag ? (
-        i18n.intl.formatMessage(
-          {
-            id: 'key0005',
-            defaultMessage: '哈哈{v1}',
-          },
-          { v1: name }
-        )
-      ) : (
-        <h1>
-          {i18n.intl.formatMessage({
-            id: 'key0004',
-            defaultMessage: '哈哈',
-          })}
-        </h1>
+      {i18n.intl.formatMessage(
+        {
+          id: 'key0006',
+          defaultMessage: '你好{v1}',
+        },
+        {
+          v1: flag ? (
+            i18n.intl.formatMessage(
+              {
+                id: 'key0005',
+                defaultMessage: '哈哈{v1}',
+              },
+              { v1: name }
+            )
+          ) : (
+            <h1>
+              {i18n.intl.formatMessage({
+                id: 'key0004',
+                defaultMessage: '哈哈',
+              })}
+            </h1>
+          ),
+        }
       )}
     </span>
     <span>

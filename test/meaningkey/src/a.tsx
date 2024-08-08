@@ -19,6 +19,8 @@ export default function Component() {
     '哈\
   哈';
   const hah2 = "'哈哈哈";
+  const hah2 = `哈哈
+  哈哈`;
   const v1 = '再见';
   return (
     <div>

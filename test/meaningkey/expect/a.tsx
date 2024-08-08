@@ -23,11 +23,19 @@ export default function Component() {
   });
   const x = intl.formatMessage({
     id: 'key0002',
-    defaultMessage: '哈\\n  哈',
+    defaultMessage:
+      '哈\
+  哈',
   });
   const hah2 = intl.formatMessage({
     id: 'key0003',
     defaultMessage: "'哈哈哈",
+  });
+  const hah2 = intl.formatMessage({
+    id: 'key0004',
+    defaultMessage:
+      '哈哈\
+  哈哈',
   });
   const v1 = intl.formatMessage({
     id: 'goodbye_1',
@@ -41,7 +49,7 @@ export default function Component() {
       })}
       <span>
         <FormattedMessage
-          id="key0004"
+          id="key0005"
           defaultMessage="你好{v1}"
           values={{ v1 }}
         />

@@ -33,6 +33,9 @@ export class SourceFileHandler implements TsNodeHandler {
       if (!existingImport) {
         // @TODO 获取第一个非注释的位置
         let firstNotCommentIndex = opt.node.getStart();
+        if (opt.info.file[firstNotCommentIndex - 2] === '\n') {
+          firstNotCommentIndex -= 1;
+        }
         if (firstNotCommentIndex > 0) {
           const tsIgnoreMatched = info.file
             .slice(0, firstNotCommentIndex)
@@ -101,7 +104,9 @@ export class SourceFileHandler implements TsNodeHandler {
     });
 
     fileContext.children.push(...info.globalContext);
-    fileContext.newText = fileContext.joinChildren();
+    if (fileContext.children.length > 0) {
+      fileContext.newText = fileContext.joinChildren();
+    }
     return [fileContext];
   }
 }
