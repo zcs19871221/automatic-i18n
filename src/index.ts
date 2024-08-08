@@ -60,7 +60,6 @@ export const initParams = ({
   distLocaleDir = defaultDistLocaleDir(),
   localeToReplace = defaultLocaleToReplace,
   localesToGenerate = defaultLocalesToGenerate,
-  I18nFormatterClass,
   outputToNewDir,
   filters = [excludeNodeModule, onlyTJsxFiles],
   excludes,
@@ -83,10 +82,6 @@ export const initParams = ({
   }
 
   let I18nFormatter: I18nFormatterCtr = DefaultI18nFormatter;
-
-  if (I18nFormatterClass) {
-    I18nFormatter = I18nFormatterClass;
-  }
 
   if (excludes) {
     filters.push((fileOrDirName) =>

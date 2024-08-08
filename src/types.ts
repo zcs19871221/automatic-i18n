@@ -16,7 +16,6 @@ export interface ReplacerOpt {
   distLocaleDir?: string;
   localeToReplace?: LocaleTypes;
   localesToGenerate?: LocaleTypes[];
-  I18nFormatterClass?: I18nFormatterCtr;
   global?: boolean;
   meaningKey?: boolean;
   filters?: Filter[];

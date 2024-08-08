@@ -88,6 +88,7 @@ export class ReplaceContext {
         start = c.end;
       });
     str += this.info.file.slice(start, this.end);
+    this.children.forEach((n) => n.clear());
     return str;
   }
 

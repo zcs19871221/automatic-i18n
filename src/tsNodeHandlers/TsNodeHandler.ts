@@ -1,4 +1,4 @@
-import { Node, SyntaxKind, forEachChild } from 'typescript';
+import { Node, forEachChild } from 'typescript';
 import { Info, ReplaceContext } from '../ReplaceContext';
 
 export interface HandlerOption {
@@ -14,7 +14,6 @@ export interface TsNodeHandler {
 export function handleChildren(opt: HandlerOption) {
   const childrenContext: ReplaceContext[] = [];
   forEachChild(opt.node, (child) => {
-    console.info(SyntaxKind[child.kind], child.getText());
     childrenContext.push(...handleNode({ ...opt, node: child }));
   });
   return childrenContext;

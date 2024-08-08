@@ -19,7 +19,7 @@ export default class DefaultI18nFormatter extends I18nFormatter {
   protected override doRenderJsxText(
     options: FormatOptions,
     intlId: string
-  ): FormatReturnType | null {
+  ): FormatReturnType {
     const {
       params,
       defaultMessage,
@@ -27,9 +27,6 @@ export default class DefaultI18nFormatter extends I18nFormatter {
     } = options;
     if (i18nReplacer.opt.global) {
       const globalRendered = this.renderGlobal(options, intlId);
-      if (!globalRendered) {
-        return null;
-      }
       globalRendered.newText = '{' + globalRendered?.newText + '}';
       return globalRendered;
     }
@@ -53,14 +50,14 @@ export default class DefaultI18nFormatter extends I18nFormatter {
   protected override doRenderTemplateString(
     opt: FormatOptions,
     intlId: string
-  ): FormatReturnType | null {
+  ): FormatReturnType {
     return this.doRender(opt, intlId);
   }
 
   private renderGlobal(
     { params, defaultMessage, info: { i18nReplacer, fileName } }: FormatOptions,
     intlId: string
-  ): FormatReturnType | null {
+  ): FormatReturnType {
     const newText = this.intlApiExpression(
       intlId,
       defaultMessage,
@@ -187,7 +184,7 @@ export default class DefaultI18nFormatter extends I18nFormatter {
   protected override doRenderStringLike(
     opt: FormatOptions,
     intlId: string
-  ): FormatReturnType | null {
+  ): FormatReturnType {
     return this.doRender(opt, intlId);
   }
 

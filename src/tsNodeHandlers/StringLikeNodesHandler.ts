@@ -70,10 +70,6 @@ export class StringLikeNodesHandler implements TsNodeHandler {
       return false;
     }
 
-    if (node.parent?.kind === SyntaxKind.CallExpression) {
-      return false;
-    }
-
     return true;
   }
 

@@ -75,15 +75,15 @@ export abstract class I18nFormatter {
   protected abstract doRenderJsxText(
     opt: FormatOptions,
     intlId: string
-  ): FormatReturnType | null;
+  ): FormatReturnType;
   protected abstract doRenderTemplateString(
     opt: FormatOptions,
     intlId: string
-  ): FormatReturnType | null;
+  ): FormatReturnType;
   protected abstract doRenderStringLike(
     opt: FormatOptions,
     intlId: string
-  ): FormatReturnType | null;
+  ): FormatReturnType;
 
   public static getIfInFunctionBody(node: Node): {
     functionName: string;
@@ -167,11 +167,8 @@ export abstract class I18nFormatter {
       }
     }
 
-    const result: FormatReturnType | null = this[method](opt, intlId);
+    const result: FormatReturnType = this[method](opt, intlId);
 
-    if (result === null) {
-      return opt.originStr;
-    }
     if (!this.messageMapIntlId[message]) {
       this.messageMapIntlId[message] = intlId;
       this.newIntlMapMessages[intlId] = message;
@@ -189,15 +186,6 @@ export abstract class I18nFormatter {
       });
     }
     return newText;
-  }
-
-  protected camelLocale(naming: string) {
-    const splitIndex = naming.indexOf('-');
-    return (
-      naming.slice(0, splitIndex) +
-      naming[splitIndex + 1].toUpperCase() +
-      naming.slice(splitIndex + 2)
-    );
   }
 
   protected paramsString(param?: Record<string, string>) {

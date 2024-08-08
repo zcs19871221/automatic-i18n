@@ -5,8 +5,6 @@ import { i18n } from './i18n/index.tsx';
 function App() {
   const [name, setName] = useState('');
 
-  document.getElementById('root');
-
   return (
     <div>
       <input
