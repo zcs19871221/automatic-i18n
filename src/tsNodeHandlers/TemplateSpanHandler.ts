@@ -1,26 +1,29 @@
 import { SyntaxKind } from 'typescript';
-import {
-  HandlerOption,
-  TsNodeHandler,
-  traverseChildren,
-} from './TsNodeHandler';
+import { HandlerOption, TsNodeHandler, handleChildren } from './TsNodeHandler';
 import { ReplaceContext } from '../ReplaceContext';
 
 export class TemplateSpanHandler implements TsNodeHandler {
-  match({ node, info: { i18nReplacer } }: HandlerOption): boolean {
+  match({ node }: HandlerOption): boolean {
     return node.kind === SyntaxKind.TemplateSpan;
   }
 
-  handle({ node, info, tsNodeHandlers }: HandlerOption): ReplaceContext {
-    const start = node.getStart() - 2;
-    const end = node.getEnd();
+  public static getRange({ node, info: { file } }: HandlerOption) {
+    const first = node.getChildren()[0];
+    const start = file.lastIndexOf('${', node.getStart());
+    const end = file.indexOf('}', first.getEnd()) + '}'.length;
+    return { start, end };
+  }
+
+  handle(option: HandlerOption): ReplaceContext {
+    const { node, info, tsNodeHandlers } = option;
+    const { start, end } = TemplateSpanHandler.getRange(option);
 
     const templateExpression = new ReplaceContext({
       start,
       end,
       info,
     });
-    traverseChildren({
+    templateExpression.children = handleChildren({
       node,
       parentContext: templateExpression,
       info,

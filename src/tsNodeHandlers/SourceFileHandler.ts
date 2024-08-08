@@ -1,6 +1,6 @@
 import { SyntaxKind } from 'typescript';
 import { TsNodeHandler } from '.';
-import { HandlerOption, traverseChildren } from './TsNodeHandler';
+import { HandlerOption, handleChildren } from './TsNodeHandler';
 import { ReplaceContext } from '../ReplaceContext';
 
 export class SourceFileHandler implements TsNodeHandler {
@@ -16,7 +16,12 @@ export class SourceFileHandler implements TsNodeHandler {
       parentContext,
       tsNodeHandlers,
     } = opt;
-    traverseChildren({ node, parentContext, info, tsNodeHandlers });
+    parentContext.children = handleChildren({
+      node,
+      parentContext,
+      info,
+      tsNodeHandlers,
+    });
 
     Object.values(requiredImports).forEach(({ moduleName, names }) => {
       const existingImport = [...imports].find((importNode) =>

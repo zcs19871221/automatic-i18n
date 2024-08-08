@@ -39,12 +39,6 @@ export class ReplaceContext {
     }
   }
 
-  public addChildrenIfValid(context: ReplaceContext) {
-    if (context.newText !== null) {
-      this.children.push(context);
-    }
-  }
-
   public sortAndCheckChildren() {
     this.children.sort((a, b) => a.start - b.start);
     let prev = this.children?.[0];
@@ -80,6 +74,7 @@ export class ReplaceContext {
   }
 
   public joinChildren(handler: (str: string) => string = (str) => str): string {
+    this.sortAndCheckChildren();
     let str = '';
     let start = this.start;
     this.children

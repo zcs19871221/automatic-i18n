@@ -29,7 +29,7 @@ export const expectDirEqualDistDirAt = (dir: string) => {
 export const runAndExpect = async ({
   dirName,
   opt = {},
-  afterHook = (testDir: string, distDir: string) => {},
+  afterHook = () => {},
   hideConsole = true,
 }: {
   dirName: string;

@@ -467,8 +467,6 @@ export default class I18nReplacer {
           error.message = '@ ' + fileLocation + ' ' + error.message;
         }
         console.error(error);
-      } finally {
-        fileContext.clear();
       }
 
       if (fileContext.newText === null) {

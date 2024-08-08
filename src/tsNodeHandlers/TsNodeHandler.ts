@@ -12,17 +12,15 @@ export interface TsNodeHandler {
   handle(opt: HandlerOption): ReplaceContext | void;
 }
 
-export function traverseChildren(opt: HandlerOption) {
+export function handleChildren(opt: HandlerOption) {
+  const childrenContext: ReplaceContext[] = [];
   forEachChild(opt.node, (child) => {
-    const newContext = handleNode(opt);
-    if (newContext) {
-      opt.parentContext.children.push(newContext);
-    }
+    childrenContext.push(...handleNode({ ...opt, node: child }));
   });
-  opt.parentContext.sortAndCheckChildren();
+  return childrenContext;
 }
 
-export function handleNode(opt: HandlerOption): ReplaceContext | void {
+export function handleNode(opt: HandlerOption): ReplaceContext[] {
   const { node, info, parentContext, tsNodeHandlers } = opt;
   const matchedTsNodeHandlers = tsNodeHandlers.filter((tsNodeHandler) =>
     tsNodeHandler.match({ node, info, parentContext, tsNodeHandlers })
@@ -39,10 +37,10 @@ export function handleNode(opt: HandlerOption): ReplaceContext | void {
       tsNodeHandlers: tsNodeHandlers,
     });
     if (newContext) {
-      parentContext.children.push(newContext);
+      return [newContext];
     }
-    return newContext;
+    return [];
   }
 
-  traverseChildren({ node, parentContext, info, tsNodeHandlers });
+  return handleChildren(opt);
 }

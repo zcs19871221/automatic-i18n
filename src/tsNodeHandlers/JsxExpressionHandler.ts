@@ -1,9 +1,5 @@
 import { SyntaxKind } from 'typescript';
-import {
-  HandlerOption,
-  TsNodeHandler,
-  traverseChildren,
-} from './TsNodeHandler';
+import { HandlerOption, TsNodeHandler, handleChildren } from './TsNodeHandler';
 import { ReplaceContext } from '../ReplaceContext';
 
 export class JsxExpressionHandler implements TsNodeHandler {
@@ -17,7 +13,7 @@ export class JsxExpressionHandler implements TsNodeHandler {
       end: node.getEnd(),
       info,
     });
-    traverseChildren({
+    handleChildren({
       node,
       parentContext: jsxExpression,
       info,

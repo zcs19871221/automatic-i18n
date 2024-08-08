@@ -1,24 +1,53 @@
 import { ReplaceContext } from '../ReplaceContext';
-import {
-  HandlerOption,
-  TsNodeHandler,
-  traverseChildren,
-} from './TsNodeHandler';
+import { TemplateSpanHandler } from './TemplateSpanHandler';
+import { HandlerOption, TsNodeHandler, handleChildren } from './TsNodeHandler';
 import { SyntaxKind } from 'typescript';
 
 export class TemplateExpressionHandler implements TsNodeHandler {
-  match({ node }: HandlerOption): boolean {
-    return (
-      node.kind === SyntaxKind.TemplateExpression ||
-      node.kind === SyntaxKind.TemplateSpan
+  // only handle and create new context if templateText has target locale
+  match(option: HandlerOption): boolean {
+    const {
+      node,
+      info: { i18nReplacer, file },
+    } = option;
+    if (node.kind !== SyntaxKind.TemplateExpression) {
+      return false;
+    }
+
+    const templateSpanHandler = option.tsNodeHandlers.find(
+      (h) => h instanceof TemplateSpanHandler
     );
+    if (!templateSpanHandler) {
+      return false;
+    }
+    const skip: Record<number, number> = {};
+    // node.getChildren()[1]: get a syntax list node contain all expression node
+    //node.getChildren()[1].getChildren() get all expression nodes
+
+    for (const child of node.getChildren()[1].getChildren()) {
+      if (templateSpanHandler.match({ ...option, node: child })) {
+        const range = TemplateSpanHandler.getRange({ ...option, node: child });
+        skip[range.start] = range.end;
+      }
+    }
+
+    for (let i = node.getStart() + 1; i < node.getEnd() - 1; ) {
+      if (skip[i]) {
+        i = skip[i];
+        continue;
+      }
+      if (i18nReplacer.includesTargetLocale(file[i])) {
+        return true;
+      }
+      i++;
+    }
+    return false;
   }
 
   handle({
     node,
-    parentContext,
     info,
-    info: { i18nReplacer, file },
+    info: { i18nReplacer },
     tsNodeHandlers,
   }: HandlerOption): ReplaceContext | void {
     const template = new ReplaceContext({
@@ -26,28 +55,13 @@ export class TemplateExpressionHandler implements TsNodeHandler {
       end: node.getEnd(),
       info,
     });
-    traverseChildren({ node, parentContext: template, info, tsNodeHandlers });
-
-    template.sortAndCheckChildren();
-    const skip: Record<number, number> = {};
-    template.children.forEach((c) => {
-      skip[c.start] = c.end;
+    template.children = handleChildren({
+      node,
+      parentContext: template,
+      info,
+      tsNodeHandlers,
     });
-    let hasTargetLocale = false;
-    for (let i = template.start; i < template.end; ) {
-      if (skip[i]) {
-        i = skip[i];
-        continue;
-      }
-      if (i18nReplacer.includesTargetLocale(file[i])) {
-        hasTargetLocale = true;
-        break;
-      }
-    }
-    if (!hasTargetLocale) {
-      parentContext.children.push(...template.children);
-      return;
-    }
+    template.sortAndCheckChildren();
 
     const { str, keyMapValue } = template.useChildrenCreateIntlVariableMessage(
       (str) => str.slice(2, str.length).slice(0, -1)

@@ -4,7 +4,7 @@ import {
   HandlerOption,
   TsNodeHandler,
   handleNode,
-  traverseChildren,
+  handleChildren,
 } from './TsNodeHandler';
 
 export class JsxTagHandler implements TsNodeHandler {
@@ -24,7 +24,7 @@ export class JsxTagHandler implements TsNodeHandler {
   }: HandlerOption): ReplaceContext | void {
     // handle start html tag
     const startTag = node.getChildren()[0];
-    traverseChildren({
+    handleChildren({
       node: startTag,
       parentContext,
       info,
@@ -131,7 +131,7 @@ export class JsxTagHandler implements TsNodeHandler {
         return;
       }
 
-      traverseChildren({
+      handleChildren({
         node,
         parentContext,
         info,
