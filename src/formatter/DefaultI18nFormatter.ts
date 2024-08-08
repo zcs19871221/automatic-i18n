@@ -192,12 +192,13 @@ export default class DefaultI18nFormatter extends I18nFormatter {
     // check if same scope local has already add
     contextToAdd.forEach((add) => {
       if (
-        !context.children.some((c) => {
-          c.start === add.start && c.end === c.end;
-        })
+        info.globalContext.some(
+          (c) => c.start === add.start && c.end === add.end
+        )
       ) {
-        context.children.push(add);
+        return;
       }
+      info.globalContext.push(add);
     });
 
     return returnValue(intlObj);

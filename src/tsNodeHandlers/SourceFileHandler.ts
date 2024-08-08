@@ -8,17 +8,20 @@ export class SourceFileHandler implements TsNodeHandler {
     return node.kind === SyntaxKind.SourceFile;
   }
 
-  handle(opt: HandlerOption): ReplaceContext | void {
+  handle(opt: HandlerOption): ReplaceContext[] {
     const {
       node,
       info,
-      info: { requiredImports, imports },
-      parentContext,
+      info: { requiredImports, imports, file },
       tsNodeHandlers,
     } = opt;
-    parentContext.children = handleChildren({
+    const fileContext = new ReplaceContext({
+      start: 0,
+      end: file.length,
+      info,
+    });
+    fileContext.children = handleChildren({
       node,
-      parentContext,
       info,
       tsNodeHandlers,
     });
@@ -29,7 +32,15 @@ export class SourceFileHandler implements TsNodeHandler {
       );
       if (!existingImport) {
         // @TODO 获取第一个非注释的位置
-        const firstNotCommentIndex = 0;
+        let firstNotCommentIndex = opt.node.getStart();
+        if (firstNotCommentIndex > 0) {
+          const tsIgnoreMatched = info.file
+            .slice(0, firstNotCommentIndex)
+            .match(/(^|\n).*?@ts-ignore/);
+          if (tsIgnoreMatched) {
+            firstNotCommentIndex = tsIgnoreMatched.index ?? 0;
+          }
+        }
         let firstNonRelativeImport = 0;
         if (moduleName.startsWith('.')) {
           firstNonRelativeImport =
@@ -50,7 +61,7 @@ export class SourceFileHandler implements TsNodeHandler {
           info,
           newText: `import { ${[...names].join(', ')} } from '${moduleName}'\n`,
         });
-        parentContext.children.push(insertImport);
+        fileContext.children.push(insertImport);
         return;
       }
       if (!existingImport?.importClause) {
@@ -68,7 +79,7 @@ export class SourceFileHandler implements TsNodeHandler {
           requiredNames.push(name);
         }
         if (requiredNames.length > 0) {
-          parentContext.children.push(
+          fileContext.children.push(
             new ReplaceContext({
               info,
               start,
@@ -78,7 +89,7 @@ export class SourceFileHandler implements TsNodeHandler {
           );
         }
       } else {
-        parentContext.children.push(
+        fileContext.children.push(
           new ReplaceContext({
             info,
             start: existingImport.importClause?.getEnd() + 1,
@@ -89,7 +100,8 @@ export class SourceFileHandler implements TsNodeHandler {
       }
     });
 
-    parentContext.sortAndCheckChildren();
-    parentContext.newText = parentContext.joinChildren();
+    fileContext.children.push(...info.globalContext);
+    fileContext.newText = fileContext.joinChildren();
+    return [fileContext];
   }
 }

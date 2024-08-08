@@ -14,7 +14,7 @@ export class TemplateSpanHandler implements TsNodeHandler {
     return { start, end };
   }
 
-  handle(option: HandlerOption): ReplaceContext {
+  handle(option: HandlerOption): ReplaceContext[] {
     const { node, info, tsNodeHandlers } = option;
     const { start, end } = TemplateSpanHandler.getRange(option);
 
@@ -25,11 +25,10 @@ export class TemplateSpanHandler implements TsNodeHandler {
     });
     templateExpression.children = handleChildren({
       node,
-      parentContext: templateExpression,
       info,
       tsNodeHandlers,
     });
     templateExpression.newText = templateExpression.joinChildren();
-    return templateExpression;
+    return [templateExpression];
   }
 }

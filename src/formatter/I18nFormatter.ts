@@ -55,7 +55,7 @@ export abstract class I18nFormatter {
   }
 
   public renderJsxText(opt: FormatOptions): string {
-    return this.render(opt, 'doRenderStringLike');
+    return this.render(opt, 'doRenderJsxText');
   }
 
   public renderTemplateString(opt: FormatOptions) {

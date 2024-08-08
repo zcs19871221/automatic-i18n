@@ -12,6 +12,7 @@ export interface Info {
       names: Set<string>;
     };
   };
+  globalContext: ReplaceContext[];
 }
 export class ReplaceContext {
   public children: ReplaceContext[] = [];
@@ -55,6 +56,8 @@ export class ReplaceContext {
     str: string;
     keyMapValue: Record<string, string>;
   } {
+    this.sortAndCheckChildren();
+
     const valueMapKey: Record<string, string> = {};
     const keyMapValue: Record<string, string> = {};
 

@@ -76,7 +76,7 @@ export class StringLikeNodesHandler implements TsNodeHandler {
     node,
     info: { i18nReplacer },
     info,
-  }: HandlerOption): ReplaceContext {
+  }: HandlerOption): ReplaceContext[] {
     const stringLiteral = new ReplaceContext({
       start: node.getStart(),
       end: node.getEnd(),
@@ -98,7 +98,7 @@ export class StringLikeNodesHandler implements TsNodeHandler {
     }
 
     stringLiteral.newText = newText;
-    return stringLiteral;
+    return [stringLiteral];
   }
 
   private removeTextVariableSymbol(text: string) {

@@ -5,6 +5,12 @@ import { SyntaxKind } from 'typescript';
 
 export class TemplateExpressionHandler implements TsNodeHandler {
   // only handle and create new context if templateText has target locale
+  // like: `hello:{name}` to
+  // formatMessage({
+  //   id: key0001",
+  //   defaultMessage:'hello:{v1}',
+  //   values:{v1:name}
+  // })
   match(option: HandlerOption): boolean {
     const {
       node,
@@ -49,7 +55,7 @@ export class TemplateExpressionHandler implements TsNodeHandler {
     info,
     info: { i18nReplacer },
     tsNodeHandlers,
-  }: HandlerOption): ReplaceContext | void {
+  }: HandlerOption): ReplaceContext[] {
     const template = new ReplaceContext({
       start: node.getStart(),
       end: node.getEnd(),
@@ -57,24 +63,23 @@ export class TemplateExpressionHandler implements TsNodeHandler {
     });
     template.children = handleChildren({
       node,
-      parentContext: template,
       info,
       tsNodeHandlers,
     });
     template.sortAndCheckChildren();
 
     const { str, keyMapValue } = template.useChildrenCreateIntlVariableMessage(
-      (str) => str.slice(2, str.length).slice(0, -1)
+      (str) => str.slice(2, -1)
     );
 
     template.newText = i18nReplacer.i18nFormatter.renderTemplateString({
       params: keyMapValue,
-      defaultMessage: str.slice(1).slice(0, -1),
+      defaultMessage: str.slice(1, -1),
       originStr: node.getText(),
       info,
       node: node,
       context: template,
     });
-    return template;
+    return [template];
   }
 }

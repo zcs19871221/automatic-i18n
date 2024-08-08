@@ -7,8 +7,9 @@ export class ImportHandler implements TsNodeHandler {
     return node.kind === SyntaxKind.ImportDeclaration;
   }
 
-  handle({ node, info }: HandlerOption): ReplaceContext | void {
+  handle({ node, info }: HandlerOption): ReplaceContext[] {
     const importNode = node as ImportDeclaration;
     info.imports.add(importNode);
+    return [];
   }
 }

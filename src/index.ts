@@ -379,7 +379,11 @@ export default class I18nReplacer {
       if (!prettierOptions.parser) {
         prettierOptions.parser = 'typescript';
       }
-      file = prettier.format(file, prettierOptions);
+      try {
+        file = prettier.format(file, prettierOptions);
+      } catch (error: any) {
+        throw new Error(error?.message + `\n\nat: ${dist}, code: \n\n` + file);
+      }
     }
 
     return fs.writeFileSync(dist, file);
@@ -449,19 +453,15 @@ export default class I18nReplacer {
         i18nReplacer: this as I18nReplacer,
         imports: new Set(),
         requiredImports: {},
+        globalContext: [],
       };
-      const fileContext = new ReplaceContext({
-        start: 0,
-        end: file.length,
-        info,
-      });
+      let fileContext: null | ReplaceContext = null;
       try {
-        handleNode({
+        fileContext = handleNode({
           node,
           info: info,
-          parentContext: fileContext,
           tsNodeHandlers,
-        });
+        })[0];
       } catch (error: any) {
         if (error.message) {
           error.message = '@ ' + fileLocation + ' ' + error.message;
@@ -469,7 +469,7 @@ export default class I18nReplacer {
         console.error(error);
       }
 
-      if (fileContext.newText === null) {
+      if (!fileContext || !fileContext.newText) {
         continue;
       }
 

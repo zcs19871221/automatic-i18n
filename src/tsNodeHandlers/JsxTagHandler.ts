@@ -1,11 +1,6 @@
 import { Node, SyntaxKind } from 'typescript';
 import { ReplaceContext } from '../ReplaceContext';
-import {
-  HandlerOption,
-  TsNodeHandler,
-  handleNode,
-  handleChildren,
-} from './TsNodeHandler';
+import { HandlerOption, TsNodeHandler, handleNode } from './TsNodeHandler';
 
 export class JsxTagHandler implements TsNodeHandler {
   match({ node }: HandlerOption): boolean {
@@ -19,17 +14,18 @@ export class JsxTagHandler implements TsNodeHandler {
     node,
     info,
     info: { i18nReplacer },
-    parentContext,
     tsNodeHandlers,
-  }: HandlerOption): ReplaceContext | void {
+  }: HandlerOption): ReplaceContext[] {
+    const contexts: ReplaceContext[] = [];
     // handle start html tag
     const startTag = node.getChildren()[0];
-    handleChildren({
-      node: startTag,
-      parentContext,
-      info,
-      tsNodeHandlers,
-    });
+    contexts.push(
+      ...handleNode({
+        node: startTag,
+        info,
+        tsNodeHandlers,
+      })
+    );
     // jsxInnerHtml nodes
     const innerHtmlNodes = node.getChildren()[1].getChildren();
 
@@ -61,9 +57,9 @@ export class JsxTagHandler implements TsNodeHandler {
           )
         ) {
           innerNodes.splice(innerNodes.indexOf(innerHtmlNodes[index]), 1);
-          list.push(innerHtmlNodes[index]);
+          list.unshift(innerHtmlNodes[index]);
         }
-        list.reverse().push(node);
+        list.push(node);
         innerNodes.push(list);
         continue;
       }
@@ -85,17 +81,18 @@ export class JsxTagHandler implements TsNodeHandler {
           });
 
           expressionNodes.forEach((n) => {
-            handleNode({
-              node: n,
-              parentContext: nodeList,
-              info,
-              tsNodeHandlers,
-            });
+            nodeList.children.push(
+              ...handleNode({
+                node: n,
+                info,
+                tsNodeHandlers,
+              })
+            );
           });
           const { str, keyMapValue } =
             nodeList.useChildrenCreateIntlVariableMessage((str) => {
               if (str.startsWith('{') && str.endsWith('}')) {
-                return str.slice(1, str.length - 1);
+                return str.slice(1, -1);
               }
               return str;
             });
@@ -120,23 +117,26 @@ export class JsxTagHandler implements TsNodeHandler {
             node: node[0],
             context: nodeList,
           });
-
+          contexts.push(nodeList);
           return;
         }
 
         // node should have only one textNode
         node.forEach((n) => {
-          handleNode({ node: n, parentContext, info, tsNodeHandlers });
+          contexts.push(...handleNode({ node: n, info, tsNodeHandlers }));
         });
         return;
       }
 
-      handleChildren({
-        node,
-        parentContext,
-        info,
-        tsNodeHandlers,
-      });
+      contexts.push(
+        ...handleNode({
+          node,
+          info,
+          tsNodeHandlers,
+        })
+      );
     });
+
+    return contexts;
   }
 }

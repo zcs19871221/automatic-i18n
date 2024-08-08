@@ -7,20 +7,18 @@ export class JsxExpressionHandler implements TsNodeHandler {
     return SyntaxKind.JsxExpression === node.kind;
   }
 
-  handle({ node, info, tsNodeHandlers }: HandlerOption): ReplaceContext {
+  handle({ node, info, tsNodeHandlers }: HandlerOption): ReplaceContext[] {
     const jsxExpression = new ReplaceContext({
       start: node.getStart(),
       end: node.getEnd(),
       info,
     });
-    handleChildren({
+    jsxExpression.children = handleChildren({
       node,
-      parentContext: jsxExpression,
       info,
       tsNodeHandlers,
     });
-
     jsxExpression.newText = jsxExpression.joinChildren();
-    return jsxExpression;
+    return [jsxExpression];
   }
 }

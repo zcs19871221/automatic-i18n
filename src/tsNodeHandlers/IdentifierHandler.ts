@@ -11,8 +11,8 @@ export class IdentifierHandler implements TsNodeHandler {
     node,
     info,
     info: { i18nReplacer },
-  }: HandlerOption): ReplaceContext | void {
-    // add warning if use non english text as object property name
+  }: HandlerOption): ReplaceContext[] {
+    // add warning message if user use non-English text as object property name
     if (
       i18nReplacer.opt.localeToReplace !== 'en-us' &&
       i18nReplacer.includesTargetLocale(node.getText()) &&
@@ -26,7 +26,7 @@ export class IdentifierHandler implements TsNodeHandler {
       });
     }
 
-    // replace the message key with the English abbreviation If there is an English translation,
+    // replace the message key with the English abbreviation If there is an English translation, match key like `.formatMessage({id: key00001 `
     if (
       node.getText() === 'id' &&
       node.parent?.getChildren()?.[2]?.getText().includes('key') &&
@@ -35,11 +35,11 @@ export class IdentifierHandler implements TsNodeHandler {
       const keyNode = node.parent.getChildren()[2];
       const matched = keyNode?.getText().match(/(['"])(key\d+)['"]/);
       if (!matched) {
-        return;
+        return [];
       }
       const newKey = i18nReplacer.getOldKeyMapNewKey()[matched[2]];
       if (!newKey) {
-        return;
+        return [];
       }
       const replaceKeyToMeaningKey = new ReplaceContext({
         start: keyNode.getStart(),
@@ -48,7 +48,9 @@ export class IdentifierHandler implements TsNodeHandler {
       });
       replaceKeyToMeaningKey.newText =
         matched[1] + i18nReplacer.getOldKeyMapNewKey()[matched[2]] + matched[1];
-      return replaceKeyToMeaningKey;
+      return [replaceKeyToMeaningKey];
     }
+
+    return [];
   }
 }

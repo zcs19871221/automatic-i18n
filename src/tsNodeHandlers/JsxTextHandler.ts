@@ -13,20 +13,33 @@ export class JsxTextHandler implements TsNodeHandler {
   handle({
     node,
     info,
-    info: { i18nReplacer },
-  }: HandlerOption): ReplaceContext {
+    info: { i18nReplacer, file },
+  }: HandlerOption): ReplaceContext[] {
+    let start = node.getStart();
+    let end = node.getEnd();
+    node
+      .getText()
+      .replace(/^[\s\n]+/, (match: string) => {
+        start += match.length;
+        return '';
+      })
+      .replace(/[\s\n]+$/, (match: string) => {
+        end -= match.length;
+        return '';
+      });
+
     const jsxText = new ReplaceContext({
-      start: node.getStart(),
-      end: node.getEnd(),
+      start,
+      end,
       info,
     });
     jsxText.newText = i18nReplacer.i18nFormatter.renderJsxText({
       node,
-      defaultMessage: node.getText(),
+      defaultMessage: file.slice(start, end),
       originStr: node.getText(),
       info,
       context: jsxText,
     });
-    return jsxText;
+    return [jsxText];
   }
 }
