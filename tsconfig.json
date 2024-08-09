@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "target": "ES2018",
+    "strict": true,
+    "strictNullChecks": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "jsx": "react",
+    "alwaysStrict": true,
+    "strictFunctionTypes": false,
+    "allowSyntheticDefaultImports": true,
+    "allowJs": true,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "module": "CommonJS"
+  },
+  "include": ["./src/**/*.ts", "./bin/**/*.ts"],
+  "exclude": ["./test/**/*.ts"]
+}
