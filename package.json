@@ -1,6 +1,6 @@
 {
   "name": "automatic-i18n",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "description": "Replace the language in the front-end source code with one command",
   "main": "lib/src/index.js",
   "files": [
