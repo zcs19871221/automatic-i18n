@@ -29,14 +29,15 @@ export class IdentifierHandler implements TsNodeHandler {
     // replace the message key with the English abbreviation If there is an English translation, match key like `.formatMessage({id: key00001 `
     if (
       node.getText() === 'id' &&
-      node.parent?.getChildren()?.[2]?.getText().includes('key') &&
-      node.parent?.parent?.parent?.getText().includes('.formatMessage')
+      node.parent.getChildren()[2].getText().includes('key') &&
+      node.parent
+        .getChildren()[2]
+        .getText()
+        .match(/(['"])(key\d+)['"]/) &&
+      node.parent.parent.parent.getText().includes('.formatMessage')
     ) {
       const keyNode = node.parent.getChildren()[2];
-      const matched = keyNode?.getText().match(/(['"])(key\d+)['"]/);
-      if (!matched) {
-        return [];
-      }
+      const matched = keyNode.getText().match(/(['"])(key\d+)['"]/)!;
       const newKey = i18nReplacer.getOldKeyMapNewKey()[matched[2]];
       if (!newKey) {
         return [];
