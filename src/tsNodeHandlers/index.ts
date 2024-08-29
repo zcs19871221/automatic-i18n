@@ -1,3 +1,4 @@
+import { FormateMessageIdHandler } from './FormateMessageIdHandler';
 import { IdentifierHandler } from './IdentifierHandler';
 import { ImportHandler } from './ImportHandler';
 import { JsxExpressionHandler } from './JsxExpressionHandler';
@@ -15,6 +16,7 @@ const tsNodeHandlers: TsNodeHandler[] = [
   new TemplateSpanHandler(),
   new ImportHandler(),
   new IdentifierHandler(),
+  new FormateMessageIdHandler(),
   new JsxTagHandler(),
   new JsxTextHandler(),
   new JsxExpressionHandler(),

@@ -57,3 +57,7 @@ export default function Component() {
     </div>
   );
 }
+
+export function MeaningKeyComponent() {
+  return <FormattedMessage id="hellosdffdsfds" defaultMessage="你好" />;
+}
