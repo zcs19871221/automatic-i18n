@@ -24,7 +24,7 @@ export class SourceFileHandler implements TsNodeHandler {
       node,
       info,
       tsNodeHandlers,
-    });
+    }).filter((c) => c.newText !== file.slice(c.start, c.end));
 
     Object.values(requiredImports).forEach(({ moduleName, names }) => {
       const existingImport = [...imports].find((importNode) =>

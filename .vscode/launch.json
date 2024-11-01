@@ -15,6 +15,7 @@
       "type": "node",
       "request": "launch",
       "name": "current",
+      "sourceMaps": true,
       "skipFiles": ["<node_internals>/**"],
       "program": "${file}",
       "outFiles": ["${workspaceFolder}/dist/**/*.js"],
@@ -24,6 +25,7 @@
       "type": "node",
       "request": "launch",
       "name": "i18nRun",
+      "sourceMaps": true,
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/src/run/index.ts",
       "outFiles": ["${workspaceFolder}/dist/**/*.js"],
@@ -33,6 +35,8 @@
       "name": "Debug current TestFile",
       "type": "node",
       "request": "launch",
+      "sourceMaps": true,
+      "skipFiles": ["${workspaceRoot}/node_modules/**/*"],
       "runtimeArgs": [
         "--inspect-brk",
         "${workspaceRoot}/node_modules/jest/bin/jest.js",
@@ -45,6 +49,7 @@
       "name": "Debug Test from input",
       "type": "node",
       "request": "launch",
+      "sourceMaps": true,
       "runtimeArgs": [
         "--inspect-brk",
         "${workspaceRoot}/node_modules/jest/bin/jest.js",
