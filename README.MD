@@ -122,7 +122,12 @@ the options is like this:
         excludes?: string[];
         debug?: boolean;
     }
-
+## TODO
+1. 根据i8n文件夹的局部LocalKey
+2. 如果目标文件已经引用语言文件，且引用的语言文件和当前的目标语言文件不同，那么要把原来引用的语言文件里的翻译key放到目标文件里
+3. 增加下一行ignore和全文件ignore，根据在位置范围377-788这样来跳过
+4. 翻译的key变成uniqId，防止不同分支冲突
+5. vue支持？
 ## License
 
 The MIT License.
