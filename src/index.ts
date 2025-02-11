@@ -60,6 +60,7 @@ export const initParams = ({
   meaningKey = false,
   global: hook = false,
   debug = false,
+  uniqIntlKey = false,
   I18nFormatter = DefaultI18nFormatter,
 }: ReplacerOpt) => {
   targets = targets.map((t) => path.resolve(t));
@@ -88,6 +89,7 @@ export const initParams = ({
 
   const HandlerOption: HandlerOption = {
     global: hook,
+    uniqIntlKey,
     targets,
     distLocaleDir,
     localeToReplace,
@@ -170,10 +172,7 @@ export default class I18nReplacer {
   }
 
   public async doReplace() {
-    const map: Record<LocaleTypes, Record<string, string>> = {
-      'en-us': {},
-      'zh-cn': {},
-    };
+    const map: Record<LocaleTypes, Record<string, string>> = {} as any;
     this.opt.localesToGenerate.forEach((locale) => {
       map[locale] = this.getIntlIdMapMessage(locale);
     });

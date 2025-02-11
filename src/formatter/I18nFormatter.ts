@@ -6,6 +6,7 @@ import {
   SyntaxKind,
   VariableDeclaration,
 } from 'typescript';
+import crypto from 'crypto';
 import { Info, ReplaceContext } from '../ReplaceContext';
 import { LocaleTypes } from '../types';
 
@@ -47,14 +48,28 @@ export abstract class I18nFormatter {
 
   private intlSeq: number = 1;
 
-  private getOrCreateIntlId(message: string) {
+  private shortMd5(input: string) {
+    // Create an MD5 hash of the input string
+    const hash = crypto.createHash('md5').update(input).digest('base64');
+
+    // Remove padding characters and return the short MD5 string
+    return hash.replace(/=+$/, '');
+  }
+
+  private getOrCreateIntlId(opt: FormatOptions) {
+    const { defaultMessage: message } = opt;
+
     let intlId = '';
     if (this.messageMapIntlId[message] !== undefined) {
       intlId = this.messageMapIntlId[message];
     } else {
-      do {
-        intlId = `key${String(this.intlSeq++).padStart(4, '0')}`;
-      } while (Object.values(this.messageMapIntlId).includes(intlId));
+      if (opt.info.i18nReplacer.opt.uniqIntlKey) {
+        intlId = `key1${this.shortMd5(message)}`;
+      } else {
+        do {
+          intlId = `key${String(this.intlSeq++).padStart(4, '0')}`;
+        } while (Object.values(this.messageMapIntlId).includes(intlId));
+      }
     }
 
     return [intlId, message];
@@ -150,7 +165,7 @@ export abstract class I18nFormatter {
         return '\\' + m;
       }
     );
-    const [intlId, message] = this.getOrCreateIntlId(opt.defaultMessage);
+    const [intlId, message] = this.getOrCreateIntlId(opt);
 
     if (!opt.info.i18nReplacer.opt.global) {
       const parentFunctionInfo = I18nFormatter.getIfInFunctionBody(opt.node);

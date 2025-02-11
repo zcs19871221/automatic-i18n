@@ -18,6 +18,7 @@ export interface ReplacerOpt {
   localesToGenerate?: LocaleTypes[];
   global?: boolean;
   meaningKey?: boolean;
+  uniqIntlKey?: boolean;
   I18nFormatter?: I18nFormatterCtr;
   filters?: Filter[];
   // baseNames
