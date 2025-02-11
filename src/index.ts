@@ -263,11 +263,7 @@ export default class I18nReplacer {
       })
     );
 
-    const templateDist = path.join(
-      this.opt.distLocaleDir,
-      'index.ts' +
-        (this.i18nFormatter instanceof DefaultI18nFormatter ? 'x' : '')
-    );
+    const templateDist = path.join(this.opt.distLocaleDir, 'index.tsx');
 
     if (!fs.existsSync(templateDist)) {
       await this.formatAndWrite(
