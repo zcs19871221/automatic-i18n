@@ -275,7 +275,10 @@ export abstract class I18nFormatter {
         const locale: Record<LocalKey, string> = {
           ${ids
             .map((key) => {
-              return `${key}: ${this.wrapStringWithQuote(keyMapValue[key])}`;
+              const quote = key.includes("'") ? '"' : "'";
+              return `${quote}${key}${quote}: ${this.wrapStringWithQuote(
+                keyMapValue[key]
+              )}`;
             })
             .join(',\n')}
         };

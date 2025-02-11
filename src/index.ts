@@ -365,7 +365,10 @@ export default class I18nReplacer {
       try {
         file = prettier.format(file, prettierOptions);
       } catch (error: any) {
-        throw new Error(error?.message + `\n\nat: ${dist}, code: \n\n` + file);
+        console.error(
+          'fail to format and write to file: ' + dist + ' try to direct write'
+        );
+        fs.writeFileSync(dist, file);
       }
     }
 

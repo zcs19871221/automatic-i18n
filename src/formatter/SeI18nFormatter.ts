@@ -3,7 +3,6 @@ import {
   FormatOptions,
   FormatReturnType,
 } from './I18nFormatter';
-import path from 'path';
 
 export default class SeI18nFormatter extends I18nFormatter {
   protected override doRenderJsxText(
@@ -23,37 +22,20 @@ export default class SeI18nFormatter extends I18nFormatter {
   }
 
   private renderGlobal(
-    { params, defaultMessage, info: { i18nReplacer, fileName } }: FormatOptions,
+    { params, defaultMessage }: FormatOptions,
     intlId: string
   ): FormatReturnType {
     const newText = this.intlApiExpression(
       intlId,
       defaultMessage,
-      `i18n.intl`,
+      `i18.intl`,
       params
     );
-    const localeDist = path.resolve(
-      i18nReplacer.opt.distLocaleDir,
-      'index.tsx'
-    );
-    const src = i18nReplacer.opt.outputToNewDir
-      ? path.join(i18nReplacer.opt.outputToNewDir, path.basename(fileName))
-      : fileName;
-
-    let relativePath = path
-      .relative(src, localeDist)
-      .replace(/\\/g, '/')
-      .replace(/^\.\.\//, '');
-
-    if (!relativePath.startsWith('.')) {
-      relativePath = './' + relativePath;
-    }
-
     return {
       newText: newText,
       dependencies: {
-        moduleName: relativePath,
-        names: ['i18n'],
+        moduleName: 'I18',
+        names: ['i18'],
       },
     };
   }
