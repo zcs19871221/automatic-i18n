@@ -11,13 +11,7 @@ import * as prettier from 'prettier';
 import { Options as PrettierOptions } from 'prettier';
 
 import { ReplaceContext, Info } from './ReplaceContext';
-import {
-  HandlerOption,
-  ReplacerOpt,
-  LocaleTypes,
-  I18nFormatterCtr,
-  TargetOpt,
-} from './types';
+import { HandlerOption, ReplacerOpt, LocaleTypes, TargetOpt } from './types';
 import { ScriptTarget } from 'typescript';
 import { DefaultI18nFormatter, I18nFormatter } from './formatter';
 import tsNodeHandlers from './tsNodeHandlers';
@@ -66,6 +60,7 @@ export const initParams = ({
   meaningKey = false,
   global: hook = false,
   debug = false,
+  I18nFormatter = DefaultI18nFormatter,
 }: ReplacerOpt) => {
   targets = targets.map((t) => path.resolve(t));
   const notExists = targets.filter((t) => !fs.existsSync(t));
@@ -80,8 +75,6 @@ export const initParams = ({
   if (!fs.statSync(distLocaleDir).isDirectory()) {
     throw new Error('distLocaleDir should be directory. ' + distLocaleDir);
   }
-
-  let I18nFormatter: I18nFormatterCtr = DefaultI18nFormatter;
 
   if (excludes) {
     filters.push((fileOrDirName) =>

@@ -18,6 +18,7 @@ export interface ReplacerOpt {
   localesToGenerate?: LocaleTypes[];
   global?: boolean;
   meaningKey?: boolean;
+  I18nFormatter?: I18nFormatterCtr;
   filters?: Filter[];
   // baseNames
   excludes?: string[];
@@ -31,7 +32,6 @@ export type HandlerOption = {
     'I18nFormatterClass' | 'excludes' | 'outputToNewDir'
   >]-?: ReplacerOpt[key];
 } & {
-  I18nFormatter: I18nFormatterCtr;
   outputToNewDir?: string;
   prettierOptions?: PrettierOptions;
 };
