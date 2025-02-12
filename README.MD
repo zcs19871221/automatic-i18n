@@ -98,36 +98,44 @@ you can get specific info with `npx automatic-i18n -h`
 
 ## api
 
-not tested yet..
+The input parameter defined with `ReplacerOpt` below, only one parameter **I18nFormatter** is not exist in cli options.
 
-the options is like this:
+    const I18nReplacer = require('automatic-i18n').default;
+
+    I18nReplacer.createI18nReplacer({
+        targets: ['components', 'hooks', 'middleware', 'modules', 'pages', 'utils'],
+        uniqIntlKey: true,
+    }).replace();
 
     export interface ReplacerOpt {
-        // file or dirs to extract messages default is [process.cwd()]
         targets?: string[];
-        // The location where the locale message files are generated default is [process.cwd()/i18n]
         distLocaleDir?: string;
-        // the locale which is searched in targets default is zh-cn
         localeToReplace?: LocaleTypes;
-        // the locale file default is [en-us, zh-cn]
         localesToGenerate?: LocaleTypes[];
-        // formatter class, use could provide class implement the `I18nFormatter` class,
-        I18nFormatterClass?: DefaultI18nFormatterCtr;
-        // default is hook
-        // if rename the key to meaningful variable if has related english translate
+        global?: boolean;
         meaningKey?: boolean;
-        // decide which file or dir could be handled
+        uniqIntlKey?: boolean;
+        I18nFormatter?: I18nFormatterCtr;
         filters?: Filter[];
-        // file name or dir to ignore
+        // baseNames
         excludes?: string[];
         debug?: boolean;
+        outputToNewDir?: string;
     }
+
 ## TODO
-1. 根据i8n文件夹的局部LocalKey
-2. 如果目标文件已经引用语言文件，且引用的语言文件和当前的目标语言文件不同，那么要把原来引用的语言文件里的翻译key放到目标文件里
-3. 增加下一行ignore和全文件ignore，根据在位置范围377-788这样来跳过
-4. 翻译的key变成uniqId，防止不同分支冲突
-5. vue支持？
+
+1. add block ignore syntax :
+
+   /** @auto-i18n-ignore-next ** /
+   /** @auto-i18n-ignore ** /
+   /** @auto-i18n-ignore-start **/
+   /** @auto-i18n-ignore-end **/
+
+2. support for vue
+
+3. A new syntax to mark a section of code, with the option to translate only the code covered by this syntax, to help developers whose native language is English (it is difficult to tell whether an English variable is a text to be translated or a value)
+
 ## License
 
 The MIT License.
