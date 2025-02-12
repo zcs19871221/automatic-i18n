@@ -6,4 +6,9 @@ export interface LocaleContextValue {
   readonly fetchingMessages: boolean;
 }
 
-export type LocalKey = 'key0005' | 'key0006' | 'key0008' | 'key0009';
+export type LocalKey =
+  | 'key0005'
+  | 'key0006'
+  | 'key0008'
+  | 'key0009'
+  | 'key1SGrp8OHiEjHihstWO61MQQ__';

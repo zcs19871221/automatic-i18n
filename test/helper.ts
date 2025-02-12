@@ -29,12 +29,12 @@ export const expectDirEqualDistDirAt = (dir: string) => {
 export const runAndExpect = async ({
   dirName,
   opt = {},
-  afterHook = () => {},
+  beforeRun = () => {},
   hideConsole = true,
 }: {
   dirName: string;
   opt?: {};
-  afterHook?: (testDir: string, distDir: string) => void;
+  beforeRun?: (testDir: string, distDir: string) => void;
   hideConsole?: boolean;
 }) => {
   const originWarning = console.warn;
@@ -48,7 +48,7 @@ export const runAndExpect = async ({
   const template = path.join(testDir, 'template.tsx');
   fs.removeSync(distDir);
   fs.ensureDirSync(distDir);
-  afterHook(testDir, distDir);
+  beforeRun(testDir, distDir);
   await I18nReplacer.createI18nReplacer({
     distLocaleDir: distDir,
     outputToNewDir: distDir,

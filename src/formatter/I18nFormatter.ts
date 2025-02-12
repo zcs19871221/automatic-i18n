@@ -64,7 +64,7 @@ export abstract class I18nFormatter {
       intlId = this.messageMapIntlId[message];
     } else {
       if (opt.info.i18nReplacer.opt.uniqIntlKey) {
-        intlId = `key1${this.shortMd5(message)}`;
+        intlId = `key1${this.shortMd5(message)}__`;
       } else {
         do {
           intlId = `key${String(this.intlSeq++).padStart(4, '0')}`;

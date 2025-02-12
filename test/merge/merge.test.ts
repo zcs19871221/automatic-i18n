@@ -8,7 +8,7 @@ it('test merge', async () => {
     opt: {
       global: false,
     },
-    afterHook(testDir, distDir) {
+    beforeRun(testDir, distDir) {
       fs.copyFileSync(
         path.join(testDir, 'zh-cn.ts'),
         path.join(distDir, 'zh-cn.ts')

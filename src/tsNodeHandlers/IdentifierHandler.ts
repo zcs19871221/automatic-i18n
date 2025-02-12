@@ -33,11 +33,13 @@ export class IdentifierHandler implements TsNodeHandler {
       node.parent
         ?.getChildren()[2]
         ?.getText()
-        ?.match(/(['"])(key\d+)['"]/) &&
+        ?.match(/(['"])((?:key\d+)|(?:key1[^'"]+__))['"]/) &&
       node.parent?.parent?.parent?.getText()?.includes('.formatMessage')
     ) {
       const keyNode = node.parent.getChildren()[2];
-      const matched = keyNode.getText().match(/(['"])(key\d+)['"]/)!;
+      const matched = keyNode
+        .getText()
+        .match(/(['"])((?:key\d+)|(?:key1[^'"]+__))['"]/)!;
       const newKey = i18nReplacer.getOldKeyMapNewKey()[matched[2]];
       if (!newKey) {
         return [];

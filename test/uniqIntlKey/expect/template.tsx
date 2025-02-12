@@ -45,7 +45,22 @@ function MegedFunction() {
     defaultMessage: '箭头函数组件字符串提取',
   });
   const name2 = intl.formatMessage({
-    id: 'key1SGrp8OHiEjHihstWO61MQQ',
+    id: 'key1SGrp8OHiEjHihstWO61MQQ__',
     defaultMessage: '张成思',
+  });
+  const name3 = intl.formatMessage({
+    id: 'key1SGrp8OHiEjHihstWO61MQQ__',
+    defaultMessage: '张成思',
+  });
+  message.error({
+    content: intl.formatMessage(
+      {
+        id: 'key16Fr+KZ66AYWybh3TtL8IEw__',
+        defaultMessage: '远控失败:{v1}',
+      },
+      { v1: res.msg }
+    ),
+    key,
+    duration: 3,
   });
 }
