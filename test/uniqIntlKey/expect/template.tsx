@@ -1,6 +1,15 @@
 import { useIntl } from 'react-intl';
 import React from 'react';
 
+function AA() {
+  i18.intl.formatMessage(
+    {
+      id: 'key16Fr+KZ66AYWybh3TtL8IEw__',
+      defaultMessage: '远控失败:{v1}',
+    },
+    { v1: res.msg }
+  );
+}
 const ArrowComponent = () => {
   const myIntl = useIntl();
   const name = myIntl.formatMessage({

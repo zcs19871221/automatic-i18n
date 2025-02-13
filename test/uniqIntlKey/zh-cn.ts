@@ -11,6 +11,7 @@ const locale: Record<LocalKey, string> = {
   key0008: '函数组件字符串提取',
   key0009: '函数组件{v1}jsx',
   key1SGrp8OHiEjHihstWO61MQQ__: '张成思',
+  'key16Fr+KZ66AYWybh3TtL8IEw__': '远控失败:{v1}',
 };
 
 export default locale;

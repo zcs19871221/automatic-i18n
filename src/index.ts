@@ -384,7 +384,14 @@ export default class I18nReplacer {
     intlIdMapMessage: Record<string, string> = {}
   ) {
     if (astNode.kind === SyntaxKind.PropertyAssignment) {
-      const name = (astNode as PropertyAssignment).name.getText();
+      let name = (astNode as PropertyAssignment).name.getText();
+      if (
+        ["'", '"'].some(
+          (quote) => name.startsWith(quote) && name.endsWith(quote)
+        )
+      ) {
+        name = name.slice(1, -1);
+      }
       const value = (astNode as PropertyAssignment).initializer.getText();
       intlIdMapMessage[name] = value.replace(/(^['"])|(['"]$)/g, '');
     }

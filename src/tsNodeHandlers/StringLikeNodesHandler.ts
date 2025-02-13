@@ -54,7 +54,7 @@ export class StringLikeNodesHandler implements TsNodeHandler {
     if (
       node.parent?.kind === SyntaxKind.PropertyAssignment &&
       node.parent.getText().includes('defaultMessage: ' + node.getText()) &&
-      node.parent?.parent?.parent?.getText()?.includes('formatMessage({')
+      node.parent?.parent?.parent?.getText()?.includes('.formatMessage(')
     ) {
       return false;
     }
