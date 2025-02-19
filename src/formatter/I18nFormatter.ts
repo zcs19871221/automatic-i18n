@@ -50,10 +50,13 @@ export abstract class I18nFormatter {
 
   private shortMd5(input: string) {
     // Create an MD5 hash of the input string
-    const hash = crypto.createHash('md5').update(input).digest('base64');
+    const hash = crypto
+      .createHash('shake256', { outputLength: 4 })
+      .update(input)
+      .digest('hex');
 
     // Remove padding characters and return the short MD5 string
-    return hash.replace(/=+$/, '');
+    return hash;
   }
 
   private getOrCreateIntlId(opt: FormatOptions) {
