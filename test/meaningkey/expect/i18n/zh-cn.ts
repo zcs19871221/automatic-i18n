@@ -6,9 +6,6 @@
 import { LocalKey } from './types';
 
 const locale: Record<LocalKey, string> = {
-  goodbye: '老再见',
-  goodbye_1: '再见',
-  hellosdffdsfds: '你好',
   key0001: '哈哈哈',
   key0002:
     '哈\
@@ -18,6 +15,9 @@ const locale: Record<LocalKey, string> = {
     '哈哈\
   哈哈',
   key0005: '你好{v1}',
+  goodbye: '老再见',
+  goodbye_1: '再见',
+  hellosdffdsfds: '你好',
   thatIsSoGoodILoveYouVeryMuchGo_: '师德师风佛挡杀佛佛挡杀佛水电费水电费',
   yoursIsXxx: 'ssss',
 };

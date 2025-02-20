@@ -53,6 +53,10 @@ function MegedFunction() {
     id: 'key0005',
     defaultMessage: '箭头函数组件字符串提取',
   });
+  const name3 = intl.formatMessage({
+    id: 'key140ba3cf5__',
+    defaultMessage: '啧啧啧',
+  });
   const name2 = intl.formatMessage({
     id: 'key1SGrp8OHiEjHihstWO61MQQ__',
     defaultMessage: '张成思',

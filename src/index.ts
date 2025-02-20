@@ -249,14 +249,16 @@ export default class I18nReplacer {
     );
 
     const newIntlMapMessages = this.i18nFormatter.getNewIntlMapMessages();
-
     await Promise.all(
       Object.entries(map).map(([locale, keyMapMessage]) => {
         Object.assign(keyMapMessage, newIntlMapMessages);
 
         return this.formatAndWrite(
           path.join(this.opt.distLocaleDir, locale + '.ts'),
-          this.i18nFormatter.generateMessageFile(keyMapMessage),
+          this.i18nFormatter.generateMessageFile(
+            keyMapMessage,
+            newIntlMapMessages
+          ),
           distPrettierOptions
         );
       })
@@ -284,7 +286,10 @@ export default class I18nReplacer {
       path.join(this.opt.distLocaleDir, 'types.ts'),
       this.i18nFormatter.generateTypeFile(
         this.opt.localesToGenerate,
-        I18nFormatter.sortKeys(map[this.opt.localeToReplace])
+        I18nFormatter.sortKeys(
+          map[this.opt.localeToReplace],
+          newIntlMapMessages
+        )
       ),
       distPrettierOptions
     );

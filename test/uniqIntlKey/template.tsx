@@ -47,6 +47,7 @@ function FunctionComponent(params = '参数无法提取') {
 
 function MegedFunction() {
   const name = '箭头函数组件字符串提取';
+  const name3 = '啧啧啧';
   const name2 = intl.formatMessage({
     id: 'key1SGrp8OHiEjHihstWO61MQQ__',
     defaultMessage: '张成思',

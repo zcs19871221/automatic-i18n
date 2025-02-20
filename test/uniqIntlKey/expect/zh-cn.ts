@@ -6,6 +6,7 @@
 import { LocalKey } from './types';
 
 const locale: Record<LocalKey, string> = {
+  key140ba3cf5__: '啧啧啧',
   key0005: '箭头函数组件字符串提取',
   key0006: '箭头函数组件{v1}jsx',
   key0008: '函数组件字符串提取',
