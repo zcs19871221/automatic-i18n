@@ -28,7 +28,11 @@ const ArrowComponent = () => {
     id: 'key0005',
     defaultMessage: '箭头函数组件字符串提取',
   });
-
+  const name4 = i18.intl.formatMessage({
+    id: 'key186O1pBy+R0GyONiAIWzm6g__',
+    defaultMessage:
+      '碳排放量指标不支持手动创建，配置排放源后，系统将自动生成碳排放量指标',
+  });
   return (
     <div>
       <FormattedMessage

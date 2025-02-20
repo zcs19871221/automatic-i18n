@@ -17,7 +17,11 @@ function normalFunction() {
 const ArrowComponent = () => {
   const myIntl = useIntl();
   const name = '箭头函数组件字符串提取';
-
+  const name4 = i18.intl.formatMessage({
+    id: 'key186O1pBy+R0GyONiAIWzm6g__',
+    defaultMessage:
+      '碳排放量指标不支持手动创建，配置排放源后，系统将自动生成碳排放量指标',
+  });
   return <div>箭头函数组件{name}jsx</div>;
 };
 function FunctionComponent(params = '参数无法提取') {
