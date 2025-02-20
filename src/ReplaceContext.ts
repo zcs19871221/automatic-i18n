@@ -1,6 +1,10 @@
 import { ImportDeclaration } from 'typescript';
 import I18nReplacer from '.';
 
+export interface CommentRange {
+  ignore: [number, number][];
+  collect: [number, number][];
+}
 export interface Info {
   file: string;
   fileName: string;
@@ -12,6 +16,7 @@ export interface Info {
       names: Set<string>;
     };
   };
+  commentRange: CommentRange;
   globalContext: ReplaceContext[];
 }
 export class ReplaceContext {

@@ -21,10 +21,10 @@ export interface ReplacerOpt {
   uniqIntlKey?: boolean;
   I18nFormatter?: I18nFormatterCtr;
   filters?: Filter[];
-  // baseNames
   excludes?: string[];
   debug?: boolean;
   outputToNewDir?: string;
+  onlyMarked?: boolean;
 }
 
 export type HandlerOption = {

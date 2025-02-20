@@ -1,12 +1,14 @@
+/* auto-i18n-ignore-next */
 const variable: any = [];
 
+/* auto-i18n-ignore-next */
 if (variable === '发') {
 }
-
+/* auto-i18n-collect-start */
 if ('好' === variable) {
 }
-
-if (/* @ignore */ '忽略' === variable) {
+/* automatic-i18n-ignore-next */
+if ('忽略' === variable) {
 }
 
 ['你', variable, '大'].includes(variable);

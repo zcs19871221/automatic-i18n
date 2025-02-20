@@ -19,6 +19,12 @@ export function handleChildren(opt: HandlerOption) {
   return childrenContext;
 }
 
+function inRange(node: Node, ranges: [number, number][]) {
+  return ranges.some(
+    ([start, end]) => node.getStart() >= start && node.getEnd() <= end
+  );
+}
+
 export function handleNode(opt: HandlerOption): ReplaceContext[] {
   const { node, info, tsNodeHandlers } = opt;
   const matchedTsNodeHandlers = tsNodeHandlers.filter((tsNodeHandler) =>
@@ -28,13 +34,24 @@ export function handleNode(opt: HandlerOption): ReplaceContext[] {
     throw new Error('matched more then 1 ');
   }
   const tsNodeHandler = matchedTsNodeHandlers[0];
-  if (tsNodeHandler) {
-    return tsNodeHandler.handle({
-      node,
-      info,
-      tsNodeHandlers: tsNodeHandlers,
-    });
+  if (!tsNodeHandler) {
+    return handleChildren(opt);
   }
 
-  return handleChildren(opt);
+  if (inRange(node, info.commentRange.ignore)) {
+    return [];
+  }
+
+  if (
+    (info.i18nReplacer.opt.onlyMarked && inRange(node, markedRanges)) ||
+    !inRange(node, ignoreRanges)
+  ) {
+    return handleChildren(opt);
+  }
+
+  return tsNodeHandler.handle({
+    node,
+    info,
+    tsNodeHandlers: tsNodeHandlers,
+  });
 }
