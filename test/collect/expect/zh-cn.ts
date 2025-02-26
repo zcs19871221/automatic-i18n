@@ -6,8 +6,10 @@
 import { LocalKey } from './types';
 
 const locale: Record<LocalKey, string> = {
-  key0001: '{v1} and {v2}',
-  key0002: 'Please choose your locale from: {v1} {v2}',
+  key11e39f792__: 'excel',
+  key13b999b27__: 'hello sir!',
+  key1b2e24430__: 'lucy',
+  key1eaa0f157__: 'hello {v1}',
 };
 
 export default locale;

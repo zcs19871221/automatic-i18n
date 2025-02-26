@@ -1,6 +1,7 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import I18nReplacer from '../src';
+import { ReplacerOpt } from '../src/types';
 
 const testBaseDir = path.join(process.cwd(), 'test');
 const expectName = 'expect';
@@ -33,7 +34,7 @@ export const runAndExpect = async ({
   hideConsole = true,
 }: {
   dirName: string;
-  opt?: {};
+  opt?: ReplacerOpt;
   beforeRun?: (testDir: string, distDir: string) => void;
   hideConsole?: boolean;
 }) => {

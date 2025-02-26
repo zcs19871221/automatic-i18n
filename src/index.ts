@@ -10,7 +10,7 @@ import ts, {
 import * as prettier from 'prettier';
 import { Options as PrettierOptions } from 'prettier';
 
-import { ReplaceContext, Info } from './ReplaceContext';
+import { ReplaceContext, Info, CommentRange } from './ReplaceContext';
 import { HandlerOption, ReplacerOpt, LocaleTypes, TargetOpt } from './types';
 import { ScriptTarget } from 'typescript';
 import { DefaultI18nFormatter, I18nFormatter } from './formatter';
@@ -451,6 +451,7 @@ export default class I18nReplacer {
 
       const info: Info = {
         file,
+        commentRange: this.collectMeaningfulCommentsRange(file),
         fileName: fileLocation,
         i18nReplacer: this as I18nReplacer,
         imports: new Set(),
@@ -496,5 +497,40 @@ export default class I18nReplacer {
         console.log(fileLocation + ' rewrite successful! 😃');
       }
     }
+  }
+
+  private collectMeaningfulCommentsRange(text: string): CommentRange {
+    const result: CommentRange = {
+      ignore: [],
+      collect: [],
+    };
+    let prevStart: number | null = null;
+    text.replace(
+      /\/\* auto-i18n-(ignore|collect)-(start|next|end) \*\//g,
+      (matched, commentType: 'ignore' | 'collect', commentRange, index) => {
+        if (commentRange === 'next') {
+          const nextLineStart = text.indexOf('\n', index + matched.length) + 1;
+          const range: [number, number] = [
+            nextLineStart,
+            text.indexOf('\n', nextLineStart) - 1,
+          ];
+          result[commentType].push(range);
+          return '';
+        }
+
+        if (commentRange === 'start' && prevStart === null) {
+          prevStart = index + matched.length;
+
+          return '';
+        }
+
+        if (commentRange === 'end' && prevStart !== null) {
+          result[commentType].push([prevStart, index]);
+        }
+
+        return '';
+      }
+    );
+    return result;
   }
 }

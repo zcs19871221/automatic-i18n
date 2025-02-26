@@ -6,7 +6,7 @@ import {
   isTypeNode,
 } from 'typescript';
 import { ReplaceContext } from '../ReplaceContext';
-import { TsNodeHandler, HandlerOption } from './TsNodeHandler';
+import { TsNodeHandler, HandlerOption, inRange } from './TsNodeHandler';
 
 export class StringLikeNodesHandler implements TsNodeHandler {
   match({ node, info, info: { i18nReplacer } }: HandlerOption): boolean {
@@ -67,6 +67,13 @@ export class StringLikeNodesHandler implements TsNodeHandler {
     }
 
     if (node.parent?.getText()?.match(/^id=/)) {
+      return false;
+    }
+
+    if (
+      i18nReplacer.opt.localeToReplace === 'en-us' &&
+      !inRange(node, info.commentRange.collect)
+    ) {
       return false;
     }
 
