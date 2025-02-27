@@ -16,30 +16,13 @@ import { ScriptTarget } from 'typescript';
 import { DefaultI18nFormatter, I18nFormatter } from './formatter';
 import tsNodeHandlers from './tsNodeHandlers';
 import { handleNode } from './tsNodeHandlers/TsNodeHandler';
+import excludeNodeModule from './filters/excludeNodeModule';
+import onlyTJsxFiles from './filters/onlyTJsxFiles';
 
 export { I18nFormatter };
 
-export const excludeNodeModule = (fileOrDirName: string) => {
-  if (
-    fileOrDirName.includes('node_modules') ||
-    path.basename(fileOrDirName).startsWith('.')
-  ) {
-    return false;
-  }
-
-  return true;
-};
-
 const resolvePrettierConfig = async (p: string) => {
   return await prettier.resolveConfig(p);
-};
-
-export const onlyTJsxFiles = (fileOrDirName: string, directory: boolean) => {
-  if (!directory && !fileOrDirName.match(/\.[tj]sx?$/)) {
-    return false;
-  }
-
-  return true;
 };
 
 export const defaultTargets = () => [process.cwd()];
@@ -63,7 +46,9 @@ export const initParams = ({
   uniqIntlKey = false,
   I18nFormatter = DefaultI18nFormatter,
 }: ReplacerOpt) => {
+  // get target real path
   targets = targets.map((t) => path.resolve(t));
+  // if target path not exists, throw error
   const notExists = targets.filter((t) => !fs.existsSync(t));
   if (notExists.length > 0) {
     throw new Error('can not find target fileOrDirs: ' + notExists.join(','));
@@ -165,13 +150,6 @@ export default class I18nReplacer {
 
   public async replace() {
     const startTime = Date.now();
-    await this.doReplace();
-    if (this.opt.debug) {
-      console.log('usedTime: ' + (Date.now() - startTime) / 1000 + 's');
-    }
-  }
-
-  public async doReplace() {
     const map: Record<LocaleTypes, Record<string, string>> = {} as any;
     this.opt.localesToGenerate.forEach((locale) => {
       map[locale] = this.getIntlIdMapMessage(locale);
@@ -298,6 +276,10 @@ export default class I18nReplacer {
       console.warn(warn);
       console.log('\n');
     });
+
+    if (this.opt.debug) {
+      console.log('usedTime: ' + (Date.now() - startTime) / 1000 + 's');
+    }
   }
 
   public getIgnoreComment() {
