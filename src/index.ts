@@ -507,7 +507,7 @@ export default class I18nReplacer {
         }
 
         if (commentRange === 'end' && prevStart !== null) {
-          result[commentType].push([prevStart, index]);
+          result[commentType].push([prevStart, index - 1]);
         }
 
         return '';

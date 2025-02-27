@@ -70,14 +70,15 @@ export class StringLikeNodesHandler implements TsNodeHandler {
       return false;
     }
 
-    if (
-      i18nReplacer.opt.localeToReplace === 'en-us' &&
-      !inRange(node, info.commentRange.collect)
-    ) {
-      return false;
+    if (i18nReplacer.opt.localeToReplace !== 'en-us') {
+      return true;
     }
 
-    return true;
+    if (inRange(node, info.commentRange.collect)) {
+      return true;
+    }
+
+    return false;
   }
 
   handle({

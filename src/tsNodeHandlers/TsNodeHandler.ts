@@ -21,7 +21,7 @@ export function handleChildren(opt: HandlerOption) {
 
 export function inRange(node: Node, ranges: [number, number][]) {
   return ranges.some(
-    ([start, end]) => node.getStart() >= start && node.getEnd() <= end
+    ([start, end]) => node.getStart() >= start && node.getEnd() - 1 <= end
   );
 }
 
