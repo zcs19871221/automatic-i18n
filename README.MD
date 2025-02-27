@@ -87,7 +87,11 @@ Some locale message files will be generated automatic.
 
     export default locale;
 
-And the entry template file will be generated which will use above locale message files. This template export a provider and a global object and you could use them in your own prefer. You could see the example file here:
+And the entry template file will be generated which will use above locale message files. This template export a provider and a global object and you could use them in your own prefer.
+You could get my other project as example here: https://github.com/zcs19871221/local-development-console
+
+enter the /web directory, make sure you have installed `Node.js 14` and relevant npm, execute `npm ci` then run `npm run dev`, then you could visit `http://localhost:5173/process` to see the effect:
+![](./image.png)
 
 # Quick start
 
