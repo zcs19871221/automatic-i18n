@@ -90,7 +90,8 @@ Some locale message files will be generated automatic.
 And the entry template file will be generated which will use above locale message files. This template export a provider and a global object and you could use them in your own prefer.
 You could get my other project as example here: https://github.com/zcs19871221/local-development-console
 
-enter the /web directory, make sure you have installed `Node.js 14` and relevant npm, execute `npm ci` then run `npm run dev`, then you could visit `http://localhost:5173/process` to see the effect:
+enter the /web directory, make sure you have installed `Node.js 14` and relevant npm, execute `npm ci` then run `npm run dev`, then you could visit `http://localhost:5173/process`, you could click the button in the right top of the page, and switch the language between english and chinese. you could enter some chinese language into the source code such like: `const text = '你好';` and run `npm run i18n` in the terminal at /web directory to see how it work.
+
 ![](./image.png)
 
 # Quick start
@@ -142,26 +143,26 @@ The input parameter defined with `ReplacerOpt` below, only one parameter **I18nF
 
 ### turn off next line
 
-`/** auto-i18n-ignore-next ** /`
+`/* auto-i18n-ignore-next * /`
 
-        /** auto-i18n-ignore-next ** /
+        /* auto-i18n-ignore-next * /
         const name = 'chengsiZhang';
 
 ### turn off a block of code
 
-`/** auto-i18n-ignore-start ** /`
-`/** auto-i18n-ignore-end ** /`
+`/* auto-i18n-ignore-start * /`
+`/* auto-i18n-ignore-end * /`
 
-        /** auto-i18n-ignore-start ** /
+        /* auto-i18n-ignore-start * /
         const name = 'chengsiZhang';
-        /** auto-i18n-ignore-end ** /
+        /* auto-i18n-ignore-end * /
 
 ## for people who write english text("localeToReplace" param is 'en-us')
 
 program will not collect english literal text unless you wrap codes with following comments.
-`/** auto-i18n-collect-start ** /`
-`/** auto-i18n-collect-end ** /`
-`/** auto-i18n-collect-next ** /`
+`/* auto-i18n-collect-start * /`
+`/* auto-i18n-collect-end * /`
+`/* auto-i18n-collect-next * /`
 
 Because program can not distinguish if a english variable is a locale or a meaningful things(maybe the keyname of json data).Because non english language have a range of unicode and they will not be used as a meaningful thing.So if you set params "localeToReplace" as 'en-us', you have to use the above configuration comments to tell program which english literal variable need to be replace otherwise they will not be replaced. Only effect the literal string variable, the html and template string will not effect.see the below codes, the "welcome" is replaced, and the "user" is not.
 
