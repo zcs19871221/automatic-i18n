@@ -1,5 +1,14 @@
 import React from 'react';
 import { FormattedMessage } from 'react-intl';
+const dateRangeErrMsg = () => {
+  if (hasDateRangeError) {
+    return '不能为空';
+  }
+  if (isMoreThanOneYear()) {
+    return '不能超过一年';
+  }
+  return '';
+};
 const value = {
   id: 'key0001',
   defaultMessage: 'English',

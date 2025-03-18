@@ -229,8 +229,7 @@ export abstract class I18nFormatter {
   ) {
     const paramString = this.paramsString(params);
 
-    return `
-    ${apiName}.formatMessage({
+    return `${apiName}.formatMessage({
             id: '${intlId}',
             defaultMessage: ${this.wrapStringWithQuote(defaultMessage)}
           }${paramString ? ',' + paramString : ''})`;

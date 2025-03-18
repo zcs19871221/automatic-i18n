@@ -6,12 +6,14 @@
 import { LocalKey } from './types';
 
 const locale: Record<LocalKey, string> = {
-  key0003: '普通箭头函数字符串替换成全局',
-  key0004: '普通函数字符串替换成全局',
-  key0005: '箭头函数组件字符串提取',
-  key0006: '箭头函数组件{v1}jsx',
-  key0008: '函数组件字符串提取',
-  key0009: '函数组件{v1}jsx',
+  key0001: '不能为空',
+  key0002: '不能超过一年',
+  key0005: '普通箭头函数字符串替换成全局',
+  key0006: '普通函数字符串替换成全局',
+  key0007: '箭头函数组件字符串提取',
+  key0008: '箭头函数组件{v1}jsx',
+  key0010: '函数组件字符串提取',
+  key0011: '函数组件{v1}jsx',
 };
 
 export default locale;
