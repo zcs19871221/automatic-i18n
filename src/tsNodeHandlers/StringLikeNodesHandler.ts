@@ -39,10 +39,7 @@ export class StringLikeNodesHandler implements TsNodeHandler {
         this.stringLiteralIsChildOfIncludeBlock(node)
       ) {
         i18nReplacer.addWarning({
-          text:
-            'do not use locale literal to do [===] or [includes], maybe an error! use /* ' +
-            i18nReplacer.getIgnoreComment() +
-            ' */ before text to ignore warning or refactor code!',
+          text: 'do not use locale literal to do [===] or [includes], maybe an error! add configuration comments:  /* auto-i18n-ignore-next */ or /* auto-i18n-ignore-start */ or /* auto-i18n-ignore-end */ to ignore this warning',
           start: node.getStart(),
           end: node.getEnd(),
           info,

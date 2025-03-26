@@ -433,7 +433,10 @@ export default class I18nReplacer {
 
       const info: Info = {
         file,
-        commentRange: this.collectMeaningfulCommentsRange(file),
+        commentRange: this.collectMeaningfulCommentsRange(
+          file,
+          this.opt.localeToReplace
+        ),
         fileName: fileLocation,
         i18nReplacer: this as I18nReplacer,
         imports: new Set(),
@@ -481,14 +484,39 @@ export default class I18nReplacer {
     }
   }
 
-  private collectMeaningfulCommentsRange(text: string): CommentRange {
+  private collectMeaningfulCommentsRange(
+    text: string,
+    targetLocale: LocaleTypes
+  ): CommentRange {
     const result: CommentRange = {
       ignore: [],
       collect: [],
     };
+    let ignore = false;
+    let collect = false;
+    let reg = /\/\* auto-i18n-(ignore|collect)-(start|next|end) \*\//g;
+    if (
+      targetLocale === 'en-us' &&
+      text.indexOf('/* auto-i18n-collect-') >= 0
+    ) {
+      collect = true;
+    }
+    if (text.indexOf('/* auto-i18n-ignore-') >= 0) {
+      ignore = true;
+    }
+    if (!ignore && !collect) {
+      return result;
+    }
+    if (!ignore) {
+      reg = /\/\* auto-i18n-(collect)-(start|next|end) \*\//g;
+    }
+    if (!collect) {
+      reg = /\/\* auto-i18n-(ignore)-(start|next|end) \*\//g;
+    }
+
     let prevStart: number | null = null;
     text.replace(
-      /\/\* auto-i18n-(ignore|collect)-(start|next|end) \*\//g,
+      reg,
       (matched, commentType: 'ignore' | 'collect', commentRange, index) => {
         if (commentRange === 'next') {
           const nextLineStart = text.indexOf('\n', index + matched.length) + 1;
@@ -500,7 +528,7 @@ export default class I18nReplacer {
           return '';
         }
 
-        if (commentRange === 'start' && prevStart === null) {
+        if (commentRange === 'start') {
           prevStart = index + matched.length;
 
           return '';
@@ -508,6 +536,7 @@ export default class I18nReplacer {
 
         if (commentRange === 'end' && prevStart !== null) {
           result[commentType].push([prevStart, index - 1]);
+          prevStart = null;
         }
 
         return '';

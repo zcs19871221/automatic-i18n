@@ -19,7 +19,7 @@ export class IdentifierHandler implements TsNodeHandler {
       !i18nReplacer.ignore(node)
     ) {
       i18nReplacer.addWarning({
-        text: 'property name of object should be english',
+        text: 'property name of object should be english, add configuration comments:  /* auto-i18n-ignore-next */ or /* auto-i18n-ignore-start */ or /* auto-i18n-ignore-end */ to ignore this warning',
         start: node.getStart(),
         end: node.getEnd(),
         info,

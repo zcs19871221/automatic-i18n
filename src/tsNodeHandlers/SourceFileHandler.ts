@@ -39,7 +39,9 @@ export class SourceFileHandler implements TsNodeHandler {
         if (firstNotCommentIndex > 0) {
           const tsIgnoreMatched = info.file
             .slice(0, firstNotCommentIndex)
-            .match(/(^|\n).*?@ts-ignore/);
+            .match(
+              /(^|\n).*?(@ts-ignore|\/\* auto-(?:i18n-ignore|collect)-(?:next|start) \*\/)/
+            );
           if (tsIgnoreMatched) {
             firstNotCommentIndex = tsIgnoreMatched.index ?? 0;
           }

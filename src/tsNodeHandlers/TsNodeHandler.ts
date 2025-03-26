@@ -20,13 +20,18 @@ export function handleChildren(opt: HandlerOption) {
 }
 
 export function inRange(node: Node, ranges: [number, number][]) {
-  return ranges.some(
+  const result = ranges.some(
     ([start, end]) => node.getStart() >= start && node.getEnd() - 1 <= end
   );
+  return result;
 }
 
 export function handleNode(opt: HandlerOption): ReplaceContext[] {
   const { node, info, tsNodeHandlers } = opt;
+  const ignore = inRange(node, info.commentRange.ignore);
+  if (ignore) {
+    return [];
+  }
   const matchedTsNodeHandlers = tsNodeHandlers.filter((tsNodeHandler) =>
     tsNodeHandler.match({ node, info, tsNodeHandlers })
   );
@@ -36,10 +41,6 @@ export function handleNode(opt: HandlerOption): ReplaceContext[] {
   const tsNodeHandler = matchedTsNodeHandlers[0];
   if (!tsNodeHandler) {
     return handleChildren(opt);
-  }
-
-  if (inRange(node, info.commentRange.ignore)) {
-    return [];
   }
 
   return tsNodeHandler.handle({
