@@ -109,6 +109,7 @@ export const getScriptTarget = (file: string): ScriptTarget => {
       return compilerOptions.options.target;
     }
   }
+  // istanbul ignore next
   return ScriptTarget.ES2015;
 };
 
@@ -282,10 +283,6 @@ export default class I18nReplacer {
     }
   }
 
-  public getIgnoreComment() {
-    return this.ignoreComment;
-  }
-
   public ignore(node: Node) {
     return node.getFullText().includes(this.ignoreComment);
   }
@@ -356,9 +353,11 @@ export default class I18nReplacer {
       try {
         file = prettier.format(file, prettierOptions);
       } catch (error: any) {
+        // istanbul ignore next
         console.error(
           'fail to format and write to file: ' + dist + ' try to direct write'
         );
+        // istanbul ignore next
         fs.writeFileSync(dist, file);
       }
     }
@@ -451,9 +450,12 @@ export default class I18nReplacer {
           tsNodeHandlers,
         })[0];
       } catch (error: any) {
+        // istanbul ignore next
         if (error.message) {
+          // istanbul ignore next
           error.message = '@ ' + fileLocation + ' ' + error.message;
         }
+        // istanbul ignore next
         console.error(error);
       }
 

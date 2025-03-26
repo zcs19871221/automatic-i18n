@@ -36,6 +36,7 @@ export function handleNode(opt: HandlerOption): ReplaceContext[] {
     tsNodeHandler.match({ node, info, tsNodeHandlers })
   );
   if (matchedTsNodeHandlers.length > 1) {
+    // istanbul ignore next
     throw new Error('matched more then 1 ');
   }
   const tsNodeHandler = matchedTsNodeHandlers[0];

@@ -3,7 +3,7 @@ import * as path from 'path';
 import I18nReplacer from '../src';
 import { ReplacerOpt } from '../src/types';
 
-const testBaseDir = path.join(process.cwd(), 'test');
+export const testBaseDir = path.join(process.cwd(), 'test');
 const expectName = 'expect';
 const distName = 'dist';
 

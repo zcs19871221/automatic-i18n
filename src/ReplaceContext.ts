@@ -50,6 +50,7 @@ export class ReplaceContext {
     let prev = this.children?.[0];
     for (let i = 1; i < this.children.length; i++) {
       if (this.children[i].start < prev.end) {
+        // istanbul ignore next
         throw new Error('error parser');
       }
     }

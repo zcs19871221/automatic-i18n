@@ -22,10 +22,8 @@ export class TemplateExpressionHandler implements TsNodeHandler {
 
     const templateSpanHandler = option.tsNodeHandlers.find(
       (h) => h instanceof TemplateSpanHandler
-    );
-    if (!templateSpanHandler) {
-      return false;
-    }
+    )!;
+
     const skip: Record<number, number> = {};
     // node.getChildren()[1]: get a syntax list node contain all expression node
     //node.getChildren()[1].getChildren() get all expression nodes

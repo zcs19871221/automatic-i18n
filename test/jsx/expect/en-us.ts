@@ -14,7 +14,10 @@ const locale: Record<LocalKey, string> = {
   key0006: '你好{v1}',
   key0007: '准备{v1}再见{v1}',
   key0008: '再见',
-  key0009: '张成思',
+  key0009:
+    '你好啊\
+      我很好',
+  key0010: '张成思',
 };
 
 export default locale;

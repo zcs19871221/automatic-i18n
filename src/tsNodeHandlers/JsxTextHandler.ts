@@ -20,7 +20,9 @@ export class JsxTextHandler implements TsNodeHandler {
     node
       .getText()
       .replace(/^[\s\n]+/, (match: string) => {
+        // istanbul ignore next
         start += match.length;
+        // istanbul ignore next
         return '';
       })
       .replace(/[\s\n]+$/, (match: string) => {

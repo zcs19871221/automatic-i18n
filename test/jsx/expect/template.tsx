@@ -120,6 +120,14 @@ const nest1 = (
     <span>{flag}</span>
     <span>flag</span>
     <span>
+      {i18n.intl.formatMessage({
+        id: 'key0009',
+        defaultMessage:
+          '你好啊\
+      我很好',
+      })}
+    </span>
+    <span>
       {flag
         ? i18n.intl.formatMessage({
             id: 'key0008',
@@ -142,7 +150,7 @@ const nest1 = (
         width: '20px',
       }}
       name={i18n.intl.formatMessage({
-        id: 'key0009',
+        id: 'key0010',
         defaultMessage: '张成思',
       })}
     />
