@@ -90,7 +90,7 @@ Some locale message files will be generated automatic.
 And the entry template file will be generated which will use above locale message files. This template export a provider and a global object and you could use them in your own prefer.
 You could get my other project as example here: https://github.com/zcs19871221/local-development-console
 
-enter the /web directory, make sure you have installed `Node.js 14` and relevant npm, execute `npm ci` then run `npm run dev`, then you could visit `http://localhost:5173/process`, you could click the button in the right top of the page, and switch the language between english and chinese. you could enter some chinese language into the source code such like: `const text = '你好';` and run `npm run i18n` in the terminal at /web directory to see how it work.
+enter the /web directory, make sure you have installed `Node.js 20` and relevant npm, execute `npm ci` then run `npm run dev`, then you could visit `http://localhost:5173/process`, you could click the button in the right top of the page, and switch the language between english and chinese. you could enter some chinese language into the source code such like: `const text = '你好';` and run `npm run i18n` in the terminal at /web directory to see how it work.
 
 ![](./image.png)
 
@@ -103,7 +103,7 @@ you can get specific info with `npx automatic-i18n -h`
 
 ## api
 
-The input parameter defined with `ReplacerOpt` below, only one parameter **I18nFormatter** is not exist in cli options.
+The input parameter defined with `ReplacerOpt` below, only one parameter **I18nFormatter**(which is not necessary except you want to get full control of the render) is not exist in cli options.
 
     const I18nReplacer = require('automatic-i18n').default;
 
@@ -114,26 +114,39 @@ The input parameter defined with `ReplacerOpt` below, only one parameter **I18nF
 
     export interface ReplacerOpt {
         // directories or files to extract locales
+        // you could write absolute or relative path(relative to current work dir),
+        // will use path.resolve method to analyze it.
+        // ex: ['src', 'c://work//project1"] default: [your current work dir]
         targets?: string[];
         // folder where message files are generated
+        // relative path or absolute path
+        // ex: "dist", default: path.join(yourCurrentWorkDir, "i18n")
         distLocaleDir?: string;
         // locale to search in source code
         localeToReplace?: LocaleTypes;
         // which locales will be generated
+        // ex: ['en-us'] default: ['en-us', 'zh-cn']
         localesToGenerate?: LocaleTypes[];
         // if prefer global intl obj instead hook
+        //  default: false
         global?: boolean;
         // if true, will replace the message key with camel cased english translation
+        // default: false
         meaningKey?: boolean;
         // if true, the message key will be generated from the message text, use hash
+        // default: false
         uniqIntlKey?: boolean;
         // the class to define how to render the i18n message
+        // default: DefaultI18nFormatter
         I18nFormatter?: I18nFormatterCtr;
         // a function list to determine whether to replace the file or dir
+        // default: excludeNodeModules and only include *.[tj]sx? files
         filters?: Filter[];
-        // a string list to exclude the file or dir if matched
+        // a string list to exclude the file or dir if matched, wild match
+        // ex: ['node_modules'], default: []
         excludes?: string[];
         // if output debug information
+        // ex: false, default: false
         debug?: boolean;
         // if output to new dir instead of replace the original files
         outputToNewDir?: string;
