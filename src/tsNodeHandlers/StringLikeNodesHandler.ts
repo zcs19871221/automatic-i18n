@@ -30,10 +30,6 @@ export class StringLikeNodesHandler implements TsNodeHandler {
     }
 
     if (node.kind === SyntaxKind.StringLiteral) {
-      if (i18nReplacer.ignore(node)) {
-        return false;
-      }
-
       if (
         this.stringLiteralIsInEqualBlock(node) ||
         this.stringLiteralIsChildOfIncludeBlock(node)

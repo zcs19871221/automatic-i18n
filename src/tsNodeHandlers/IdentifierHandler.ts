@@ -15,8 +15,7 @@ export class IdentifierHandler implements TsNodeHandler {
     // add warning message if user use non-English text as object property name
     if (
       i18nReplacer.opt.localeToReplace !== 'en-us' &&
-      i18nReplacer.includesTargetLocale(node.getText()) &&
-      !i18nReplacer.ignore(node)
+      i18nReplacer.includesTargetLocale(node.getText())
     ) {
       i18nReplacer.addWarning({
         text: 'property name of object should be english, add configuration comments:  /* auto-i18n-ignore-next */ or /* auto-i18n-ignore-start */ or /* auto-i18n-ignore-end */ to ignore this warning',
