@@ -121,6 +121,7 @@ export default class I18nReplacer {
   }
 
   private warnings: Set<string> = new Set();
+  private ignoreComment = '@ignore';
 
   public readonly i18nFormatter: I18nFormatter;
   private constructor(public readonly opt: HandlerOption) {
@@ -284,6 +285,10 @@ export default class I18nReplacer {
     if (this.opt.debug) {
       console.log('usedTime: ' + (Date.now() - startTime) / 1000 + 's');
     }
+  }
+
+  public ignore(node: Node) {
+    return node.getFullText().includes(this.ignoreComment);
   }
 
   public addWarning({
