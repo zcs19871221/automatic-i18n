@@ -50,7 +50,7 @@ export class IdentifierHandler implements TsNodeHandler {
       if (!codeBlock.getChildAt(1).getText().endsWith(',')) {
         newText = ',' + newText;
       }
-      if (!codeBlock.getChildAt(2).getFullText().startsWith('\n')) {
+      if (codeBlock.getChildAt(2).getFullText().match(/\s*\n/) === null) {
         newText = '\n' + newText;
       }
 
