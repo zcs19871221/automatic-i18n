@@ -36,6 +36,8 @@ export interface ReplacerOpt {
   debug?: boolean;
   // if output to new dir instead of replace the original files
   outputToNewDir?: string;
+  // if output to new dir instead of replace the original files
+  addMissingDefaultMessage?: boolean;
 }
 
 export type HandlerOption = {

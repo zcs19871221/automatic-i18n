@@ -4,8 +4,8 @@ const ArrowComponent = () => {
   const myIntl = useIntl();
   const name = myIntl.formatMessage({
     id: 'key0005',
-    defaultMessage: '箭头函数组件字符串提取',
   });
+  const name2 = myIntl.formatMessage({id: 'key0006'});
 
   return (
     <div>
@@ -26,12 +26,19 @@ function FunctionComponent(params = '参数无法提取') {
   });
 
   return (
-    <div>
+    <div
+      attr-desc={intl.formatMessage({
+        id: 'key0008',
+      })}
+    >
       <FormattedMessage
         id="key0009"
         defaultMessage="函数组件{v1}jsx"
         values={{ v1: name }}
       />
+      {intl.formatMessage({
+        id: 'key0008',
+      })}
     </div>
   );
 }

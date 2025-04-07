@@ -155,19 +155,23 @@ export abstract class I18nFormatter {
     return null;
   }
 
+  public escapeDefaultMessage(defaultMessage: string) {
+    return defaultMessage.replace(/(?:\r)?\n/g, (m, index) => {
+      if (defaultMessage[index - 1] === '\\') {
+        return m;
+      }
+      return '\\' + m;
+    });
+  }
+
   private render(
     opt: FormatOptions,
-    method: 'doRenderJsxText' | 'doRenderTemplateString' | 'doRenderStringLike'
+    methodToInvoke:
+      | 'doRenderJsxText'
+      | 'doRenderTemplateString'
+      | 'doRenderStringLike'
   ): string {
-    opt.defaultMessage = opt.defaultMessage.replace(
-      /(?:\r)?\n/g,
-      (m, index) => {
-        if (opt.defaultMessage[index - 1] === '\\') {
-          return m;
-        }
-        return '\\' + m;
-      }
-    );
+    opt.defaultMessage = this.escapeDefaultMessage(opt.defaultMessage);
     const [intlId, message] = this.getOrCreateIntlId(opt);
 
     if (!opt.info.i18nReplacer.opt.global) {
@@ -185,7 +189,7 @@ export abstract class I18nFormatter {
       }
     }
 
-    const result: FormatReturnType = this[method](opt, intlId);
+    const result: FormatReturnType = this[methodToInvoke](opt, intlId);
 
     if (!this.messageMapIntlId[message]) {
       this.messageMapIntlId[message] = intlId;
@@ -221,6 +225,16 @@ export abstract class I18nFormatter {
     return paramsString;
   }
 
+  public static DEFAULT_MESSAGE_PROPERTY = 'defaultMessage:';
+
+  public static FORMATTED_MESSAGE_TAG_START = '<FormattedMessage';
+
+  public createDefaultMessageStr(defaultMessage: string) {
+    return `${
+      I18nFormatter.DEFAULT_MESSAGE_PROPERTY
+    } ${this.wrapStringWithQuote(defaultMessage)}`;
+  }
+
   protected intlApiExpression(
     intlId: string,
     defaultMessage: string,
@@ -231,7 +245,7 @@ export abstract class I18nFormatter {
 
     return `${apiName}.formatMessage({
             id: '${intlId}',
-            defaultMessage: ${this.wrapStringWithQuote(defaultMessage)}
+            ${this.createDefaultMessageStr(defaultMessage)}
           }${paramString ? ',' + paramString : ''})`;
   }
 

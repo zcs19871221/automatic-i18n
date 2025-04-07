@@ -7,6 +7,7 @@ it('test merge', async () => {
     dirName: path.basename(__dirname),
     opt: {
       global: false,
+      addMissingDefaultMessage: true,
     },
     beforeRun(testDir, distDir) {
       fs.copyFileSync(

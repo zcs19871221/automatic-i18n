@@ -43,6 +43,7 @@ export const initParams = ({
   meaningKey = false,
   global: hook = false,
   debug = false,
+  addMissingDefaultMessage = false,
   uniqIntlKey = false,
   I18nFormatter = DefaultI18nFormatter,
 }: ReplacerOpt) => {
@@ -75,6 +76,7 @@ export const initParams = ({
   const HandlerOption: HandlerOption = {
     global: hook,
     uniqIntlKey,
+    addMissingDefaultMessage,
     targets,
     distLocaleDir,
     localeToReplace,
@@ -148,6 +150,7 @@ export default class I18nReplacer {
     return this.oldKeyMapNewKey;
   }
 
+  public idMapDefaultMessage: Record<string, string> = {};
   public async replace() {
     const startTime = Date.now();
     const map: Record<LocaleTypes, Record<string, string>> = {} as any;
@@ -155,6 +158,7 @@ export default class I18nReplacer {
       map[locale] = this.getIntlIdMapMessage(locale);
     });
     this.oldKeyMapNewKey = {};
+    this.idMapDefaultMessage = map[this.opt.localeToReplace];
     Object.entries(map['en-us']).forEach(([key, message]) => {
       if (
         I18nFormatter.isAutomaticGeneratedKey(key) &&
