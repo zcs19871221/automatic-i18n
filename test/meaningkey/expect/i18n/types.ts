@@ -1,13 +1,13 @@
 export type AvailableLocales = 'zh-cn' | 'en-us';
 
 export type LocalKey =
-  | 'key0001'
-  | 'key0002'
-  | 'key0003'
-  | 'key0004'
-  | 'key0005'
-  | 'goodbye'
   | 'goodbye_1'
   | 'hellosdffdsfds'
+  | 'key0005'
   | 'thatIsSoGoodILoveYouVeryMuchGo_'
-  | 'yoursIsXxx';
+  | 'yoursIsXxx'
+  | 'key0001'
+  | 'key0002'
+  | 'goodbye'
+  | 'key0003'
+  | 'key0004';

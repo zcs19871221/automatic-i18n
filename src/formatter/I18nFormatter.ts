@@ -274,10 +274,13 @@ export abstract class I18nFormatter {
 
   public static sortKeys(
     _keyMapValue: Record<string, string>,
-    newIntlKeys: Record<string, string>,
+    _newIntlKeys: Record<string, string>,
     originKeys: Set<string>
   ): string[] {
-    return [...Object.keys(newIntlKeys).sort(), ...originKeys];
+    const newKeys = Object.keys(_keyMapValue).filter((key) => {
+      return !originKeys.has(key);
+    });
+    return [...newKeys.sort(), ...originKeys];
   }
 
   private wrapStringWithQuote(text: string) {
