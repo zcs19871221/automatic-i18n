@@ -133,6 +133,7 @@ export default class I18nReplacer {
   private getIntlIdMapMessage(locale: LocaleTypes) {
     const defaultLocaleFile = path.join(this.opt.distLocaleDir, locale + '.ts');
     let intlIdMapMessage: Record<string, string> = {};
+    let keys: Set<string> | null = null;
     if (fs.existsSync(defaultLocaleFile)) {
       const file = fs.readFileSync(defaultLocaleFile, 'utf-8');
       const source = createSourceFile(
@@ -141,10 +142,10 @@ export default class I18nReplacer {
         getScriptTarget(defaultLocaleFile),
         true
       );
-      intlIdMapMessage =
+      [intlIdMapMessage, keys] =
         I18nReplacer.intlIdMapMessageFromAstNodeRecursively(source);
     }
-    return intlIdMapMessage;
+    return [intlIdMapMessage, keys] as const;
   }
 
   public getOldKeyMapNewKey() {
@@ -155,8 +156,11 @@ export default class I18nReplacer {
   public async replace() {
     const startTime = Date.now();
     const map: Record<LocaleTypes, Record<string, string>> = {} as any;
+    let originKeys: Set<string> = new Set();
     this.opt.localesToGenerate.forEach((locale) => {
-      map[locale] = this.getIntlIdMapMessage(locale);
+      const res = this.getIntlIdMapMessage(locale);
+      map[locale] = res[0];
+      originKeys = res[1] ?? originKeys;
     });
     this.oldKeyMapNewKey = {};
     this.idMapDefaultMessage = map[this.opt.localeToReplace];
@@ -240,7 +244,8 @@ export default class I18nReplacer {
           path.join(this.opt.distLocaleDir, locale + '.ts'),
           this.i18nFormatter.generateMessageFile(
             keyMapMessage,
-            newIntlMapMessages
+            newIntlMapMessages,
+            originKeys
           ),
           distPrettierOptions
         );
@@ -271,7 +276,8 @@ export default class I18nReplacer {
         this.opt.localesToGenerate,
         I18nFormatter.sortKeys(
           map[this.opt.localeToReplace],
-          newIntlMapMessages
+          newIntlMapMessages,
+          originKeys
         )
       ),
       distPrettierOptions
@@ -371,7 +377,8 @@ export default class I18nReplacer {
 
   private static intlIdMapMessageFromAstNodeRecursively(
     astNode: Node,
-    intlIdMapMessage: Record<string, string> = {}
+    intlIdMapMessage: Record<string, string> = {},
+    keys: Set<string> = new Set()
   ) {
     if (astNode.kind === SyntaxKind.PropertyAssignment) {
       let name = (astNode as PropertyAssignment).name.getText();
@@ -383,12 +390,17 @@ export default class I18nReplacer {
         name = name.slice(1, -1);
       }
       const value = (astNode as PropertyAssignment).initializer.getText();
+      keys.add(name);
       intlIdMapMessage[name] = value.replace(/(^['"])|(['"]$)/g, '');
     }
     forEachChild(astNode, function (n) {
-      I18nReplacer.intlIdMapMessageFromAstNodeRecursively(n, intlIdMapMessage);
+      I18nReplacer.intlIdMapMessageFromAstNodeRecursively(
+        n,
+        intlIdMapMessage,
+        keys
+      );
     });
-    return intlIdMapMessage;
+    return [intlIdMapMessage, keys] as const;
   }
 
   private async replaceTargetLocaleWithMessageRecursively(
