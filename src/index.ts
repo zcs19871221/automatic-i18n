@@ -153,17 +153,84 @@ export default class I18nReplacer {
   }
 
   public idMapDefaultMessage: Record<string, string> = {};
+  // ...existing code...
+
   public async replace() {
     const startTime = Date.now();
     const map: Record<LocaleTypes, Record<string, string>> = {} as any;
-    let originKeys: Set<string> = new Set();
+    let originalKeys: Set<string> = new Set();
+
+    // 1. 加载所有 locale 的 key/message
     this.opt.localesToGenerate.forEach((locale) => {
-      const res = this.getIntlIdMapMessage(locale);
-      map[locale] = res[0];
-      originKeys = res[1] ?? originKeys;
+      const [keyMap, keys] = this.getIntlIdMapMessage(locale);
+      map[locale] = keyMap;
+      originalKeys = keys ?? originalKeys;
     });
+
     this.oldKeyMapNewKey = {};
     this.idMapDefaultMessage = map[this.opt.localeToReplace];
+
+    // 2. 更新自动生成 key 的映射
+    this.updateKeyMap(map);
+
+    // 3. 补全缺失的 key
+    this.fillMissingKeys(map);
+
+    // 4. 设置 formatter 的 messageMapIntlId
+    this.i18nFormatter.setMessageMapIntlId(
+      Object.entries<string>(map[this.opt.localeToReplace]).reduce(
+        (messageMapIntlId: Record<string, string>, [intlId, message]) => {
+          if (!messageMapIntlId[message]) {
+            messageMapIntlId[message] = intlId;
+          }
+          return messageMapIntlId;
+        },
+        {}
+      )
+    );
+
+    if (this.opt.outputToNewDir) {
+      fs.ensureDirSync(this.opt.outputToNewDir);
+    }
+    fs.ensureDirSync(this.opt.distLocaleDir);
+
+    const distPrettierOptions = await resolvePrettierConfig(
+      path.join(this.opt.distLocaleDir, 'index.ts')
+    );
+
+    // 5. 替换目标文件内容
+    await this.replaceTargetLocaleWithMessageRecursively(
+      await Promise.all(
+        this.opt.targets.map(async (target) => {
+          const config = await resolvePrettierConfig(target);
+          const scriptTarget = getScriptTarget(target);
+          return {
+            prettierOptions: config,
+            name: target,
+            scriptTarget,
+          };
+        })
+      )
+    );
+
+    // 6. 写入 locale 文件
+    await this.writeLocaleFiles(map, originalKeys, distPrettierOptions);
+
+    // 7. 写入 types 文件
+    await this.writeTypeFile(map, originalKeys, distPrettierOptions);
+
+    this.warnings.forEach((warn) => {
+      console.warn(warn);
+      console.log('\n');
+    });
+
+    if (this.opt.debug) {
+      console.log('usedTime: ' + (Date.now() - startTime) / 1000 + 's');
+    }
+  }
+
+  // 辅助函数：更新自动生成 key 的映射
+  private updateKeyMap(map: Record<LocaleTypes, Record<string, string>>) {
     Object.entries(map['en-us']).forEach(([key, message]) => {
       if (
         I18nFormatter.isAutomaticGeneratedKey(key) &&
@@ -171,7 +238,6 @@ export default class I18nReplacer {
         this.opt.meaningKey
       ) {
         let meaningKey = this.englishToVariableName(message);
-
         let i = 1;
         let newKey = meaningKey;
         while (map['en-us'][newKey] !== undefined) {
@@ -188,61 +254,34 @@ export default class I18nReplacer {
         map[locale as LocaleTypes] = keyMapMessage;
       });
     });
+  }
 
+  // 辅助函数：补全缺失的 key
+  private fillMissingKeys(map: Record<LocaleTypes, Record<string, string>>) {
     Object.entries(map)
       .filter((entry) => entry[0] !== this.opt.localeToReplace)
-      .map(([_locale, keyMapMessage]) => {
+      .forEach(([_locale, keyMapMessage]) => {
         Object.keys(map[this.opt.localeToReplace]).forEach((key) => {
           if (keyMapMessage[key] == undefined) {
             keyMapMessage[key] = map[this.opt.localeToReplace][key];
           }
         });
       });
+  }
 
-    this.i18nFormatter.setMessageMapIntlId(
-      Object.entries<string>(map[this.opt.localeToReplace]).reduce(
-        (messageMapIntlId: Record<string, string>, [intlId, message]) => {
-          if (!messageMapIntlId[message]) {
-            messageMapIntlId[message] = intlId;
-          }
-          return messageMapIntlId;
-        },
-        {}
-      )
-    );
-
-    if (this.opt.outputToNewDir) {
-      fs.ensureDirSync(this.opt.outputToNewDir);
-    }
-
-    fs.ensureDirSync(this.opt.distLocaleDir);
-
-    const distPrettierOptions = await resolvePrettierConfig(
-      path.join(this.opt.distLocaleDir, 'index.ts')
-    );
-
-    await this.replaceTargetLocaleWithMessageRecursively(
-      await Promise.all(
-        this.opt.targets.map(async (target) => {
-          const config = await resolvePrettierConfig(target);
-          const scriptTarget = getScriptTarget(target);
-          return {
-            prettierOptions: config,
-            name: target,
-            scriptTarget,
-          };
-        })
-      )
-    );
-
+  // 辅助函数：写入 locale 文件
+  private async writeLocaleFiles(
+    map: Record<LocaleTypes, Record<string, string>>,
+    originalKeys: Set<string>,
+    distPrettierOptions: PrettierOptions | null
+  ) {
     const newIntlMapMessages = this.i18nFormatter.getNewIntlMapMessages();
     await Promise.all(
       Object.entries(map).map(([locale, keyMapMessage]) => {
         Object.assign(keyMapMessage, newIntlMapMessages);
-
         return this.formatAndWrite(
           path.join(this.opt.distLocaleDir, locale + '.ts'),
-          this.i18nFormatter.generateMessageFile(keyMapMessage, originKeys),
+          this.i18nFormatter.generateMessageFile(keyMapMessage, originalKeys),
           distPrettierOptions
         );
       })
@@ -257,7 +296,6 @@ export default class I18nReplacer {
     if (!fs.existsSync(templateDist)) {
       await this.formatAndWrite(
         templateDist,
-
         this.i18nFormatter.entryFile(
           this.opt.localesToGenerate,
           this.opt.localeToReplace
@@ -265,24 +303,22 @@ export default class I18nReplacer {
         distPrettierOptions
       );
     }
+  }
 
+  // 辅助函数：写入 types 文件
+  private async writeTypeFile(
+    map: Record<LocaleTypes, Record<string, string>>,
+    originalKeys: Set<string>,
+    distPrettierOptions: PrettierOptions | null
+  ) {
     await this.formatAndWrite(
       path.join(this.opt.distLocaleDir, 'types.ts'),
       this.i18nFormatter.generateTypeFile(
         this.opt.localesToGenerate,
-        I18nFormatter.sortKeys(map[this.opt.localeToReplace], originKeys)
+        I18nFormatter.sortKeys(map[this.opt.localeToReplace], originalKeys)
       ),
       distPrettierOptions
     );
-
-    this.warnings.forEach((warn) => {
-      console.warn(warn);
-      console.log('\n');
-    });
-
-    if (this.opt.debug) {
-      console.log('usedTime: ' + (Date.now() - startTime) / 1000 + 's');
-    }
   }
 
   public ignore(node: Node) {
