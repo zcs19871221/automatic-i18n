@@ -242,11 +242,7 @@ export default class I18nReplacer {
 
         return this.formatAndWrite(
           path.join(this.opt.distLocaleDir, locale + '.ts'),
-          this.i18nFormatter.generateMessageFile(
-            keyMapMessage,
-            newIntlMapMessages,
-            originKeys
-          ),
+          this.i18nFormatter.generateMessageFile(keyMapMessage, originKeys),
           distPrettierOptions
         );
       })
@@ -274,11 +270,7 @@ export default class I18nReplacer {
       path.join(this.opt.distLocaleDir, 'types.ts'),
       this.i18nFormatter.generateTypeFile(
         this.opt.localesToGenerate,
-        I18nFormatter.sortKeys(
-          map[this.opt.localeToReplace],
-          newIntlMapMessages,
-          originKeys
-        )
+        I18nFormatter.sortKeys(map[this.opt.localeToReplace], originKeys)
       ),
       distPrettierOptions
     );
