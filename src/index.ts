@@ -153,7 +153,6 @@ export default class I18nReplacer {
   }
 
   public idMapDefaultMessage: Record<string, string> = {};
-  // ...existing code...
 
   public async replace() {
     const startTime = Date.now();
