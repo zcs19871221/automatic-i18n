@@ -98,8 +98,13 @@ enter the /web directory, make sure you have installed `Node.js 20` and relevant
 
 ## cli
 
-`npx automatic-i18n`
+### `npx automatic-i18n`
+
 you can get specific info with `npx automatic-i18n -h`
+
+### `npx automatic-i18n merge [localFileDir] [mergedFileOutput]`
+
+It will help you to auto merge the git conflict language files with "both accept" policy, then deduplicate the keys.
 
 ## api
 
