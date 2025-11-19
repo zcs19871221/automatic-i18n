@@ -15,7 +15,7 @@ export default async function resolveMergeConflict(
   outputDir = distDir
 ) {
   distDir = path.resolve(distDir);
-
+  outputDir = path.resolve(outputDir);
   if (!fs.existsSync(distDir) || !fs.statSync(distDir).isDirectory()) {
     throw new Error('distLocaleDir should be directory. ' + distDir);
   }
@@ -43,6 +43,9 @@ export default async function resolveMergeConflict(
       true
     );
     if (fileOrDirName === TYPE_FILE_NAME) {
+      console.log(
+        'file [' + filePath + '] was merged with policy: accept both'
+      );
       I18nReplacer.formatAndWrite(
         path.join(outputDir, fileOrDirName),
         merged,
@@ -56,6 +59,11 @@ export default async function resolveMergeConflict(
       path.join(outputDir, fileOrDirName),
       I18nFormatter.generateMessageFile(intlIdMapMessage, keys),
       distPrettierOptions
+    );
+    console.log(
+      'file [' +
+        filePath +
+        '] was merged with policy: accept both, then deduplicated'
     );
   });
 }
