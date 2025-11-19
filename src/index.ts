@@ -18,9 +18,11 @@ import tsNodeHandlers from './tsNodeHandlers';
 import { handleNode } from './tsNodeHandlers/TsNodeHandler';
 import excludeNodeModule from './filters/excludeNodeModule';
 import onlyTJsxFiles from './filters/onlyTJsxFiles';
+import resolveMergeConflict from './resolveMergeConflict';
 
 export { I18nFormatter };
 
+export { resolveMergeConflict };
 export const resolvePrettierConfig = async (p: string) => {
   return await prettier.resolveConfig(p);
 };
