@@ -232,7 +232,7 @@ export abstract class I18nFormatter {
   public createDefaultMessageStr(defaultMessage: string) {
     return `${
       I18nFormatter.DEFAULT_MESSAGE_PROPERTY
-    } ${this.wrapStringWithQuote(defaultMessage)}`;
+    } ${I18nFormatter.wrapStringWithQuote(defaultMessage)}`;
   }
 
   protected intlApiExpression(
@@ -249,16 +249,16 @@ export abstract class I18nFormatter {
           }${paramString ? ',' + paramString : ''})`;
   }
 
-  private unionType(types: string[]) {
+  private static unionType(types: string[]) {
     return types.length > 0
       ? types.map((type) => `'${type}'`).join('|')
       : 'any';
   }
 
-  public generateTypeFile(locales: LocaleTypes[], keys: string[]) {
-    return `export type AvailableLocales = ${this.unionType(locales)};
+  public static generateTypeFile(locales: LocaleTypes[], keys: string[]) {
+    return `export type AvailableLocales = ${I18nFormatter.unionType(locales)};
 
-            export type LocalKey = ${this.unionType(keys)};
+            export type LocalKey = ${I18nFormatter.unionType(keys)};
           `;
   }
 
@@ -282,10 +282,10 @@ export abstract class I18nFormatter {
     return [...newKeys.sort(), ...originKeys];
   }
 
-  private wrapStringWithQuote(text: string) {
+  private static wrapStringWithQuote(text: string) {
     return `'${text.replace(/(?<!\\)'/g, '\\' + "'")}'`;
   }
-  public generateMessageFile(
+  public static generateMessageFile(
     keyMapValue: Record<string, string>,
     originKeys: Set<string>
   ) {
@@ -302,7 +302,7 @@ export abstract class I18nFormatter {
           ${ids
             .map((key) => {
               const quote = key.includes("'") ? '"' : "'";
-              return `${quote}${key}${quote}: ${this.wrapStringWithQuote(
+              return `${quote}${key}${quote}: ${I18nFormatter.wrapStringWithQuote(
                 keyMapValue[key]
               )}`;
             })

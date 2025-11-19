@@ -7,6 +7,7 @@ import I18nReplacer, {
 } from '..';
 import { availableLocales } from '../types';
 import pkg from '../../package.json';
+import resolveMergeConflict from '../resolveMergeConflict';
 
 export async function cli() {
   program
@@ -51,11 +52,37 @@ export async function cli() {
     )
     .option('-v, --version', 'show npm version');
 
-  program.parse();
-  if (program.opts().version) {
-    console.log('v' + pkg.version);
-    return;
-  }
+  // 新增 merge 子命令
+  program
+    .command('merge [distDir] [outputDir]')
+    .description(
+      'resolve git merge conflicts in locale directory; optionally write merged result to outputDir'
+    )
+    .action(
+      async (distDir: string | undefined, outputDir: string | undefined) => {
+        const targetDir = distDir || defaultDistLocaleDir();
+        const outDir = outputDir || targetDir;
+        try {
+          await resolveMergeConflict(targetDir, outDir);
+          console.log(
+            `[merge] resolved conflicts in: ${targetDir} -> written to: ${outDir}`
+          );
+        } catch (e: any) {
+          console.error('[merge] failed: ' + (e?.message || e));
+          process.exitCode = 1;
+        }
+      }
+    );
 
-  await I18nReplacer.createI18nReplacer(program.opts()).replace();
+  // 主命令行为（无子命令时执行原逻辑）
+  program.action(async () => {
+    const opts = program.opts();
+    if (opts.version) {
+      console.log('v' + pkg.version);
+      return;
+    }
+    await I18nReplacer.createI18nReplacer(opts).replace();
+  });
+
+  await program.parseAsync();
 }

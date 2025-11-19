@@ -21,7 +21,7 @@ import onlyTJsxFiles from './filters/onlyTJsxFiles';
 
 export { I18nFormatter };
 
-const resolvePrettierConfig = async (p: string) => {
+export const resolvePrettierConfig = async (p: string) => {
   return await prettier.resolveConfig(p);
 };
 
@@ -115,6 +115,7 @@ export const getScriptTarget = (file: string): ScriptTarget => {
   return ScriptTarget.ES2015;
 };
 
+export const TYPE_FILE_NAME = 'types.ts';
 export default class I18nReplacer {
   public static createI18nReplacer(opt: ReplacerOpt = {}): I18nReplacer {
     return new I18nReplacer(initParams(opt));
@@ -278,9 +279,9 @@ export default class I18nReplacer {
     await Promise.all(
       Object.entries(map).map(([locale, keyMapMessage]) => {
         Object.assign(keyMapMessage, newIntlMapMessages);
-        return this.formatAndWrite(
+        return I18nReplacer.formatAndWrite(
           path.join(this.opt.distLocaleDir, locale + '.ts'),
-          this.i18nFormatter.generateMessageFile(keyMapMessage, originalKeys),
+          I18nFormatter.generateMessageFile(keyMapMessage, originalKeys),
           distPrettierOptions
         );
       })
@@ -293,7 +294,7 @@ export default class I18nReplacer {
     );
 
     if (!fs.existsSync(templateDist)) {
-      await this.formatAndWrite(
+      await I18nReplacer.formatAndWrite(
         templateDist,
         this.i18nFormatter.entryFile(
           this.opt.localesToGenerate,
@@ -310,9 +311,9 @@ export default class I18nReplacer {
     originalKeys: Set<string>,
     distPrettierOptions: PrettierOptions | null
   ) {
-    await this.formatAndWrite(
-      path.join(this.opt.distLocaleDir, 'types.ts'),
-      this.i18nFormatter.generateTypeFile(
+    await I18nReplacer.formatAndWrite(
+      path.join(this.opt.distLocaleDir, TYPE_FILE_NAME),
+      I18nFormatter.generateTypeFile(
         this.opt.localesToGenerate,
         I18nFormatter.sortKeys(map[this.opt.localeToReplace], originalKeys)
       ),
@@ -378,7 +379,7 @@ export default class I18nReplacer {
     return text;
   }
 
-  private async formatAndWrite(
+  public static async formatAndWrite(
     dist: string,
     file: string,
     prettierOptions: PrettierOptions | null
@@ -402,7 +403,7 @@ export default class I18nReplacer {
     return fs.writeFileSync(dist, file);
   }
 
-  private static intlIdMapMessageFromAstNodeRecursively(
+  public static intlIdMapMessageFromAstNodeRecursively(
     astNode: Node,
     intlIdMapMessage: Record<string, string> = {},
     keys: Set<string> = new Set()
@@ -507,7 +508,7 @@ export default class I18nReplacer {
       }
 
       if (this.opt.outputToNewDir) {
-        await this.formatAndWrite(
+        await I18nReplacer.formatAndWrite(
           path.join(this.opt.outputToNewDir, path.basename(fileLocation)),
           fileContext.newText,
           prettierOptions
@@ -519,7 +520,7 @@ export default class I18nReplacer {
             ' successful! 😃'
         );
       } else {
-        await this.formatAndWrite(
+        await I18nReplacer.formatAndWrite(
           fileLocation,
           fileContext.newText,
           prettierOptions
