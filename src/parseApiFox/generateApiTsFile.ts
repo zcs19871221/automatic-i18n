@@ -2,7 +2,7 @@ import * as fs from 'fs-extra';
 import path from 'path';
 import { GenerateApiTsFileOptions } from './types';
 import generateUiApiTsFile from './generateUIApiTsFile';
-import I18nReplacer, { resolvePrettierConfig } from '../src';
+import I18nReplacer, { resolvePrettierConfig } from '..';
 
 const cwd = process.cwd();
 export default async function generateApiFile(

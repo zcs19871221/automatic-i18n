@@ -22,6 +22,7 @@ interface ApiResponseTypeGenResult {
 /**
  * 解析 Apifox/Ajax 返回值 JSON，生成 TypeScript 类型定义及结构分析
  * 所有 interface 命名均为 `${rootName}Response${属性名}`，根类型为 `${rootName}Response`
+ * 如果 ResponseData 对应内容为空，则输出 type 而不是 interface，且类型为 unknown
  */
 function generateApiResponseTypes(
   value: ApiJsonValue,
@@ -102,6 +103,14 @@ function generateApiResponseTypes(
     overrideName?: string
   ) {
     const exportName = overrideName || name;
+    const keys = Object.keys(obj);
+    // 如果内容为空，输出 type xxx = unknown
+    if (keys.length === 0) {
+      out.push(`export type ${exportName} = unknown;`);
+      interfaceProps[exportName] = new Set();
+      interfaceFieldType[exportName] = {};
+      return;
+    }
     const lines = [`export interface ${exportName} {`];
     interfaceProps[exportName] = new Set();
     interfaceFieldType[exportName] = {};
@@ -125,7 +134,7 @@ function generateApiResponseTypes(
   let isCommonPagedList = false;
   let responseItem = '';
 
-  // 判断 code, data, msg
+  // 判断 code, msg
   if (
     interfaceProps[rootTypeName] &&
     ['code', 'msg'].every((k) => interfaceProps[rootTypeName].has(k))
@@ -143,7 +152,7 @@ function generateApiResponseTypes(
       isCommonPagedList = true;
       // list 字段类型如 T[] 或 SomeType[]
       const listType = interfaceFieldType[responseData]['list'];
-      const match = listType.match(/^([A-Za-z0-9_]+)\[\]$/);
+      const match = listType && listType.match(/^([A-Za-z0-9_]+)\[\]$/);
       if (match && interfaceProps[match[1]]) {
         responseItem = match[1];
       }

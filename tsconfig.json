@@ -21,6 +21,6 @@
     "experimentalDecorators": true,
     "module": "CommonJS"
   },
-  "include": ["./src/**/*.ts", "./bin/**/*.ts", "./parseApiFox/**/*.ts"],
+  "include": ["./src/**/*.ts", "./bin/**/*.ts"],
   "exclude": ["./test/**/*.ts"]
 }

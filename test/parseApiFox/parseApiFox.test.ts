@@ -1,6 +1,6 @@
 import path from 'path';
 import * as fs from 'fs-extra';
-import parseApiFox from '../../parseApiFox';
+import parseApiFox from '../../src/parseApiFox';
 
 const uiDist = path.join(process.cwd(), '../eh-ui/api');
 const extraOptionsForGeneration = {
@@ -31,8 +31,7 @@ it('should create file from apiFox url successful', async () => {
   const expectDir = path.join(process.cwd(), 'test/parseApiFox/expect');
   fs.readdirSync(expectDir).forEach((fileOrDirName) => {
     const fileName = path.join(expectDir, fileOrDirName);
-    expect(fs.readFileSync(fileName, 'utf-8')).toEqual(
-      fs.readFileSync(path.join(uiDist, fileOrDirName), 'utf-8')
-    );
+    const target = fs.readFileSync(path.join(uiDist, fileOrDirName), 'utf-8');
+    expect(fs.readFileSync(fileName, 'utf-8')).toEqual(target);
   });
 });
