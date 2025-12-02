@@ -6,6 +6,7 @@ export interface GenerateApiTsFileOptions {
   request: CurlParseResult;
   contentType?: string;
   extraOptionsForGeneration?: any;
+  url: string;
 }
 
 export type GenerateApiTsFile = (params: GenerateApiTsFileOptions) => void;

@@ -2,13 +2,21 @@ import * as fs from 'fs-extra';
 import path from 'path';
 import { GenerateApiTsFileOptions } from './types';
 import generateUiApiTsFile from './generateUIApiTsFile';
+import I18nReplacer, { resolvePrettierConfig } from '../src';
 
 const cwd = process.cwd();
-export default function generateApiFile(params: GenerateApiTsFileOptions) {
+export default async function generateApiFile(
+  params: GenerateApiTsFileOptions
+) {
   const { extraOptionsForGeneration } = params;
   const uiDist = extraOptionsForGeneration?.uiDist ?? path.join(cwd, 'api');
   const uiApiFile = generateUiApiTsFile(params);
   // const bffApiFile = generateBffApiFile(params);
   fs.ensureDirSync(uiDist);
-  fs.writeFileSync(path.join(uiDist, params.request.name + '.ts'), uiApiFile);
+  const prettierOptions = await resolvePrettierConfig(uiDist);
+  await I18nReplacer.formatAndWrite(
+    path.join(uiDist, params.request.name + '.ts'),
+    '// ' + params.url + '\n' + uiApiFile,
+    prettierOptions
+  );
 }

@@ -123,6 +123,7 @@ export default async function main({
       request,
       contentType,
       extraOptionsForGeneration,
+      url,
     });
   }
   return { responseTs, domain, request, tsFile, contentType };

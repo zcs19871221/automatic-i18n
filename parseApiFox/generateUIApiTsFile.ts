@@ -37,6 +37,7 @@ export default function generateUIApiTsFile({
 
   let swrType = '';
   let useFn = '';
+  let needSwrImport = false;
   // 只有存在data属性时才生成 useXXX
   if (
     contentType !== 'binary' &&
@@ -44,7 +45,7 @@ export default function generateUIApiTsFile({
     responseTs.responseCommonDataTypeName
   ) {
     if (responseTs.isCommonPagedList && responseTs.responsePagedItemTypeName) {
-      swrType = `PagedResponse<${responseTs.responsePagedItemTypeName}[]>`;
+      swrType = `PagedResponse<${responseTs.responsePagedItemTypeName}>`;
     } else {
       swrType = responseTs.responseCommonDataTypeName;
     }
@@ -57,15 +58,18 @@ export const use${methodCap}${request.name} = (${
     params,
   });
 `;
+    needSwrImport = true;
   }
 
   if (contentType === 'binary') {
     importLines.push(`import { ensureDownload } from 'Mid/defaultConnector';`);
   } else {
     importLines.push(
-      `import { ensure${methodCap}, ${methodLower} } from 'Mid/defaultConnector';`,
-      `import { use${methodCap}AppSwr } from 'Mid/useSwr';`
+      `import { ensure${methodCap}, ${methodLower} } from 'Mid/defaultConnector';`
     );
+    if (needSwrImport) {
+      importLines.push(`import { use${methodCap}AppSwr } from 'Mid/useSwr';`);
+    }
     // 只有在 swrType 包含 PagedResponse 时才导入
     if (swrType.startsWith('PagedResponse<')) {
       importLines.push(`import { PagedResponse } from 'Uti/types';`);
@@ -89,7 +93,7 @@ export const ${methodLower}${request.name} = (${
     ensureFn = `
 export const ensure${methodCap}${request.name} = (${
       paramType ? 'params: ' + paramType : ''
-    }): Promise<${responseTs.responseTypeName}> =>
+    }): Promise<${responseTs.responseCommonDataTypeName}> =>
   ensure${methodCap}(${urlWithPrefix}, params);
 `;
   }
