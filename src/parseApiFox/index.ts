@@ -117,14 +117,12 @@ export default async function main({
 
   responseTs = generateApiResponseTypes(responseObj, request?.name);
   let tsFile = '';
-  if (responseTs && request) {
-    generateApiTsFileMethod({
-      responseTs,
-      request,
-      contentType,
-      extraOptionsForGeneration,
-      url,
-    });
-  }
+  await generateApiTsFileMethod({
+    responseTs,
+    request,
+    contentType,
+    extraOptionsForGeneration,
+    url,
+  });
   return { responseTs, domain, request, tsFile, contentType };
 }

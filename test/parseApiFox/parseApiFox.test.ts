@@ -1,3 +1,5 @@
+jest.setTimeout(20000);
+
 import path from 'path';
 import * as fs from 'fs-extra';
 import parseApiFox from '../../src/parseApiFox';

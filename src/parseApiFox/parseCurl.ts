@@ -57,9 +57,8 @@ function buildExportInterface(obj: Record<string, any>, name: string): string {
   return lines.join('\n');
 }
 
-function inferName(url: string, suffix: string): string {
-  if (!url) return 'Unknown' + suffix;
-  const path = url.split('?')[0];
+function inferName(path: string, suffix: string): string {
+  if (!path) return 'Unknown' + suffix;
   const segs = path.split('/').filter((s) => s && !/^{.*}$/.test(s));
   const core = segs.slice(-2).join('-') || segs.slice(-1)[0] || 'Data';
   return (
@@ -131,7 +130,7 @@ export function parseCurl(curlText: string, rawPath?: string): CurlParseResult {
       queryKey.push(k);
       searchKey.push(k);
     });
-    queryTypeName = inferName(url, 'Query');
+    queryTypeName = inferName(path, 'Query');
     queryTypeDef = buildExportInterface(params, queryTypeName);
   }
 
@@ -147,7 +146,7 @@ export function parseCurl(curlText: string, rawPath?: string): CurlParseResult {
     raw = raw.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
     try {
       const obj = JSON.parse(raw);
-      bodyTypeName = inferName(url, 'RequestBody');
+      bodyTypeName = inferName(path, 'RequestBody');
       bodyTypeDef = buildExportInterface(obj, bodyTypeName);
     } catch {
       bodyTypeDef = '';
@@ -157,7 +156,7 @@ export function parseCurl(curlText: string, rawPath?: string): CurlParseResult {
   // Path interface
   let pathTypeDef = '';
   if (pathKey.length > 0) {
-    const pathTypeName = inferName(url, 'Path');
+    const pathTypeName = inferName(path, 'Path');
     const pathObj: Record<string, string> = {};
     pathKey.forEach((k) => (pathObj[k] = 'string'));
     pathTypeDef = buildExportInterface(pathObj, pathTypeName);
@@ -176,7 +175,7 @@ export function parseCurl(curlText: string, rawPath?: string): CurlParseResult {
     requestTypeDefinition,
     queryTypeName,
     bodyTypeName,
-    name: inferName(url, ''),
+    name: inferName(path, ''),
     path,
     pathKey,
     queryKey,

@@ -6,12 +6,21 @@ export default function generateUIApiTsFile({
   contentType,
 }: GenerateApiTsFileOptions): string {
   // 类型定义部分
-  const typeDefs = [
+  let typeDefs = [
     responseTs.typeDefinitionString,
     request.requestTypeDefinition,
   ]
     .filter(Boolean)
     .join('\n\n');
+
+  // 如果是下载接口，去掉 export type xxx = unknown;
+  if (contentType === 'binary' && responseTs.responseTypeName) {
+    const typeUnknownReg = new RegExp(
+      `export type ${responseTs.responseTypeName} = unknown;\\s*`,
+      'g'
+    );
+    typeDefs = typeDefs.replace(typeUnknownReg, '');
+  }
 
   // import 部分
   const importLines: string[] = [];
