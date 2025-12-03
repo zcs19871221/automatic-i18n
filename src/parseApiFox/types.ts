@@ -7,6 +7,7 @@ export interface GenerateApiTsFileOptions {
   contentType?: string;
   extraOptionsForGeneration?: any;
   url: string;
+  domain: string;
 }
 
 export type GenerateApiTsFile = (params: GenerateApiTsFileOptions) => void;

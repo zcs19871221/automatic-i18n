@@ -9,6 +9,7 @@ export type CurlParseResult = {
   pathKey: string[];
   queryKey: string[];
   searchKey: string[];
+  rawPath: string;
 };
 
 function inferPrimitive(v: string): string {
@@ -70,7 +71,7 @@ function inferName(path: string, suffix: string): string {
   );
 }
 
-export function parseCurl(curlText: string, rawPath?: string): CurlParseResult {
+export function parseCurl(curlText: string, rawPath: string): CurlParseResult {
   const joined = curlText.replace(/\r/g, '');
 
   // Method
@@ -180,5 +181,6 @@ export function parseCurl(curlText: string, rawPath?: string): CurlParseResult {
     pathKey,
     queryKey,
     searchKey,
+    rawPath,
   };
 }

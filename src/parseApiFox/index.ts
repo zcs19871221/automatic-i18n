@@ -1,4 +1,4 @@
-import { fetchJson } from './fetch';
+import { fetch, fetchJson } from './fetch';
 import {
   generateApiResponseTypes,
   ApiResponseTypeGenResult,
@@ -38,91 +38,98 @@ function isJson(str: string): boolean {
   }
 }
 
-// fetchJson 需要你自己实现，或者用 node-fetch、axios 等库
-// function fetchJson(url: string): string { ... }
+function extractApiPath(html: string): string[] {
+  const regex =
+    /<span[^>]*class="cursor-pointer[^"]*"[^>]*>(\/api\/[^\<]+)<\/span>/g;
+  const result: string[] = [];
+  let match;
+  while ((match = regex.exec(html)) !== null) {
+    result.push(match[1]);
+  }
+  return result;
+}
 
 export default async function main({
   url,
   generateApiTsFileMethod = generateApiFile,
   extraOptionsForGeneration,
 }: {
-  url: string;
+  url: string | string[];
   generateApiTsFileMethod?: GenerateApiTsFile;
   extraOptionsForGeneration?: any;
 }) {
-  const match = url.match(/api-(\d+)$/);
-  if (!match) {
-    console.error('URL格式错误，必须以 api-数字 结尾，例如 .../api-3485318');
-    process.exit(1);
-  }
-  const id = match[1];
-  const api = await fetchJson(url);
-  let responseTs: ApiResponseTypeGenResult | undefined;
-  let request: CurlParseResult | undefined;
-  let domain = '';
-  let responseObj = {};
-  let contentType = '';
-  let path = '';
-  let curl = '';
-  let pathTag: any;
-  traverse(api, (item, parent, index) => {
-    if (item === 'responses' && Array.isArray(parent)) {
-      for (let i = Number(index) + 1; i < parent.length; i++) {
-        const siblingItem = parent[i];
-        if (
-          typeof siblingItem === 'string' &&
-          siblingItem.startsWith('{') &&
-          isJson(siblingItem)
-        ) {
-          responseObj = JSON.parse(siblingItem);
-          return true;
+  const urls = Array.isArray(url) ? url : [url];
+  for (const singleUrl of urls) {
+    const match = singleUrl.match(/api-(\d+)$/);
+    if (!match) {
+      console.error('URL格式错误，必须以 api-数字 结尾，例如 .../api-3485318');
+      process.exit(1);
+    }
+    const api = await fetchJson(singleUrl);
+    const html = await fetch(singleUrl);
+    let path = extractApiPath(html)[0];
+    let responseTs: ApiResponseTypeGenResult | undefined;
+    let request: CurlParseResult | undefined;
+    let domain = '';
+    let responseObj = {};
+    let contentType = '';
+    let curl = '';
+    let pathTag: any;
+    traverse(api, (item, parent, index) => {
+      if (item === 'responses' && Array.isArray(parent)) {
+        for (let i = Number(index) + 1; i < parent.length; i++) {
+          const siblingItem = parent[i];
+          if (
+            typeof siblingItem === 'string' &&
+            siblingItem.startsWith('{') &&
+            isJson(siblingItem)
+          ) {
+            responseObj = JSON.parse(siblingItem);
+            return true;
+          }
         }
       }
-    }
 
-    if (item === 'siteName' && Array.isArray(parent)) {
-      domain = parent[Number(index) - 1];
-    }
+      if (item === 'siteName' && Array.isArray(parent)) {
+        domain = parent[Number(index) - 1];
+      }
 
-    if (item === 'contentType' && Array.isArray(parent)) {
-      contentType = parent[Number(index) + 1];
-    }
-    if (typeof item === 'string' && item.startsWith('curl --location')) {
-      curl = item;
-    }
-    if (item === `apiDetail.${id}` && Array.isArray(parent)) {
-      path = parent[Number(index) + 1];
-    }
-  });
-
-  if (Array.isArray(path)) {
-    pathTag = path[0];
-    path = '';
-  }
-  request = parseCurl(curl, path);
-  if (!path) {
-    traverse(api, (item, parent, index) => {
-      if (Array.isArray(item) && item.length === 1 && item[0] === pathTag) {
-        if (
-          parent[Number(index) - 1].startsWith(
-            request?.path.slice(0, request.path.lastIndexOf('/'))
-          )
-        ) {
-          path = parent[Number(index) - 1];
-        }
+      if (item === 'contentType' && Array.isArray(parent)) {
+        contentType = parent[Number(index) + 1];
+      }
+      if (typeof item === 'string' && item.startsWith('curl --location')) {
+        curl = item;
       }
     });
-    request = parseCurl(curl, path);
-  }
 
-  responseTs = generateApiResponseTypes(responseObj, request?.name);
-  let tsFile = '';
-  await generateApiTsFileMethod({
-    responseTs,
-    request,
-    contentType,
-    extraOptionsForGeneration,
-    url,
-  });
-  return { responseTs, domain, request, tsFile, contentType };
+    if (Array.isArray(path)) {
+      pathTag = path[0];
+    }
+    request = parseCurl(curl, path);
+    if (!path) {
+      traverse(api, (item, parent, index) => {
+        if (Array.isArray(item) && item.length === 1 && item[0] === pathTag) {
+          if (
+            parent[Number(index) - 1].startsWith(
+              request?.path.slice(0, request.path.lastIndexOf('/'))
+            )
+          ) {
+            path = parent[Number(index) - 1];
+          }
+        }
+      });
+      request = parseCurl(curl, path);
+    }
+
+    responseTs = generateApiResponseTypes(responseObj, request?.name);
+
+    await generateApiTsFileMethod({
+      responseTs,
+      request,
+      contentType,
+      extraOptionsForGeneration,
+      url: singleUrl,
+      domain,
+    });
+  }
 }
