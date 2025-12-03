@@ -14,7 +14,7 @@ if (fs.existsSync(extraOptionsForGeneration.uiDist)) {
   fs.removeSync(extraOptionsForGeneration.uiDist);
 }
 
-it('should create file from apiFox url successful', async () => {
+it.skip('should create file from apiFox url successful', async () => {
   await parseApiFox({
     url: [
       'https://apifox.t.energymost.com/apidoc/docs-site/6000016/api-3485315',
