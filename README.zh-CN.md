@@ -6,36 +6,36 @@
 
 [English](./README.MD) | [简体中文](./README.zh-CN.md)
 
-Automatically extract and replace hard-coded locale text in TypeScript, JavaScript, and React code with one command.
+一条命令完成 TypeScript、JavaScript、React 项目中的文案提取与 i18n 替换。
 
-`automatic-i18n` scans source files, parses AST, replaces matched text with i18n calls, and generates locale files.
+automatic-i18n 会扫描源码、基于 AST 解析文本节点、将命中文案替换为 i18n 调用，并自动生成多语言文件。
 
-## Why automatic-i18n
+## 为什么用 automatic-i18n
 
-- No large manual refactor before i18n adoption.
-- Supports JSX text, string literals, and template strings with variables.
-- Works with `react-intl` by default.
-- Supports hook mode and global mode.
-- Supports custom formatter implementation via `I18nFormatter`.
-- Includes a merge helper for locale files with git conflict markers.
+- 不需要先做大规模手工改造再接入国际化。
+- 支持 JSX 文本、字符串字面量、带变量的模板字符串。
+- 默认集成 react-intl。
+- 同时支持 Hook 模式与全局对象模式。
+- 可通过实现 I18nFormatter 自定义替换与产物格式。
+- 提供 locale 冲突合并命令，处理 git conflict 更省心。
 
-## Quick Start (60 seconds)
+## 60 秒快速开始
 
-1. Install required packages in your project:
+1. 在你的项目中安装依赖：
 
 ```bash
 npm i -D automatic-i18n typescript prettier fs-extra
 ```
 
-2. Run the replacer on your project:
+2. 执行替换：
 
 ```bash
 npx automatic-i18n -t src
 ```
 
-3. Check generated files under `./i18n` (default).
+3. 在默认目录 ./i18n 查看生成的语言文件。
 
-For command help:
+查看帮助：
 
 ```bash
 npx automatic-i18n -h
@@ -43,56 +43,56 @@ npx automatic-i18n -h
 
 ## CLI
 
-The package provides a CLI through `npx automatic-i18n` (or `npx i18n` after install).
+安装后可通过 npx automatic-i18n（或 npx i18n）使用命令行。
 
-### Common examples
+### 常用命令示例
 
-Replace Chinese text from `src` and generate both `zh-cn` and `en-us` locale files:
+提取 src 中的中文，并生成 zh-cn 与 en-us 两份语言文件：
 
 ```bash
 npx automatic-i18n -t src -sl zh-cn -tl zh-cn en-us
 ```
 
-Use global intl object mode instead of hook mode:
+使用全局 intl 对象模式（而不是 Hook 模式）：
 
 ```bash
 npx automatic-i18n -t src -g
 ```
 
-Exclude specific folders:
+排除特定目录：
 
 ```bash
 npx automatic-i18n -t src -e dist build
 ```
 
-Enable stable hash-like keys from message text:
+使用基于文本内容的唯一 key：
 
 ```bash
 npx automatic-i18n -t src -u
 ```
 
-Merge locale files that contain git conflict markers:
+合并包含 git 冲突标记的 locale 文件：
 
 ```bash
 npx automatic-i18n merge ./i18n ./i18n
 ```
 
-### CLI options
+### CLI 参数
 
-- `-t, --targets <fileOrDir...>`: files or directories to process. Default: current working directory.
-- `-d, --distLocaleDir <fileOrDir>`: output directory of locale files. Default: `<cwd>/i18n`.
-- `-sl, --localeToReplace <locale>`: source locale to detect in code. Choices: `en-us`, `zh-cn`. Default: `zh-cn`.
-- `-tl, --localesToGenerate <locales...>`: locales to generate. Default: `zh-cn en-us`.
-- `-g, --global`: use global intl object mode.
-- `-e, --excludes <filesOrDirs...>`: names to exclude.
-- `-m, --meaningKey`: convert auto-generated keys to meaningful English-style keys when possible.
-- `-u, --uniqIntlKey`: generate keys from message hash to reduce key conflicts.
-- `-db, --debug`: print debug logs.
-- `-v, --version`: show version.
+- -t, --targets <fileOrDir...>: 需要处理的文件或目录。默认：当前工作目录。
+- -d, --distLocaleDir <fileOrDir>: 语言文件输出目录。默认：<cwd>/i18n。
+- -sl, --localeToReplace <locale>: 需要在源码中匹配的语言。可选：en-us、zh-cn。默认：zh-cn。
+- -tl, --localesToGenerate <locales...>: 需要生成的语言。默认：zh-cn en-us。
+- -g, --global: 使用全局 intl 对象模式。
+- -e, --excludes <filesOrDirs...>: 按名称排除文件或目录。
+- -m, --meaningKey: 尝试将自动 key 转为语义化英文 key。
+- -u, --uniqIntlKey: 基于 message 哈希生成 key，降低 key 冲突概率。
+- -db, --debug: 输出调试日志。
+- -v, --version: 输出版本号。
 
-## Before and After
+## 替换前后示例
 
-Before:
+替换前：
 
 ```tsx
 import React from 'react';
@@ -110,7 +110,7 @@ function Component() {
 }
 ```
 
-After:
+替换后：
 
 ```tsx
 import { useIntl, FormattedMessage } from 'react-intl';
@@ -145,7 +145,7 @@ function Component() {
 }
 ```
 
-Generated locale file example:
+生成的语言文件示例：
 
 ```ts
 /*
@@ -164,11 +164,11 @@ const locale: Record<LocalKey, string> = {
 export default locale;
 ```
 
-Live demo project:
+演示项目：
 
 https://github.com/zcs19871221/local-development-console
 
-Preview screenshot:
+预览图：
 
 ![](./image.png)
 
@@ -201,28 +201,28 @@ export interface ReplacerOpt {
 }
 ```
 
-Also exported:
+额外导出：
 
-- `resolveMergeConflict(distDir, outputDir)`
+- resolveMergeConflict(distDir, outputDir)
 
-## Safety Recommendations
+## 安全使用建议
 
-For large repositories, start with a dry rollout pattern:
+对于大仓库，建议采用渐进式接入：
 
-1. Commit current code first.
-2. Compare diffs and run tests.
-3. Merge after review.
+1. 先提交当前代码，确保可回滚。
+2. 做 diff 对比并跑测试。
+3. 审核通过后再合并到主分支。
 
-## Comment Controls
+## 注释控制规则
 
-### Ignore next line
+### 忽略下一行
 
 ```ts
 /* auto-i18n-ignore-next */
 const name = 'chengsiZhang';
 ```
 
-### Ignore a code block
+### 忽略代码块
 
 ```ts
 /* auto-i18n-ignore-start */
@@ -230,17 +230,17 @@ const name = 'chengsiZhang';
 /* auto-i18n-ignore-end */
 ```
 
-### English source mode (`localeToReplace: 'en-us'`)
+### 英文模式（localeToReplace: 'en-us'）
 
-In English mode, plain string literals are not collected unless you explicitly mark them.
+在英文模式下，字符串字面量默认不会被收集，必须显式标注。
 
-Use one of:
+可用注释：
 
-- `/* auto-i18n-collect-start */`
-- `/* auto-i18n-collect-end */`
-- `/* auto-i18n-collect-next */`
+- /_ auto-i18n-collect-start _/
+- /_ auto-i18n-collect-end _/
+- /_ auto-i18n-collect-next _/
 
-Example:
+示例：
 
 ```tsx
 // before
@@ -275,11 +275,11 @@ function Component(fetchedData: any) {
 }
 ```
 
-## Limitations
+## 已知边界
 
-- This tool focuses on TypeScript/JavaScript/JSX/TSX source parsing.
-- English mode requires explicit collection comments for string literals.
-- Always review generated diffs before merging in production branches.
+- 当前主要面向 TypeScript/JavaScript/JSX/TSX 代码解析。
+- 英文模式下，字符串字面量需要配合 collect 注释。
+- 合并到生产分支前，建议总是人工审核 diff。
 
 ## License
 
