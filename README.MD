@@ -87,6 +87,7 @@ npx automatic-i18n merge ./i18n ./i18n
 - `-e, --excludes <filesOrDirs...>`: names to exclude.
 - `-m, --meaningKey`: convert auto-generated keys to meaningful English-style keys when possible.
 - `-u, --uniqIntlKey`: generate keys from message hash to reduce key conflicts.
+- `--englishStrategy <mode>`: english extraction strategy for `localeToReplace=en-us`. Choices: `comment-only`, `balanced`, `aggressive`. Default: `comment-only`.
 - `-db, --debug`: print debug logs.
 - `-v, --version`: show version.
 
@@ -196,6 +197,7 @@ export interface ReplacerOpt {
   filters?: Filter[];
   excludes?: string[];
   debug?: boolean;
+  englishStrategy?: 'comment-only' | 'balanced' | 'aggressive';
   outputToNewDir?: string;
   addMissingDefaultMessage?: boolean;
 }
@@ -239,6 +241,24 @@ Use one of:
 - `/* auto-i18n-collect-start */`
 - `/* auto-i18n-collect-end */`
 - `/* auto-i18n-collect-next */`
+
+#### How `englishStrategy` works
+
+Detailed decision document: [docs/english-strategy.md](./docs/english-strategy.md)
+
+`englishStrategy` controls automatic extraction when `localeToReplace` is `en-us`:
+
+- `comment-only`: safest mode. String literals require collect comments.
+- `balanced`: extracts sentence-like literals and keeps key-like literals unchanged.
+- `aggressive`: extracts most literals except hard blacklisted contexts.
+
+Decision order for English extraction:
+
+1. If collect comment matches, extract directly.
+2. If node is in blacklist context, never extract.
+3. Otherwise apply strategy behavior.
+
+Current blacklist examples include import paths, object property names, element access keys (`obj['key']`), and technical JSX attributes like `className`, `id`, `data-testid`, `href`, and `src`.
 
 Example:
 

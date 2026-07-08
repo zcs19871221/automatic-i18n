@@ -4,6 +4,7 @@ import { ScriptTarget } from 'typescript';
 
 export const availableLocales = ['en-us', 'zh-cn'] as const;
 export type LocaleTypes = (typeof availableLocales)[number];
+export type EnglishStrategy = 'comment-only' | 'balanced' | 'aggressive';
 
 export interface I18nFormatterCtr<A extends I18nFormatter = I18nFormatter> {
   new (): A;
@@ -38,6 +39,8 @@ export interface ReplacerOpt {
   outputToNewDir?: string;
   // if output to new dir instead of replace the original files
   addMissingDefaultMessage?: boolean;
+  // extraction strategy when localeToReplace is en-us
+  englishStrategy?: EnglishStrategy;
 }
 
 export type HandlerOption = {

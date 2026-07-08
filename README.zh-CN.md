@@ -87,6 +87,7 @@ npx automatic-i18n merge ./i18n ./i18n
 - -e, --excludes <filesOrDirs...>: 按名称排除文件或目录。
 - -m, --meaningKey: 尝试将自动 key 转为语义化英文 key。
 - -u, --uniqIntlKey: 基于 message 哈希生成 key，降低 key 冲突概率。
+- --englishStrategy <mode>: localeToReplace 为 en-us 时的英文提取策略，可选 comment-only、balanced、aggressive。默认：comment-only。
 - -db, --debug: 输出调试日志。
 - -v, --version: 输出版本号。
 
@@ -196,6 +197,7 @@ export interface ReplacerOpt {
   filters?: Filter[];
   excludes?: string[];
   debug?: boolean;
+  englishStrategy?: 'comment-only' | 'balanced' | 'aggressive';
   outputToNewDir?: string;
   addMissingDefaultMessage?: boolean;
 }
@@ -236,9 +238,27 @@ const name = 'chengsiZhang';
 
 可用注释：
 
-- /_ auto-i18n-collect-start _/
-- /_ auto-i18n-collect-end _/
-- /_ auto-i18n-collect-next _/
+- `/* auto-i18n-collect-start */`
+- `/* auto-i18n-collect-end */`
+- `/* auto-i18n-collect-next */`
+
+#### englishStrategy 的工作方式
+
+详细规则文档：[docs/english-strategy.md](./docs/english-strategy.md)
+
+当 `localeToReplace` 为 `en-us` 时，`englishStrategy` 控制自动提取行为：
+
+- `comment-only`：最安全。字符串字面量需要 collect 注释才提取。
+- `balanced`：优先提取“更像文案”的句子，保留“更像 key”的字面量。
+- `aggressive`：除黑名单场景外，尽可能自动提取。
+
+英文提取决策顺序：
+
+1. 命中 collect 注释则直接提取。
+2. 命中黑名单上下文则不提取。
+3. 其他情况按策略执行。
+
+当前黑名单示例：import 路径、对象属性名、下标访问 key（如 `obj['key']`）、以及 `className`、`id`、`data-testid`、`href`、`src` 等技术属性。
 
 示例：
 

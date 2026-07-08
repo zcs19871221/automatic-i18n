@@ -41,7 +41,12 @@ export class TemplateExpressionHandler implements TsNodeHandler {
         continue;
       }
       if (i18nReplacer.includesTargetLocale(file[i])) {
-        return true;
+        return i18nReplacer.shouldExtractLocaleNode({
+          node,
+          text: node.getText(),
+          info: option.info,
+          channel: 'template',
+        });
       }
       i++;
     }

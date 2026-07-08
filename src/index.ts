@@ -3,6 +3,9 @@ import * as path from 'path';
 import ts, {
   PropertyAssignment,
   Node,
+  JsxAttribute,
+  StringLiteral,
+  isTypeNode,
   forEachChild,
   createSourceFile,
   SyntaxKind,
@@ -11,7 +14,13 @@ import * as prettier from 'prettier';
 import { Options as PrettierOptions } from 'prettier';
 
 import { ReplaceContext, Info, CommentRange } from './ReplaceContext';
-import { HandlerOption, ReplacerOpt, LocaleTypes, TargetOpt } from './types';
+import {
+  HandlerOption,
+  ReplacerOpt,
+  LocaleTypes,
+  TargetOpt,
+  EnglishStrategy,
+} from './types';
 import { ScriptTarget } from 'typescript';
 import { DefaultI18nFormatter, I18nFormatter } from './formatter';
 import tsNodeHandlers from './tsNodeHandlers';
@@ -33,6 +42,7 @@ export const defaultDistLocaleDir = () => path.join(process.cwd(), 'i18n');
 
 export const defaultLocaleToReplace = 'zh-cn';
 export const defaultLocalesToGenerate: LocaleTypes[] = ['zh-cn', 'en-us'];
+export const defaultEnglishStrategy: EnglishStrategy = 'comment-only';
 
 export const initParams = ({
   targets = defaultTargets(),
@@ -47,6 +57,7 @@ export const initParams = ({
   debug = false,
   addMissingDefaultMessage = false,
   uniqIntlKey = false,
+  englishStrategy = defaultEnglishStrategy,
   I18nFormatter = DefaultI18nFormatter,
 }: ReplacerOpt) => {
   // get target real path
@@ -88,6 +99,7 @@ export const initParams = ({
     debug,
     outputToNewDir,
     meaningKey,
+    englishStrategy,
   };
 
   if (debug) {
@@ -359,6 +371,141 @@ export default class I18nReplacer {
 
   public includesTargetLocale(text: string) {
     return this.localeMapReg[this.opt.localeToReplace](text);
+  }
+
+  public shouldExtractLocaleNode({
+    node,
+    text,
+    info,
+    channel,
+  }: {
+    node: Node;
+    text: string;
+    info: Info;
+    channel: 'string-like' | 'jsx-text' | 'template';
+  }) {
+    // Unified gate for locale extraction across handlers.
+    // For en-us: collect comment has highest priority, then blacklist,
+    // then strategy-specific behavior.
+    if (!this.includesTargetLocale(text)) {
+      return false;
+    }
+
+    if (this.opt.localeToReplace !== 'en-us') {
+      return true;
+    }
+
+    if (this.inCommentCollectRange(node, info.commentRange.collect)) {
+      return true;
+    }
+
+    if (this.isEnglishBlacklisted(node, channel)) {
+      return false;
+    }
+
+    if (this.opt.englishStrategy === 'aggressive') {
+      return true;
+    }
+
+    if (this.opt.englishStrategy === 'comment-only') {
+      // Keep backward compatibility for jsx/template extraction.
+      return channel !== 'string-like';
+    }
+
+    if (channel !== 'string-like') {
+      return true;
+    }
+
+    const raw = text
+      .replace(/^['"`]/, '')
+      .replace(/['"`]$/, '')
+      .trim();
+    return this.englishTextScore(raw) >= 2;
+  }
+
+  private inCommentCollectRange(node: Node, ranges: [number, number][]) {
+    return ranges.some(
+      ([start, end]) => node.getStart() >= start && node.getEnd() - 1 <= end
+    );
+  }
+
+  private englishTextScore(text: string) {
+    // Heuristic scoring used by balanced strategy for string-like nodes.
+    // Positive signals: sentence-like text. Negative signals: key-like tokens.
+    if (!text) {
+      return -99;
+    }
+
+    let score = 0;
+    if (/\s/.test(text)) {
+      score += 2;
+    }
+    if (/[.,!?;:]/.test(text)) {
+      score += 2;
+    }
+    if (text.length >= 12) {
+      score += 1;
+    }
+    if (/\{v\d+\}|\$\{.+?\}/.test(text)) {
+      score += 1;
+    }
+    if (/\b(user|id|key|url|path|class|type)\b/i.test(text)) {
+      score -= 2;
+    }
+    if (/^[a-z][a-z0-9_-]{0,10}$/i.test(text)) {
+      score -= 2;
+    }
+    return score;
+  }
+
+  private isEnglishBlacklisted(
+    node: Node,
+    channel: 'string-like' | 'jsx-text' | 'template'
+  ) {
+    // Hard-stop contexts that should not be translated even in aggressive mode.
+    // This prevents semantic breakage in keys, import paths, and technical attrs.
+    if (isTypeNode(node) || isTypeNode(node.parent)) {
+      return true;
+    }
+
+    if (channel !== 'string-like') {
+      return false;
+    }
+
+    if (node.parent?.kind === SyntaxKind.ImportDeclaration) {
+      return true;
+    }
+
+    if (
+      node.parent?.kind === SyntaxKind.PropertyAssignment &&
+      (node.parent as PropertyAssignment).name === node
+    ) {
+      return true;
+    }
+
+    if (
+      node.parent?.kind === SyntaxKind.ElementAccessExpression &&
+      node.parent.getChildren()[2] === node
+    ) {
+      return true;
+    }
+
+    if (node.parent?.kind === SyntaxKind.JsxAttribute) {
+      const attr = node.parent as JsxAttribute;
+      const name = attr.name?.getText();
+      if (name && /^(className|id|data-testid|key|to|href|src)$/i.test(name)) {
+        return true;
+      }
+    }
+
+    if (node.kind === SyntaxKind.StringLiteral) {
+      const str = (node as StringLiteral).text.trim();
+      if (/^[\w\-./:@]+$/.test(str)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private localeMapReg: Record<LocaleTypes, (str: string) => boolean> = {

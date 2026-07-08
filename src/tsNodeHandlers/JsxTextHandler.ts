@@ -3,10 +3,15 @@ import { HandlerOption, TsNodeHandler } from './TsNodeHandler';
 import { ReplaceContext } from '../ReplaceContext';
 
 export class JsxTextHandler implements TsNodeHandler {
-  match({ node, info: { i18nReplacer } }: HandlerOption): boolean {
+  match({ node, info, info: { i18nReplacer } }: HandlerOption): boolean {
     return (
       node.kind === SyntaxKind.JsxText &&
-      i18nReplacer.includesTargetLocale(node.getText())
+      i18nReplacer.shouldExtractLocaleNode({
+        node,
+        text: node.getText(),
+        info,
+        channel: 'jsx-text',
+      })
     );
   }
 
