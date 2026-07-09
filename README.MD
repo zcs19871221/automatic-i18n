@@ -1,6 +1,6 @@
 # automatic-i18n
 
-[![CI](./assets/badge.svg)](https://github.com/zcs19871221/automatic-i18n/actions/workflows/npm-publish.yml)
+[![CI](https://github.com/zcs19871221/automatic-i18n/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/zcs19871221/automatic-i18n/actions/workflows/npm-publish.yml)
 [![Test coverage](https://img.shields.io/coverallsCoverage/github/zcs19871221/automatic-i18n)](https://coveralls.io/github/zcs19871221/automatic-i18n)
 [![npm version](https://img.shields.io/npm/v/automatic-i18n?style=flat-square)](https://www.npmjs.com/package/automatic-i18n)
 
