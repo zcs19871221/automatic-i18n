@@ -87,7 +87,7 @@ npx automatic-i18n merge ./i18n ./i18n
 - `-e, --excludes <filesOrDirs...>`: names to exclude.
 - `-m, --meaningKey`: convert auto-generated keys to meaningful English-style keys when possible.
 - `-u, --uniqIntlKey`: generate keys from message hash to reduce key conflicts.
-- `--englishStrategy <mode>`: english extraction strategy for `localeToReplace=en-us`. Choices: `comment-only`, `balanced`, `aggressive`. Default: `comment-only`.
+- `--englishStrategy <mode>`: english extraction strategy for `localeToReplace=en-us`. Choices: `comment-only`, `balanced`, `aggressive`. Default: `balanced`.
 - `-db, --debug`: print debug logs.
 - `-v, --version`: show version.
 

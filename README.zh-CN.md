@@ -87,7 +87,7 @@ npx automatic-i18n merge ./i18n ./i18n
 - -e, --excludes <filesOrDirs...>: 按名称排除文件或目录。
 - -m, --meaningKey: 尝试将自动 key 转为语义化英文 key。
 - -u, --uniqIntlKey: 基于 message 哈希生成 key，降低 key 冲突概率。
-- --englishStrategy <mode>: localeToReplace 为 en-us 时的英文提取策略，可选 comment-only、balanced、aggressive。默认：comment-only。
+- --englishStrategy <mode>: localeToReplace 为 en-us 时的英文提取策略，可选 comment-only、balanced、aggressive。默认：balanced。
 - -db, --debug: 输出调试日志。
 - -v, --version: 输出版本号。
 

@@ -42,7 +42,7 @@ export const defaultDistLocaleDir = () => path.join(process.cwd(), 'i18n');
 
 export const defaultLocaleToReplace = 'zh-cn';
 export const defaultLocalesToGenerate: LocaleTypes[] = ['zh-cn', 'en-us'];
-export const defaultEnglishStrategy: EnglishStrategy = 'comment-only';
+export const defaultEnglishStrategy: EnglishStrategy = 'balanced';
 
 export const initParams = ({
   targets = defaultTargets(),
