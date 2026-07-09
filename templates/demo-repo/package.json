@@ -1,0 +1,14 @@
+{
+  "name": "automatic-i18n-demo",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "i18n": "automatic-i18n -t src -sl en-us -tl en-us zh-cn -u"
+  },
+  "devDependencies": {
+    "automatic-i18n": "latest",
+    "fs-extra": "^11.2.0",
+    "prettier": "^2.8.8",
+    "typescript": "^5.3.3"
+  }
+}
